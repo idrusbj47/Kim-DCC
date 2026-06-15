@@ -1,1 +1,575 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Prosedur (SOP) | PT Karya Indah Multiguna</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Dark Theme */
+            --bg-primary: #1A202C;
+            --bg-secondary: #2D3748;
+            --bg-tertiary: #4A5568;
+            --accent: #38B2AC;
+            --accent-hover: #319795;
+            --accent-light: rgba(56, 178, 172, 0.12);
+            --text-primary: #F7FAFC;
+            --text-secondary: #A0AEC0;
+            --text-muted: #718096;
+            --border-color: #4A5568;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            --transition-speed: 0.3s;
+        }
 
+        [data-theme="light"] {
+            /* Light Theme */
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #E2E8F0;
+            --accent: #2C7A7B;
+            --accent-hover: #234E52;
+            --accent-light: rgba(44, 122, 123, 0.08);
+            --text-primary: #1A202C;
+            --text-secondary: #4A5568;
+            --text-muted: #718096;
+            --border-color: #E2E8F0;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Header Style */
+        header {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all var(--transition-speed);
+        }
+
+        .back-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateX(-3px);
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .logo-subtitle {
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            background-color: var(--bg-primary);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #38A169;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .pulse-dot::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #38A169;
+            border-radius: 50%;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        .theme-toggle-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            transition: all var(--transition-speed);
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .theme-toggle-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .page-title-area h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .page-title-area p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Search Filter Styling */
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 16px 12px 45px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            transition: all var(--transition-speed);
+            box-shadow: var(--card-shadow);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .search-icon-svg {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        /* Table Architecture */
+        .table-responsive {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: rgba(0, 0, 0, 0.15);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        [data-theme="light"] th {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        [data-theme="light"] tr:hover td {
+            background-color: rgba(0, 0, 0, 0.01);
+        }
+
+        .td-no {
+            width: 60px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .td-name {
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+
+        .td-code {
+            font-family: monospace;
+            font-size: 0.9rem;
+            background-color: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            display: inline-block;
+        }
+
+        .badge-rev {
+            background-color: var(--accent-light);
+            color: var(--accent);
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(56, 178, 172, 0.3);
+        }
+
+        .badge-dept {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .no-data-row {
+            text-align: center;
+            padding: 40px !important;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 80px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            padding: 30px 40px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive Optimization */
+        @media (max-width: 768px) {
+            header { padding: 15px 20px; }
+            .main-container { padding: 20px; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+            .search-container { max-width: 100%; }
+            th, td { padding: 12px 15px; font-size: 0.85rem; }
+            th:nth-child(5), td:nth-child(5) { display: none; } /* Sembunyikan tanggal di mobile jika padat */
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <header>
+        <div class="header-left">
+            <a href="gemini-code-dasbor.html" class="back-btn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Kembali ke Dasbor
+            </a>
+            <div class="logo-text">
+                <div class="logo-title">PT Karya Indah Multiguna</div>
+                <div class="logo-subtitle">Sistem Mutu Internal</div>
+            </div>
+        </div>
+        <div class="nav-controls">
+            <div class="system-status">
+                <div class="pulse-dot"></div>
+                <span id="loadStatus">Sinkronisasi Prosedur...</span>
+            </div>
+            <button class="theme-toggle-btn" id="themeToggle" title="Ubah Tema">
+                <svg id="themeIcon" viewBox="0 0 24 24">
+                    <path d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 3z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="page-header">
+            <div class="page-title-area">
+                <h1>Daftar Prosedur (SOP)</h1>
+                <p>Menampilkan berkas prosedur standard operating procedure yang terdaftar aktif.</p>
+            </div>
+            <div class="search-container">
+                <svg class="search-icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" id="procSearchInput" class="search-input" placeholder="Cari nama, nomor prosedur, atau bagian...">
+            </div>
+        </section>
+
+        <section class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="td-no">No.</th>
+                        <th>Nama Prosedur</th>
+                        <th>No. Prosedur</th>
+                        <th>Revisi</th>
+                        <th>Tgl. Berlaku</th>
+                        <th>Bagian</th>
+                    </tr>
+                </thead>
+                <tbody id="procedureTableBody">
+                    </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <div>&copy; 2026 ISO Document Control Center | PT Karya Indah Multiguna</div>
+    </footer>
+
+    <script>
+        const proceduresCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv";
+
+        // Hardcoded Baseline Data (Fallback awal aman sesuai file unggahan)
+        let proceduresData = [
+            { no: 1, name: "Manual Mutu", code: "KIM-MM-ISO-001", rev: "2", date: "1-Feb-21", dept: "ISO" },
+            { no: 2, name: "Rencana Mutu", code: "KIM-RM-ISO-001", rev: "0", date: "1-Apr-18", dept: "ISO" },
+            { no: 3, name: "Pengendalian Dokumen", code: "KIM-PR-QAD-001", rev: "0", date: "1-Apr-18", dept: "QAD" },
+            { no: 4, name: "Pengendalian Rekaman", code: "KIM-PR-QAD-002", rev: "0", date: "1-Apr-18", dept: "QAD" },
+            { no: 5, name: "Tinjauan Manajemen", code: "KIM-PR-QAD-003", rev: "0", date: "1-Apr-18", dept: "QAD" },
+            { no: 6, name: "Internal Audit", code: "KIM-PR-QAD-004", rev: "0", date: "1-Apr-18", dept: "QAD" },
+            { no: 7, name: "Pengendalian Produk Tidak Sesuai", code: "KIM-PR-QAD-005", rev: "0", date: "1-Apr-18", dept: "QAD" },
+            { no: 8, name: "Tindakan Perbaikan dan Pencegahan", code: "KIM-PR-QAD-006", rev: "1", date: "3-Jan-24", dept: "QAD" },
+            { no: 9, name: "Kalibrasi Alat Ukur", code: "KIM-PR-QAD-007", rev: "0", date: "1-Apr-18", dept: "QAD" },
+            { no: 10, name: "Konteks Organisasi & Manajemen Risiko", code: "KIM-PR-QAD-008", rev: "0", date: "1-Apr-18", dept: "QAD" }
+        ];
+
+        function displayProcedures(items) {
+            const tbody = document.getElementById('procedureTableBody');
+            tbody.innerHTML = "";
+
+            if(items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="no-data-row">Tidak ada data prosedur yang cocok dengan pencarian.</td></tr>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="td-no">${item.no}</td>
+                    <td class="td-name">${item.name}</td>
+                    <td><span class="td-code">${item.code}</span></td>
+                    <td><span class="badge-rev">Rev ${item.rev}</span></td>
+                    <td>${item.date}</td>
+                    <td><span class="badge-dept">${item.dept}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function fetchLiveProcedures() {
+            const statusEl = document.getElementById('loadStatus');
+            try {
+                const response = await fetch(proceduresCsvUrl);
+                if (!response.ok) throw new Error("Koneksi luar terputus");
+                const text = await response.text();
+                
+                const lines = text.split(/\r?\n/);
+                let parsedItems = [];
+                let rowCounter = 1;
+
+                for(let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(',');
+                    if (cols.length < 3) continue;
+
+                    let pName = cols[1]?.trim();
+                    let pCode = cols[2]?.trim();
+                    let pRev = cols[3]?.trim() || "0";
+                    let pDate = cols[4]?.trim() || "-";
+                    let pDept = cols[6]?.trim() || ""; 
+
+                    // Lewati baris jika nama atau nomor dokumen kosong, atau mendeteksi baris Total
+                    if (!pName || !pCode || pName.toUpperCase().includes("TOTAL") || pCode.toUpperCase().includes("TOTAL")) {
+                        continue;
+                    }
+
+                    // Deteksi Departemen Otomatis dari Struktur Kode Berkas jika kolom kosong
+                    if (!pDept) {
+                        const parts = pCode.split('-');
+                        if (parts.length >= 3) {
+                            pDept = parts[2].toUpperCase();
+                        } else {
+                            pDept = "DCC";
+                        }
+                    }
+
+                    parsedItems.push({
+                        no: rowCounter++,
+                        name: pName,
+                        code: pCode,
+                        rev: pRev,
+                        date: pDate,
+                        dept: pDept
+                    });
+                }
+
+                if(parsedItems.length > 0) {
+                    proceduresData = parsedItems;
+                }
+                statusEl.innerText = "Terkoneksi Live Sheet";
+                displayProcedures(proceduresData);
+            } catch (err) {
+                console.warn("Menggunakan data baseline cadangan internal dcc:", err);
+                statusEl.innerText = "Mode Lokal (Offline)";
+                displayProcedures(proceduresData);
+            }
+        }
+
+        // Jalankan Fetch Otomatis Saat Halaman Dimuat
+        fetchLiveProcedures();
+
+        // Fitur Pencarian Dinamis
+        const searchInput = document.getElementById('procSearchInput');
+        searchInput.addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase().trim();
+            const filtered = proceduresData.filter(item => {
+                return item.name.toLowerCase().includes(keyword) || 
+                       item.code.toLowerCase().includes(keyword) || 
+                       item.dept.toLowerCase().includes(keyword);
+            });
+            displayProcedures(filtered);
+        });
+
+        // Kontrol Pengubah Tema (Dark/Light Mode Sync)
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const themeIcon = document.getElementById('themeIcon');
+
+        const sunSvg = `<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`;
+        const moonSvg = `<path d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 3z"/>`;
+
+        themeToggle.addEventListener('click', () => {
+            const activeTheme = body.getAttribute('data-theme');
+            if (activeTheme === 'dark') {
+                body.setAttribute('data-theme', 'light');
+                themeIcon.innerHTML = sunSvg;
+                themeIcon.setAttribute('stroke', 'currentColor');
+                themeIcon.setAttribute('stroke-width', '2');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.innerHTML = moonSvg;
+                themeIcon.removeAttribute('stroke');
+            }
+        });
+    </script>
+</body>
+</html>
