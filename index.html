@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCC — Document Control Center | PT Karya Indah Multiguna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b1320;
+    --panel:#101b2d;
+    --panel-2:#152339;
+    --line:rgba(212,178,109,0.16);
+    --line-soft:rgba(255,255,255,0.06);
+    --brass:#d4b26d;
+    --brass-bright:#f0d394;
+    --paper:#f6f3ec;
+    --paper-dim:#c9cdd6;
+    --text-dim:#8e98ad;
+    --green:#6fae8c;
+    --amber:#e0a458;
+    --red:#cf6f6f;
+    --radius:14px;
+    --serif:'Cormorant Garamond', serif;
+    --sans:'Inter', sans-serif;
+    --mono:'Space Grotesk', sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    font-family:var(--sans);
+    background:
+      radial-gradient(ellipse 1200px 800px at 50% -10%, rgba(212,178,109,0.07), transparent 60%),
+      linear-gradient(180deg, #0c1626 0%, #0a1220 100%);
+    color:var(--paper-dim);
+    min-height:100vh;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* Subtle paper-grain texture overlay */
+  body::before{
+    content:'';
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:1;
+    opacity:0.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode:overlay;
+  }
+
+  a{color:inherit; text-decoration:none;}
+
+  /* ====================== HEADER ====================== */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(10,18,32,0.78);
+    backdrop-filter:blur(18px) saturate(140%);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .header-inner{
+    max-width:1280px; margin:0 auto;
+    padding:18px 32px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:24px;
+  }
+  .brand{display:flex; align-items:center; gap:14px;}
+  .brand-mark{
+    width:46px; height:46px; border-radius:10px;
+    background:linear-gradient(135deg, #1a2c47, #0d1726);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    flex-shrink:0;
+  }
+  .brand-mark::before{
+    content:'';
+    position:absolute; inset:5px;
+    border:1px solid rgba(212,178,109,0.35);
+    border-radius:6px;
+  }
+  .brand-mark svg{width:20px; height:20px;}
+  .brand-text .eyebrow{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.22em;
+    text-transform:uppercase; color:var(--brass); font-weight:500;
+  }
+  .brand-text .name{
+    font-family:var(--serif); font-size:21px; font-weight:600;
+    color:var(--paper); letter-spacing:0.01em; line-height:1.2;
+  }
+
+  .header-meta{
+    display:flex; align-items:center; gap:28px;
+    font-family:var(--mono); font-size:11.5px; color:var(--text-dim);
+  }
+  .header-meta .meta-item{display:flex; flex-direction:column; gap:3px; text-align:right;}
+  .header-meta .meta-item span:first-child{letter-spacing:0.16em; text-transform:uppercase; font-size:9.5px; color:rgba(142,152,173,0.7);}
+  .header-meta .meta-item span:last-child{color:var(--paper); font-size:12.5px; font-weight:500;}
+  .status-dot{
+    display:inline-block; width:7px; height:7px; border-radius:50%;
+    background:var(--green); margin-right:6px;
+    box-shadow:0 0 0 3px rgba(111,174,140,0.15);
+  }
+
+  @media (max-width:760px){
+    .header-meta{display:none;}
+  }
+
+  /* ====================== HERO ====================== */
+  .hero{
+    max-width:1280px; margin:0 auto;
+    padding:72px 32px 56px;
+    position:relative;
+    z-index:2;
+  }
+  .hero-grid{
+    display:grid; grid-template-columns:1.3fr 1fr; gap:64px; align-items:end;
+  }
+  .hero-eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.28em;
+    text-transform:uppercase; color:var(--brass);
+    display:flex; align-items:center; gap:14px; margin-bottom:24px;
+  }
+  .hero-eyebrow::after{content:''; height:1px; flex:1; background:linear-gradient(90deg, var(--line), transparent);}
+  .hero h1{
+    font-family:var(--serif); font-weight:600;
+    font-size:clamp(40px, 6vw, 68px);
+    line-height:1.08; color:var(--paper);
+    letter-spacing:-0.01em;
+  }
+  .hero h1 em{
+    font-style:italic; color:var(--brass-bright);
+    background:linear-gradient(120deg, var(--brass-bright), var(--brass));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero-sub{
+    margin-top:22px; font-size:16px; color:var(--text-dim);
+    max-width:520px; font-weight:300;
+  }
+
+  /* Search box */
+  .search-panel{
+    background:linear-gradient(155deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px;
+    position:relative;
+    overflow:hidden;
+  }
+  .search-panel::before{
+    content:'';
+    position:absolute; top:-40%; right:-30%;
+    width:240px; height:240px; border-radius:50%;
+    background:radial-gradient(circle, rgba(212,178,109,0.10), transparent 70%);
+  }
+  .search-panel .label{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.2em;
+    text-transform:uppercase; color:var(--text-dim); margin-bottom:14px;
+  }
+  .search-box{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(8,14,26,0.6);
+    border:1px solid var(--line-soft);
+    border-radius:10px; padding:14px 16px;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .search-box:focus-within{
+    border-color:var(--brass);
+    box-shadow:0 0 0 3px rgba(212,178,109,0.08);
+  }
+  .search-box svg{flex-shrink:0; opacity:0.6;}
+  .search-box input{
+    background:none; border:none; outline:none;
+    color:var(--paper); font-family:var(--sans); font-size:14.5px;
+    width:100%;
+  }
+  .search-box input::placeholder{color:var(--text-dim);}
+  .search-meta{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:16px; padding-top:16px;
+    border-top:1px solid var(--line-soft);
+    font-family:var(--mono); font-size:11px; color:var(--text-dim);
+  }
+  .search-meta strong{color:var(--brass-bright); font-weight:500;}
+
+  .quick-filters{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;
+  }
+  .qf-chip{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.04em;
+    padding:6px 12px; border-radius:99px;
+    border:1px solid var(--line-soft);
+    color:var(--paper-dim);
+    background:rgba(255,255,255,0.02);
+    cursor:pointer; transition:all .15s;
+  }
+  .qf-chip:hover, .qf-chip.active{
+    border-color:var(--brass); color:var(--brass-bright);
+    background:rgba(212,178,109,0.08);
+  }
+
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:1fr; gap:36px;}
+  }
+
+  /* ====================== STAT LEDGER ====================== */
+  .ledger{
+    max-width:1280px; margin:0 auto; padding:0 32px 64px;
+  }
+  .ledger-strip{
+    display:grid; grid-template-columns:repeat(5, 1fr);
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+  }
+  .ledger-cell{
+    padding:24px 22px;
+    border-right:1px solid var(--line-soft);
+    position:relative;
+  }
+  .ledger-cell:last-child{border-right:none;}
+  .ledger-cell .num{
+    font-family:var(--serif); font-weight:600; font-size:34px;
+    color:var(--paper); line-height:1;
+  }
+  .ledger-cell .lbl{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--text-dim);
+    margin-top:8px;
+  }
+  .ledger-cell .tag{
+    position:absolute; top:18px; right:20px;
+    font-family:var(--mono); font-size:9px; letter-spacing:0.18em;
+    color:var(--brass); text-transform:uppercase;
+  }
+  @media (max-width:900px){
+    .ledger-strip{grid-template-columns:repeat(2,1fr);}
+    .ledger-cell:nth-child(2n){border-right:none;}
+    .ledger-cell:nth-child(n+3){border-top:1px solid var(--line-soft);}
+  }
+
+  /* ====================== SECTION HEADERS ====================== */
+  .section{
+    max-width:1280px; margin:0 auto; padding:64px 32px;
+  }
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-bottom:36px; gap:24px; flex-wrap:wrap;
+  }
+  .section-head .heading-eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.24em;
+    text-transform:uppercase; color:var(--brass); margin-bottom:10px;
+  }
+  .section-head h2{
+    font-family:var(--serif); font-size:clamp(28px,3.6vw,40px);
+    font-weight:600; color:var(--paper); letter-spacing:-0.01em;
+  }
+  .section-head p{
+    color:var(--text-dim); font-size:14px; max-width:440px; font-weight:300;
+  }
+
+  /* ====================== DEPARTMENT VAULT GRID ====================== */
+  .vault-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:20px;
+  }
+  @media (max-width:1024px){ .vault-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:620px){ .vault-grid{grid-template-columns:1fr;} }
+
+  .vault-card{
+    background:linear-gradient(160deg, var(--panel-2) 0%, var(--panel) 100%);
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius);
+    padding:26px;
+    cursor:pointer;
+    transition:transform .28s cubic-bezier(.2,.8,.2,1), border-color .28s, box-shadow .28s;
+    position:relative;
+    overflow:hidden;
+    display:flex; flex-direction:column; gap:16px;
+  }
+  .vault-card::after{
+    content:'';
+    position:absolute; inset:0;
+    border:1px solid transparent;
+    border-radius:var(--radius);
+    background:linear-gradient(160deg, rgba(212,178,109,0.0), rgba(212,178,109,0.0));
+    transition:background .28s;
+    pointer-events:none;
+  }
+  .vault-card:hover{
+    transform:translateY(-4px);
+    border-color:var(--line);
+    box-shadow:0 18px 40px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,178,109,0.05) inset;
+  }
+  .vault-card:hover .vault-icon{
+    border-color:var(--brass);
+    color:var(--brass-bright);
+  }
+  .vault-card:hover .vault-arrow{transform:translate(3px,-3px); opacity:1;}
+
+  .vault-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .vault-icon{
+    width:50px; height:50px; border-radius:11px;
+    border:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--paper-dim);
+    transition:all .28s;
+    background:rgba(255,255,255,0.015);
+  }
+  .vault-icon svg{width:22px; height:22px;}
+  .vault-code{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.16em;
+    color:var(--text-dim); text-transform:uppercase;
+    padding:5px 10px; border:1px solid var(--line-soft); border-radius:99px;
+  }
+  .vault-card h3{
+    font-family:var(--serif); font-size:23px; font-weight:600; color:var(--paper);
+  }
+  .vault-card .vault-desc{font-size:12.5px; color:var(--text-dim); font-weight:300; margin-top:-8px;}
+
+  .vault-stats{
+    display:flex; gap:18px; padding-top:14px; border-top:1px solid var(--line-soft);
+    margin-top:auto;
+  }
+  .vault-stat{display:flex; flex-direction:column; gap:2px;}
+  .vault-stat .v{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--brass-bright);}
+  .vault-stat .k{font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim);}
+
+  .vault-foot{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:11px; color:var(--paper-dim);
+  }
+  .vault-arrow{opacity:0.4; transition:all .28s; color:var(--brass);}
+
+  /* ====================== DOCUMENT BROWSER ====================== */
+  .browser-shell{
+    background:linear-gradient(160deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius);
+    padding:0;
+    overflow:hidden;
+  }
+  .browser-head{
+    padding:24px 28px;
+    border-bottom:1px solid var(--line-soft);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;
+  }
+  .browser-head .bh-left{display:flex; align-items:center; gap:14px;}
+  .browser-head h3{font-family:var(--serif); font-size:22px; color:var(--paper); font-weight:600;}
+  .breadcrumb{
+    font-family:var(--mono); font-size:11px; color:var(--text-dim); letter-spacing:0.04em;
+  }
+  .breadcrumb span{color:var(--brass-bright);}
+
+  .type-tabs{
+    display:flex; gap:6px; padding:16px 28px; flex-wrap:wrap;
+    border-bottom:1px solid var(--line-soft);
+    background:rgba(0,0,0,0.12);
+  }
+  .type-tab{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.06em;
+    padding:8px 16px; border-radius:8px;
+    border:1px solid transparent;
+    color:var(--text-dim); cursor:pointer;
+    transition:all .15s;
+    display:flex; align-items:center; gap:8px;
+  }
+  .type-tab .count{
+    font-size:10px; padding:1px 6px; border-radius:99px;
+    background:rgba(255,255,255,0.06); color:var(--paper-dim);
+  }
+  .type-tab:hover{color:var(--paper);}
+  .type-tab.active{
+    color:var(--brass-bright); border-color:var(--line); background:rgba(212,178,109,0.06);
+  }
+  .type-tab.active .count{background:rgba(212,178,109,0.18); color:var(--brass-bright);}
+
+  /* Document table */
+  .doc-table{width:100%; border-collapse:collapse;}
+  .doc-table thead th{
+    text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--text-dim); font-weight:500;
+    padding:14px 28px; border-bottom:1px solid var(--line-soft);
+  }
+  .doc-table tbody tr{
+    border-bottom:1px solid var(--line-soft);
+    transition:background .15s;
+  }
+  .doc-table tbody tr:last-child{border-bottom:none;}
+  .doc-table tbody tr:hover{background:rgba(212,178,109,0.035);}
+  .doc-table td{padding:16px 28px; font-size:13.5px; vertical-align:middle;}
+  .doc-name{display:flex; align-items:center; gap:12px;}
+  .doc-name .file-icon{
+    width:34px; height:34px; border-radius:8px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line-soft); color:var(--brass);
+    background:rgba(212,178,109,0.04);
+  }
+  .doc-name .file-icon svg{width:16px;height:16px;}
+  .doc-name .ti{display:flex; flex-direction:column; gap:2px;}
+  .doc-name .ti .t{color:var(--paper); font-weight:500;}
+  .doc-name .ti .c{font-family:var(--mono); font-size:10.5px; color:var(--text-dim); letter-spacing:0.05em;}
+  .doc-table td.muted{color:var(--text-dim); font-family:var(--mono); font-size:12px;}
+  .pill{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.08em;
+    padding:4px 10px; border-radius:99px; text-transform:uppercase;
+    display:inline-block;
+  }
+  .pill.aktif{background:rgba(111,174,140,0.12); color:var(--green); border:1px solid rgba(111,174,140,0.25);}
+  .row-actions{display:flex; gap:8px; justify-content:flex-end;}
+  .act-btn{
+    width:34px; height:34px; border-radius:8px;
+    border:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--paper-dim); cursor:pointer; transition:all .15s;
+    background:transparent;
+  }
+  .act-btn svg{width:14px;height:14px;}
+  .act-btn:hover{border-color:var(--brass); color:var(--brass-bright); background:rgba(212,178,109,0.06);}
+
+  .empty-state{
+    padding:64px 28px; text-align:center;
+  }
+  .empty-state .es-icon{
+    width:60px; height:60px; margin:0 auto 18px; border-radius:14px;
+    border:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:center; color:var(--text-dim);
+  }
+  .empty-state h4{font-family:var(--serif); font-size:20px; color:var(--paper); margin-bottom:6px; font-weight:600;}
+  .empty-state p{font-size:13px; color:var(--text-dim); max-width:360px; margin:0 auto;}
+
+  @media (max-width:760px){
+    .doc-table thead{display:none;}
+    .doc-table td{padding:12px 16px; display:block;}
+    .doc-table tbody tr{display:block; padding:8px 0;}
+    .row-actions{justify-content:flex-start; margin-top:10px;}
+  }
+
+  /* ====================== LEGEND / DOC TYPE KEY ====================== */
+  .legend-grid{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:36px;
+  }
+  @media (max-width:900px){ .legend-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:520px){ .legend-grid{grid-template-columns:1fr;} }
+  .legend-item{
+    border:1px solid var(--line-soft); border-radius:12px; padding:18px;
+    background:rgba(255,255,255,0.012);
+  }
+  .legend-item .code{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.18em;
+    color:var(--brass); text-transform:uppercase; margin-bottom:8px;
+  }
+  .legend-item .nm{font-family:var(--serif); font-size:17px; color:var(--paper); font-weight:600; margin-bottom:4px;}
+  .legend-item .ds{font-size:11.5px; color:var(--text-dim); font-weight:300;}
+
+  /* ====================== FOOTER ====================== */
+  footer{
+    border-top:1px solid var(--line-soft);
+    padding:48px 32px 32px;
+  }
+  .footer-inner{
+    max-width:1280px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:16px;
+  }
+  .footer-left{display:flex; align-items:center; gap:14px;}
+  .footer-left .ft-mark{
+    width:38px; height:38px; border-radius:9px;
+    border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+  }
+  .footer-left .ft-mark svg{width:16px;height:16px;}
+  .footer-left .ft-text .ft-name{font-family:var(--serif); font-size:15px; color:var(--paper); font-weight:600;}
+  .footer-left .ft-text .ft-sub{font-family:var(--mono); font-size:10px; letter-spacing:0.1em; color:var(--text-dim); text-transform:uppercase; margin-top:2px;}
+  .footer-right{
+    font-family:var(--mono); font-size:11px; color:var(--text-dim);
+    display:flex; gap:24px; align-items:center;
+  }
+  .footer-right .iso-badge{
+    display:flex; align-items:center; gap:8px;
+    border:1px solid var(--line-soft); border-radius:99px; padding:6px 14px;
+  }
+  .footer-right .iso-badge svg{width:14px;height:14px; color:var(--brass);}
+
+  /* Modal preview */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(5,9,17,0.78);
+    backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    z-index:200; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .modal-overlay.open{opacity:1; pointer-events:auto;}
+  .modal-box{
+    width:min(480px, 90vw);
+    background:linear-gradient(160deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:32px;
+    transform:translateY(16px) scale(0.98);
+    transition:transform .25s;
+  }
+  .modal-overlay.open .modal-box{transform:translateY(0) scale(1);}
+  .modal-box .mb-icon{
+    width:54px; height:54px; border-radius:12px; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--brass); margin-bottom:18px;
+  }
+  .modal-box h4{font-family:var(--serif); font-size:22px; color:var(--paper); font-weight:600; margin-bottom:8px;}
+  .modal-box p{font-size:13px; color:var(--text-dim); margin-bottom:22px;}
+  .modal-box .mb-meta{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;
+    font-family:var(--mono); font-size:11px;
+  }
+  .modal-box .mb-meta div span:first-child{display:block; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase; font-size:9.5px; margin-bottom:4px;}
+  .modal-box .mb-meta div span:last-child{color:var(--paper);}
+  .modal-actions{display:flex; gap:10px;}
+  .btn{
+    flex:1; padding:12px 16px; border-radius:9px; text-align:center;
+    font-family:var(--mono); font-size:12px; letter-spacing:0.06em; text-transform:uppercase;
+    cursor:pointer; transition:all .15s; border:1px solid var(--line-soft);
+  }
+  .btn-primary{background:linear-gradient(135deg, var(--brass-bright), var(--brass)); color:#1a1408; border:none; font-weight:600;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{color:var(--paper-dim); background:transparent;}
+  .btn-ghost:hover{border-color:var(--brass); color:var(--brass-bright);}
+
+  /* Fade-in on scroll */
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.show{opacity:1; transform:translateY(0);}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:10px;}
+  ::-webkit-scrollbar-track{background:var(--ink);}
+  ::-webkit-scrollbar-thumb{background:var(--panel-2); border-radius:5px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--line);}
+
+  /* Focus visibility */
+  a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--brass); outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--brass-bright)">
+          <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="eyebrow">Document Control Center</div>
+        <div class="name">PT Karya Indah Multiguna</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="meta-item">
+        <span>Standar Acuan</span>
+        <span>ISO 9001:2015</span>
+      </div>
+      <div class="meta-item">
+        <span>Status Sistem</span>
+        <span><i class="status-dot"></i>Terverifikasi</span>
+      </div>
+      <div class="meta-item">
+        <span>Revisi Terkini</span>
+        <span id="lastUpdated">—</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ====================== HERO ====================== -->
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-eyebrow">Arsip Dokumen Terkendali</div>
+      <h1>Satu pintu untuk<br>setiap <em>dokumen ISO</em><br>perusahaan.</h1>
+      <p class="hero-sub">Cari, telusuri, dan unduh Prosedur, Instruksi Kerja, Formulir, Standar, dan Dokumen Eksternal dari seluruh departemen — terorganisir, terverifikasi, dan selalu pada revisi terbaru.</p>
+    </div>
+    <div class="search-panel">
+      <div class="label">Pencarian Dokumen</div>
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
+        <input type="text" id="searchInput" placeholder="Cari nomor dokumen, judul, atau kode...">
+      </div>
+      <div class="quick-filters">
+        <span class="qf-chip active" data-filter="all">Semua</span>
+        <span class="qf-chip" data-filter="Prosedur">Prosedur</span>
+        <span class="qf-chip" data-filter="Instruksi Kerja">Instruksi Kerja</span>
+        <span class="qf-chip" data-filter="Formulir">Formulir</span>
+        <span class="qf-chip" data-filter="Standar">Standar</span>
+        <span class="qf-chip" data-filter="External">External</span>
+      </div>
+      <div class="search-meta">
+        <span>Total <strong id="totalDocs">—</strong> dokumen terindeks</span>
+        <span>9 Departemen</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== LEDGER ====================== -->
+<div class="ledger reveal">
+  <div class="ledger-strip">
+    <div class="ledger-cell">
+      <span class="tag">PR</span>
+      <div class="num">42</div>
+      <div class="lbl">Prosedur</div>
+    </div>
+    <div class="ledger-cell">
+      <span class="tag">IK</span>
+      <div class="num">123</div>
+      <div class="lbl">Instruksi Kerja</div>
+    </div>
+    <div class="ledger-cell">
+      <span class="tag">FM</span>
+      <div class="num">295</div>
+      <div class="lbl">Formulir</div>
+    </div>
+    <div class="ledger-cell">
+      <span class="tag">STD</span>
+      <div class="num">15</div>
+      <div class="lbl">Standar</div>
+    </div>
+    <div class="ledger-cell">
+      <span class="tag">EX</span>
+      <div class="num">47</div>
+      <div class="lbl">External</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== DEPARTMENT VAULTS ====================== -->
+<section class="section">
+  <div class="section-head reveal">
+    <div>
+      <div class="heading-eyebrow">Direktori Departemen</div>
+      <h2>Pilih ruang dokumen Anda</h2>
+    </div>
+    <p>Setiap departemen memiliki ruang dokumen tersendiri — lengkap dengan Prosedur, Instruksi Kerja, Formulir, Standar, dan dokumen acuan eksternal yang relevan.</p>
+  </div>
+
+  <div class="vault-grid" id="vaultGrid"></div>
+</section>
+
+<!-- ====================== DOCUMENT BROWSER ====================== -->
+<section class="section">
+  <div class="browser-shell reveal">
+    <div class="browser-head">
+      <div class="bh-left">
+        <h3 id="browserTitle">Semua Dokumen</h3>
+      </div>
+      <div class="breadcrumb">DCC <span>/</span> <span id="breadcrumbDept">Semua Departemen</span></div>
+    </div>
+    <div class="type-tabs" id="typeTabs"></div>
+    <div id="tableWrap"></div>
+  </div>
+</section>
+
+<!-- ====================== LEGEND ====================== -->
+<section class="section">
+  <div class="section-head reveal">
+    <div>
+      <div class="heading-eyebrow">Klasifikasi Dokumen</div>
+      <h2>Kode &amp; jenis dokumen</h2>
+    </div>
+  </div>
+  <div class="legend-grid reveal">
+    <div class="legend-item">
+      <div class="code">PR</div>
+      <div class="nm">Prosedur</div>
+      <div class="ds">Mengatur alur kerja antar fungsi secara sistematis.</div>
+    </div>
+    <div class="legend-item">
+      <div class="code">IK</div>
+      <div class="nm">Instruksi Kerja</div>
+      <div class="ds">Langkah teknis pelaksanaan tugas spesifik di lapangan.</div>
+    </div>
+    <div class="legend-item">
+      <div class="code">FM</div>
+      <div class="nm">Formulir</div>
+      <div class="ds">Lembar kerja dan rekaman untuk pencatatan data mutu.</div>
+    </div>
+    <div class="legend-item">
+      <div class="code">STD</div>
+      <div class="nm">Standar</div>
+      <div class="ds">Acuan baku internal untuk parameter dan spesifikasi.</div>
+    </div>
+    <div class="legend-item">
+      <div class="code">EX</div>
+      <div class="nm">External</div>
+      <div class="ds">Regulasi, standar, dan dokumen rujukan dari luar perusahaan.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FOOTER ====================== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <div class="ft-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--brass)">
+          <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="ft-text">
+        <div class="ft-name">Document Control Center</div>
+        <div class="ft-sub">PT Karya Indah Multiguna</div>
+      </div>
+    </div>
+    <div class="footer-right">
+      <div class="iso-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9"/></svg>
+        Sistem Manajemen Mutu ISO 9001:2015
+      </div>
+      <span>&copy; <span id="year"></span> Seluruh hak terkendali.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ====================== MODAL ====================== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="mb-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+    </div>
+    <h4 id="modalTitle">Nama Dokumen</h4>
+    <p id="modalDesc">Dokumen ini akan dibuka melalui tautan penyimpanan yang telah dikonfigurasi oleh admin DCC.</p>
+    <div class="mb-meta">
+      <div><span>Kode Dokumen</span><span id="modalCode">—</span></div>
+      <div><span>Departemen</span><span id="modalDept">—</span></div>
+      <div><span>Jenis</span><span id="modalType">—</span></div>
+      <div><span>Status</span><span style="color:var(--green)">Aktif</span></div>
+    </div>
+    <div class="modal-actions">
+      <span class="btn btn-ghost" id="modalClose">Tutup</span>
+      <span class="btn btn-primary" id="modalOpen">Buka PDF</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================================================================
+   DATA — direkap dari ALL_REKAMAN summary DCC PT Karya Indah Multiguna
+   =================================================================== */
+const DEPARTMENTS = [
+  { code:"HRD", name:"HRD", full:"Human Resource Development", desc:"Rekrutmen, pelatihan, dan administrasi personalia.",
+    icon:"users",
+    counts:{ "Prosedur":8, "Instruksi Kerja":14, "Formulir":47, "Standar":6, "External":2 } },
+  { code:"MKT", name:"Marketing", full:"Pemasaran & Penjualan", desc:"Pengelolaan pesanan, kepuasan, dan hubungan pelanggan.",
+    icon:"megaphone",
+    counts:{ "Prosedur":9, "Instruksi Kerja":10, "Formulir":36, "Standar":3, "External":3 } },
+  { code:"MAN", name:"Mekanik", full:"Maintenance & Mekanik", desc:"Pemeliharaan mesin, sarana, dan fasilitas produksi.",
+    icon:"wrench",
+    counts:{ "Prosedur":1, "Instruksi Kerja":25, "Formulir":65, "Standar":0, "External":32 } },
+  { code:"MRP", name:"MR", full:"Management Representative", desc:"Koordinasi sistem manajemen mutu & audit internal.",
+    icon:"shield",
+    counts:{ "Prosedur":0, "Instruksi Kerja":0, "Formulir":1, "Standar":0, "External":0 } },
+  { code:"PUR", name:"Pembelian", full:"Purchasing", desc:"Pengadaan bahan baku, evaluasi, dan seleksi pemasok.",
+    icon:"cart",
+    counts:{ "Prosedur":5, "Instruksi Kerja":1, "Formulir":7, "Standar":0, "External":0 } },
+  { code:"PPC", name:"PPIC", full:"Production Planning & Inventory Control", desc:"Perencanaan produksi, jadwal, dan kontrol persediaan.",
+    icon:"layers",
+    counts:{ "Prosedur":4, "Instruksi Kerja":13, "Formulir":36, "Standar":1, "External":2 } },
+  { code:"PRP", name:"Prepress", full:"Pra-Cetak", desc:"Desain, plat, dan persiapan sebelum proses cetak.",
+    icon:"layout",
+    counts:{ "Prosedur":0, "Instruksi Kerja":11, "Formulir":19, "Standar":0, "External":0 } },
+  { code:"PRO", name:"Produksi", full:"Production", desc:"Proses produksi inti, cetak, dan kendali jalannya lini.",
+    icon:"factory",
+    counts:{ "Prosedur":3, "Instruksi Kerja":31, "Formulir":37, "Standar":4, "External":0 } },
+  { code:"QAD", name:"QA-QC", full:"Quality Assurance & Quality Control", desc:"Penjaminan dan pengendalian mutu produk & proses.",
+    icon:"badge",
+    counts:{ "Prosedur":10, "Instruksi Kerja":18, "Formulir":47, "Standar":1, "External":8 } },
+];
+
+const TYPE_ORDER = ["Prosedur","Instruksi Kerja","Formulir","Standar","External"];
+const TYPE_CODE = { "Prosedur":"PR", "Instruksi Kerja":"IK", "Formulir":"FM", "Standar":"STD", "External":"EX" };
+
+/* Icon set */
+const ICONS = {
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  megaphone:'<path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8A3 3 0 0 1 6 16v-3"/>',
+  wrench:'<path d="M14.7 6.3a4 4 0 1 0-5.6 5.6L3 18l3 3 6.1-6.1a4 4 0 1 0 5.6-5.6z"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  cart:'<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>',
+  layers:'<path d="M12 2 2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
+  layout:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
+  factory:'<path d="M2 22V8l6 4V8l6 4V4h6v18z"/><path d="M2 22h20"/>',
+  badge:'<circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 7 22l5-3 5 3-1.5-9.5"/>',
+  doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
+};
+
+/* ===================================================================
+   Build sample document rows per department (demonstrative listing)
+   =================================================================== */
+function buildDocs(dept){
+  let docs = [];
+  let seq = 1;
+  TYPE_ORDER.forEach(type => {
+    const count = dept.counts[type] || 0;
+    if(count === 0) return;
+    const shown = Math.min(count, 6); // sample preview rows
+    for(let i=1;i<=shown;i++){
+      const num = `${TYPE_CODE[type]}-${dept.code}-${String(i).padStart(2,'0')}`;
+      docs.push({
+        title: sampleTitle(dept, type, i),
+        code: num,
+        type: type,
+        dept: dept.name,
+        rev: `0${(i % 3)+1}`,
+        date: sampleDate(i),
+      });
+      seq++;
+    }
+  });
+  return docs;
+}
+
+function sampleTitle(dept, type, i){
+  const titles = {
+    "Prosedur": [
+      `Prosedur Pengendalian ${dept.name}`,
+      `Prosedur Kerja ${dept.full}`,
+      `Prosedur Penanganan Ketidaksesuaian ${dept.name}`,
+      `Prosedur Evaluasi Kinerja ${dept.name}`,
+      `Prosedur Pelaporan ${dept.name}`,
+      `Prosedur Koordinasi Lintas Departemen ${dept.name}`,
+    ],
+    "Instruksi Kerja": [
+      `Instruksi Kerja Operasional ${dept.name}`,
+      `Instruksi Kerja Penggunaan Alat ${dept.name}`,
+      `Instruksi Kerja Penanganan ${dept.name}`,
+      `Instruksi Kerja Inspeksi ${dept.name}`,
+      `Instruksi Kerja Perawatan ${dept.name}`,
+      `Instruksi Kerja Keselamatan ${dept.name}`,
+    ],
+    "Formulir": [
+      `Formulir Checklist ${dept.name}`,
+      `Formulir Laporan Harian ${dept.name}`,
+      `Formulir Rekaman Inspeksi ${dept.name}`,
+      `Formulir Permintaan ${dept.name}`,
+      `Formulir Evaluasi ${dept.name}`,
+      `Formulir Catatan Mutu ${dept.name}`,
+    ],
+    "Standar": [
+      `Standar Spesifikasi ${dept.name}`,
+      `Standar Mutu Proses ${dept.name}`,
+      `Standar Parameter ${dept.name}`,
+      `Standar Acuan Teknis ${dept.name}`,
+      `Standar Toleransi ${dept.name}`,
+      `Standar Kerja ${dept.name}`,
+    ],
+    "External": [
+      `Regulasi Eksternal terkait ${dept.name}`,
+      `Standar Acuan Eksternal ${dept.name}`,
+      `Peraturan Pemerintah relevan ${dept.name}`,
+      `Pedoman Industri ${dept.name}`,
+      `Sertifikasi Eksternal ${dept.name}`,
+      `Referensi Regulasi ${dept.name}`,
+    ],
+  };
+  return titles[type][(i-1) % titles[type].length];
+}
+
+function sampleDate(i){
+  const months = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  return `${(i*3 % 28)+1} ${months[(i*2)%12]} 2025`;
+}
+
+/* ===================================================================
+   Render Department Vault Cards
+   =================================================================== */
+const vaultGrid = document.getElementById('vaultGrid');
+let totalDocsAll = 0;
+
+DEPARTMENTS.forEach((dept, idx) => {
+  const total = Object.values(dept.counts).reduce((a,b)=>a+b,0);
+  totalDocsAll += total;
+  const card = document.createElement('div');
+  card.className = 'vault-card reveal';
+  card.dataset.dept = dept.name;
+  card.innerHTML = `
+    <div class="vault-top">
+      <div class="vault-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">${ICONS[dept.icon]}</svg></div>
+      <div class="vault-code">${dept.code}</div>
+    </div>
+    <div>
+      <h3>${dept.name}</h3>
+      <div class="vault-desc">${dept.desc}</div>
+    </div>
+    <div class="vault-stats">
+      <div class="vault-stat"><span class="v">${total}</span><span class="k">Total Dok.</span></div>
+      <div class="vault-stat"><span class="v">${dept.counts["Formulir"]}</span><span class="k">Formulir</span></div>
+      <div class="vault-stat"><span class="v">${dept.counts["Instruksi Kerja"]}</span><span class="k">IK</span></div>
+    </div>
+    <div class="vault-foot">
+      <span>${dept.full}</span>
+      <span class="vault-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </div>
+  `;
+  card.addEventListener('click', () => selectDept(dept.name));
+  vaultGrid.appendChild(card);
+});
+
+document.getElementById('totalDocs').textContent = totalDocsAll.toLocaleString('id-ID');
+
+/* ===================================================================
+   Document Browser Logic
+   =================================================================== */
+let currentDept = null; // null = all
+let currentType = 'all';
+let searchTerm = '';
+
+const typeTabsEl = document.getElementById('typeTabs');
+const tableWrap = document.getElementById('tableWrap');
+const browserTitle = document.getElementById('browserTitle');
+const breadcrumbDept = document.getElementById('breadcrumbDept');
+
+function allDocs(){
+  let docs = [];
+  DEPARTMENTS.forEach(d => docs = docs.concat(buildDocs(d)));
+  return docs;
+}
+
+function renderTypeTabs(docs){
+  const counts = { all: docs.length };
+  TYPE_ORDER.forEach(t => counts[t] = docs.filter(d => d.type === t).length);
+
+  let html = `<div class="type-tab ${currentType==='all'?'active':''}" data-type="all">Semua <span class="count">${counts.all}</span></div>`;
+  TYPE_ORDER.forEach(t => {
+    html += `<div class="type-tab ${currentType===t?'active':''}" data-type="${t}">${t} <span class="count">${counts[t]||0}</span></div>`;
+  });
+  typeTabsEl.innerHTML = html;
+
+  typeTabsEl.querySelectorAll('.type-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      currentType = tab.dataset.type;
+      renderBrowser();
+    });
+  });
+}
+
+function renderTable(docs){
+  if(docs.length === 0){
+    tableWrap.innerHTML = `
+      <div class="empty-state">
+        <div class="es-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
+        </div>
+        <h4>Dokumen tidak ditemukan</h4>
+        <p>Coba ubah kata kunci pencarian atau pilih jenis dokumen lain. Pastikan kode dokumen ditulis dengan benar.</p>
+      </div>`;
+    return;
+  }
+
+  let rows = docs.map(doc => `
+    <tr>
+      <td>
+        <div class="doc-name">
+          <div class="file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">${ICONS.doc}</svg></div>
+          <div class="ti">
+            <span class="t">${doc.title}</span>
+            <span class="c">${doc.code}</span>
+          </div>
+        </div>
+      </td>
+      <td class="muted">${doc.dept}</td>
+      <td class="muted">${doc.type}</td>
+      <td class="muted">Rev. ${doc.rev} &nbsp;·&nbsp; ${doc.date}</td>
+      <td><span class="pill aktif">Aktif</span></td>
+      <td>
+        <div class="row-actions">
+          <span class="act-btn" title="Lihat" onclick='openModal(${JSON.stringify(doc).replace(/'/g,"&#39;")})'>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${ICONS.eye}</svg>
+          </span>
+          <span class="act-btn" title="Unduh" onclick='openModal(${JSON.stringify(doc).replace(/'/g,"&#39;")})'>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${ICONS.download}</svg>
+          </span>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  tableWrap.innerHTML = `
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>Nama Dokumen</th>
+          <th>Departemen</th>
+          <th>Jenis</th>
+          <th>Revisi / Tanggal</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function renderBrowser(){
+  let docs = allDocs();
+
+  if(currentDept){
+    docs = docs.filter(d => d.dept === currentDept);
+    browserTitle.textContent = `Dokumen ${currentDept}`;
+    breadcrumbDept.textContent = currentDept;
+  } else {
+    browserTitle.textContent = 'Semua Dokumen';
+    breadcrumbDept.textContent = 'Semua Departemen';
+  }
+
+  renderTypeTabs(docs);
+
+  if(currentType !== 'all'){
+    docs = docs.filter(d => d.type === currentType);
+  }
+
+  if(searchTerm.trim() !== ''){
+    const q = searchTerm.toLowerCase();
+    docs = docs.filter(d =>
+      d.title.toLowerCase().includes(q) ||
+      d.code.toLowerCase().includes(q) ||
+      d.dept.toLowerCase().includes(q) ||
+      d.type.toLowerCase().includes(q)
+    );
+  }
+
+  renderTable(docs);
+}
+
+function selectDept(name){
+  currentDept = name;
+  currentType = 'all';
+  renderBrowser();
+  document.querySelector('.browser-shell').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* Search input */
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchTerm = e.target.value;
+  if(searchTerm.trim() !== '') currentDept = null;
+  renderBrowser();
+});
+
+/* Quick filters chips */
+document.querySelectorAll('.qf-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.qf-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    const f = chip.dataset.filter;
+    currentType = f === 'all' ? 'all' : f;
+    currentDept = null;
+    renderBrowser();
+    document.querySelector('.browser-shell').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+});
+
+/* ===================================================================
+   Modal
+   =================================================================== */
+const modalOverlay = document.getElementById('modalOverlay');
+function openModal(doc){
+  document.getElementById('modalTitle').textContent = doc.title;
+  document.getElementById('modalCode').textContent = doc.code;
+  document.getElementById('modalDept').textContent = doc.dept;
+  document.getElementById('modalType').textContent = doc.type;
+  modalOverlay.classList.add('open');
+}
+document.getElementById('modalClose').addEventListener('click', () => modalOverlay.classList.remove('open'));
+document.getElementById('modalOpen').addEventListener('click', () => {
+  alert('Tautan PDF belum dikonfigurasi.\n\nHubungkan setiap dokumen ke file PDF (misalnya melalui Google Drive / SharePoint) dengan mengisi kolom "url" pada data dokumen di kode sumber.');
+});
+modalOverlay.addEventListener('click', (e) => {
+  if(e.target === modalOverlay) modalOverlay.classList.remove('open');
+});
+
+/* ===================================================================
+   Misc: footer year, last updated, scroll reveal
+   =================================================================== */
+document.getElementById('year').textContent = new Date().getFullYear();
+document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add('show');
+      io.unobserve(entry.target);
+    }
+  });
+}, {threshold:0.1});
+revealEls.forEach(el => io.observe(el));
+
+/* Initial render */
+renderBrowser();
+</script>
+
+</body>
+</html>
