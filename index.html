@@ -6,39 +6,39 @@
     <title>ISO Document Control Center (DCC) | PT Karya Indah Multiguna</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Dark Theme (Default based on user preference) */
+            /* Dark Theme (Default - Corporate Dark Style) */
             --bg-primary: #1A202C;
             --bg-secondary: #2D3748;
             --bg-tertiary: #4A5568;
             --accent: #38B2AC;
             --accent-hover: #319795;
-            --accent-light: rgba(56, 178, 172, 0.15);
+            --accent-light: rgba(56, 178, 172, 0.12);
             --text-primary: #F7FAFC;
             --text-secondary: #A0AEC0;
             --text-muted: #718096;
             --border-color: #4A5568;
-            --card-shadow: float: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
             --pulse-color: rgba(56, 178, 172, 0.6);
             --transition-speed: 0.4s;
         }
 
         [data-theme="light"] {
-            /* Light Theme */
+            /* Light Theme (Clean, High-End Minimalist) */
             --bg-primary: #F8FAFC;
             --bg-secondary: #FFFFFF;
             --bg-tertiary: #E2E8F0;
             --accent: #2C7A7B;
             --accent-hover: #234E52;
-            --accent-light: rgba(44, 122, 123, 0.1);
+            --accent-light: rgba(44, 122, 123, 0.08);
             --text-primary: #1A202C;
             --text-secondary: #4A5568;
             --text-muted: #718096;
             --border-color: #E2E8F0;
             --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            --pulse-color: rgba(44, 122, 123, 0.5);
+            --pulse-color: rgba(44, 122, 123, 0.4);
         }
 
         * {
@@ -57,12 +57,12 @@
             overflow-x: hidden;
         }
 
-        h1, h2, h3, h4, h5, h6 {
+        h1, h2, h3 {
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
         }
 
-        /* Top Navigation Bar */
+        /* Header Style */
         header {
             background-color: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
@@ -80,64 +80,61 @@
         .logo-container {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 12px var(--pulse-color);
-        }
-
-        .logo-text th {
-            text-align: left;
+            font-weight: 700;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 15px var(--pulse-color);
         }
 
         .logo-title {
-            font-size: 1.15rem;
-            letter-spacing: 1px;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            color: var(--text-primary);
+            font-weight: 700;
         }
 
         .logo-subtitle {
             font-size: 0.75rem;
             color: var(--accent);
-            font-weight: 500;
-            letter-spacing: 2px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
         }
 
         .nav-controls {
             display: flex;
             align-items: center;
-            gap: 25px;
+            gap: 20px;
         }
 
         .system-status {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-size: 0.85rem;
             font-weight: 500;
             color: var(--text-secondary);
             background-color: var(--bg-primary);
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 30px;
             border: 1px solid var(--border-color);
+            transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
         }
 
         .pulse-dot {
-            width: 8px;
-            height: 8px;
+            width: 9px;
+            height: 9px;
             background-color: #38A169;
             border-radius: 50%;
             position: relative;
@@ -157,28 +154,26 @@
 
         @keyframes pulse-animation {
             0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(3); opacity: 0; }
+            100% { transform: scale(2.5); opacity: 0; }
         }
 
-        /* Theme Toggle Button */
         .theme-toggle-btn {
             background: var(--bg-primary);
             border: 1px solid var(--border-color);
             padding: 8px;
             border-radius: 50%;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-primary);
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color var(--transition-speed);
-            box-shadow: var(--card-shadow);
         }
 
         .theme-toggle-btn:hover {
-            transform: rotate(30deg) scale(1.05);
+            transform: rotate(45deg) scale(1.05);
             border-color: var(--accent);
         }
 
@@ -188,23 +183,22 @@
             fill: currentColor;
         }
 
-        /* Main Container */
+        /* Layout Container */
         .main-container {
-            max-width: 1400px;
+            max-width: 1300px;
             margin: 0 auto;
-            padding: 40px;
+            padding: 50px 40px;
         }
 
-        /* Hero / Search Section */
+        /* Hero Area */
         .hero-section {
             text-align: center;
             margin-bottom: 50px;
-            position: relative;
         }
 
         .hero-title {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
+            font-size: 2.4rem;
+            margin-bottom: 12px;
             letter-spacing: -0.5px;
             background: linear-gradient(90deg, var(--text-primary), var(--text-secondary));
             -webkit-background-clip: text;
@@ -213,15 +207,15 @@
 
         .hero-desc {
             color: var(--text-secondary);
-            font-size: 1rem;
-            max-width: 600px;
-            margin: 0 auto 30px auto;
+            font-size: 1.05rem;
+            max-width: 650px;
+            margin: 0 auto 35px auto;
             font-weight: 300;
         }
 
         .search-wrapper {
             position: relative;
-            max-width: 750px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
@@ -229,15 +223,15 @@
             display: flex;
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 6px;
+            border-radius: 14px;
+            padding: 8px;
             box-shadow: var(--card-shadow);
             transition: all var(--transition-speed) ease;
         }
 
         .search-bar-container:focus-within {
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-light);
+            box-shadow: 0 0 0 4px var(--accent-light);
         }
 
         .search-icon {
@@ -257,8 +251,8 @@
             background: transparent;
             border: none;
             outline: none;
-            padding: 12px 15px;
-            font-size: 1.05rem;
+            padding: 10px 15px;
+            font-size: 1.1rem;
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
         }
@@ -267,36 +261,22 @@
             color: var(--text-muted);
         }
 
-        /* Quick Stats Grid */
+        /* Statistics Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(5, 1fr);
             gap: 20px;
-            margin-bottom: 50px;
+            margin-bottom: 60px;
         }
 
         .stat-card {
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 14px;
+            padding: 24px 15px;
             text-align: center;
             transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--card-shadow);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            opacity: 0;
-            transition: opacity var(--transition-speed);
         }
 
         .stat-card:hover {
@@ -304,114 +284,115 @@
             border-color: var(--accent);
         }
 
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-
         .stat-number {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 700;
             color: var(--accent);
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            line-height: 1;
         }
 
         .stat-label {
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: var(--text-secondary);
-            font-weight: 500;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 4px;
         }
 
         .stat-sub {
             font-size: 0.75rem;
             color: var(--text-muted);
-            margin-top: 4px;
         }
 
-        /* Section Heading */
+        /* Section Header */
         .section-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             border-left: 4px solid var(--accent);
-            padding-left: 15px;
+            padding-left: 16px;
         }
 
         .section-title {
-            font-size: 1.4rem;
-            letter-spacing: -0.3px;
+            font-size: 1.5rem;
             color: var(--text-primary);
         }
 
         /* Department Grid */
         .dept-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 25px;
-            margin-bottom: 60px;
         }
 
         .dept-card {
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 25px;
+            border-radius: 16px;
+            padding: 28px;
             box-shadow: var(--card-shadow);
             transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
             text-decoration: none;
             color: inherit;
-            display: block;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .dept-card:hover {
             transform: translateY(-6px);
             border-color: var(--accent);
-            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="light"] .dept-card:hover {
+            box-shadow: 0 20px 35px -10px rgba(44, 122, 123, 0.15);
         }
 
         .dept-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
+            align-items: center;
+            margin-bottom: 12px;
         }
 
         .dept-code {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             color: var(--accent);
-            letter-spacing: -0.5px;
         }
 
         .dept-arrow {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             color: var(--text-muted);
             transition: transform var(--transition-speed), color var(--transition-speed);
         }
 
         .dept-card:hover .dept-arrow {
-            transform: translateX(5px);
+            transform: translateX(6px);
             color: var(--accent);
         }
 
         .dept-name {
             font-size: 1.05rem;
-            font-weight: 600;
+            font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
         }
 
         .dept-breakdown {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 12px;
             background-color: var(--bg-primary);
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
         }
 
@@ -420,8 +401,8 @@
         }
 
         .breakdown-val {
-            font-size: 0.95rem;
-            font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: 700;
             color: var(--text-primary);
         }
 
@@ -429,138 +410,28 @@
             font-size: 0.7rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            font-weight: 500;
-        }
-
-        /* Live Explorer / Search Results Section */
-        .results-section {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 30px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-            margin-top: 15px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        th {
-            padding: 14px 16px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
             font-weight: 600;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        td {
-            padding: 16px;
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.2s ease;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background-color: var(--accent-light);
-            color: var(--text-primary);
-        }
-
-        .doc-id {
-            font-family: monospace;
-            font-weight: 600;
-            color: var(--accent);
-            background-color: var(--bg-primary);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-        }
-
-        .doc-title {
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .badge-pr { background-color: rgba(66, 153, 225, 0.2); color: #4299E1; }
-        .badge-ik { background-color: rgba(236, 144, 23, 0.2); color: #ED8936; }
-        .badge-fm { background-color: rgba(72, 187, 120, 0.2); color: #48BB78; }
-        .badge-std { background-color: rgba(159, 122, 234, 0.2); color: #9F7AEA; }
-        .badge-ex { background-color: rgba(245, 101, 101, 0.2); color: #F56565; }
-
-        .action-btns {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 6px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .btn:hover {
-            border-color: var(--accent);
-            background-color: var(--accent);
-            color: white;
-        }
-
-        .btn-primary {
-            background-color: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--accent-hover);
-            border-color: var(--accent-hover);
+            margin-top: 2px;
         }
 
         .no-results {
             text-align: center;
+            grid-column: 1 / -1;
             padding: 40px;
             color: var(--text-muted);
-            font-size: 1rem;
+            font-size: 1.1rem;
+            background-color: var(--bg-secondary);
+            border: 1px dashed var(--border-color);
+            border-radius: 16px;
             display: none;
         }
 
         /* Footer */
         footer {
-            margin-top: 80px;
+            margin-top: 100px;
             border-top: 1px solid var(--border-color);
             background-color: var(--bg-secondary);
-            padding: 30px 40px;
+            padding: 35px 40px;
             text-align: center;
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -569,13 +440,90 @@
         .footer-brand {
             font-weight: 600;
             color: var(--text-secondary);
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+        }
+
+        /* --- RESPONSIVE DESIGN (MOBILE OPTIMIZATION) --- */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .main-container {
+                padding: 30px 20px;
+            }
+
+            .hero-title {
+                font-size: 1.85rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                margin-bottom: 40px;
+            }
+
+            .stat-card {
+                padding: 18px 10px;
+            }
+
+            .stat-number {
+                font-size: 1.8rem;
+            }
+
+            .dept-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .dept-card {
+                padding: 22px;
+            }
+            
+            .dept-name {
+                min-height: auto;
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo-container {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+
+            .nav-controls {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .system-status {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body data-theme="dark">
 
-    <!-- Top Navigation Bar -->
     <header>
         <div class="logo-container">
             <div class="logo-icon">M</div>
@@ -587,10 +535,9 @@
         <div class="nav-controls">
             <div class="system-status">
                 <div class="pulse-dot"></div>
-                <span>DCC System: Connected & Audit Ready</span>
+                <span id="syncStatus">Menghubungkan ke Live Sheet...</span>
             </div>
-            <button class="theme-toggle-btn" id="themeToggle" title="Ubah Tema (Terang/Gelap)">
-                <!-- Moon Icon (Default Dark Theme) -->
+            <button class="theme-toggle-btn" id="themeToggle" title="Ubah Tema">
                 <svg id="themeIcon" viewBox="0 0 24 24">
                     <path d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 3z"/>
                 </svg>
@@ -598,13 +545,11 @@
         </div>
     </header>
 
-    <!-- Main Container -->
     <main class="main-container">
         
-        <!-- Hero Section -->
         <section class="hero-section">
-            <h1 class="hero-title">ISO Document Hub & Portal Akses</h1>
-            <p class="hero-desc">Pusat pencarian, validasi, dan pengunduhan dokumen resmi Sistem Manajemen Mutu ISO perusahaan secara real-time terstruktur.</p>
+            <h1 class="hero-title">ISO Document Control Center</h1>
+            <p class="hero-desc">Portal otomatisasi data seketika untuk penelusuran, klasifikasi, dan akses dokumen mutu penjaminan perusahaan.</p>
             
             <div class="search-wrapper">
                 <div class="search-bar-container">
@@ -613,299 +558,324 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Cari berdasarkan kode dokumen, nama dokumen, atau departemen...">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Cari kode atau nama departemen...">
                 </div>
             </div>
         </section>
 
-        <!-- Quick Stats Grid -->
         <section class="stats-grid">
             <div class="stat-card">
-                <div class="stat-number">42</div>
+                <div class="stat-number" id="stat-pr">--</div>
                 <div class="stat-label">Prosedur</div>
-                <div class="stat-sub">PR (Standard Operating Procedure)</div>
+                <div class="stat-sub">SOP (PR)</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">123</div>
+                <div class="stat-number" id="stat-ik">--</div>
                 <div class="stat-label">Instruksi Kerja</div>
-                <div class="stat-sub">IK (Work Instructions)</div>
+                <div class="stat-sub">Work Instructions (IK)</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">348</div>
+                <div class="stat-number" id="stat-fm">--</div>
                 <div class="stat-label">Formulir</div>
-                <div class="stat-sub">FM (Records & Forms)</div>
+                <div class="stat-sub">Forms & Records (FM)</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">15</div>
+                <div class="stat-number" id="stat-std">--</div>
                 <div class="stat-label">Standar</div>
-                <div class="stat-sub">STD (Technical Specs)</div>
+                <div class="stat-sub">Technical Specs (STD)</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">47</div>
+                <div class="stat-number" id="stat-ex">--</div>
                 <div class="stat-label">Eksternal</div>
-                <div class="stat-sub">EX (External Regulation)</div>
+                <div class="stat-sub">Regulations (EX)</div>
             </div>
         </section>
 
-        <!-- Section: Department Explorer -->
         <div class="section-header">
             <h2 class="section-title">Eksplorasi Per Departemen</h2>
         </div>
 
-        <section class="dept-grid">
-            <!-- ISO -->
-            <a href="dept_iso.html" class="dept-card">
+        <section class="dept-grid" id="deptGrid">
+            <a href="dept_iso.html" class="dept-card" data-code="ISO" data-name="Sistem Manajemen Mutu ISO Section">
                 <div class="dept-header">
                     <div class="dept-code">ISO</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Sistem Manajemen Mutu / ISO Section</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">2</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">0</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="ISO-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="ISO-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="ISO-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
 
-            <!-- HRD -->
-            <a href="dept_hrd.html" class="dept-card">
+            <a href="dept_hrd.html" class="dept-card" data-code="HRD" data-name="Human Resources Department">
                 <div class="dept-header">
                     <div class="dept-code">HRD</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Human Resources Department</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">8</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">14</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">47</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="HRD-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="HRD-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="HRD-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
 
-            <!-- MAN -->
-            <a href="dept_man.html" class="dept-card">
+            <a href="dept_man.html" class="dept-card" data-code="MAN" data-name="Management Direksi Maintenance">
                 <div class="dept-header">
                     <div class="dept-code">MAN</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Management / Direksi & Maintenance</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">1</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">25</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">65</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MAN-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MAN-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MAN-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
 
-            <!-- MKT -->
-            <a href="dept_mkt.html" class="dept-card">
+            <a href="dept_mkt.html" class="dept-card" data-code="MKT" data-name="Marketing Sales Department">
                 <div class="dept-header">
                     <div class="dept-code">MKT</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Marketing & Sales Department</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">9</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">10</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">36</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MKT-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MKT-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MKT-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
 
-            <!-- PPC -->
-            <a href="dept_ppc.html" class="dept-card">
+            <a href="dept_ppc.html" class="dept-card" data-code="PPC" data-name="Production Planning Control">
                 <div class="dept-header">
                     <div class="dept-code">PPC</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Production Planning & Control</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">4</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">13</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">36</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PPC-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PPC-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PPC-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
 
-            <!-- PRO -->
-            <a href="dept_pro.html" class="dept-card">
+            <a href="dept_pro.html" class="dept-card" data-code="PRO" data-name="Production Department Flexo">
                 <div class="dept-header">
                     <div class="dept-code">PRO</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Production Department</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">3</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">31</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">37</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PRO-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PRO-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PRO-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
 
-            <!-- PUR -->
-            <a href="dept_pur.html" class="dept-card">
+            <a href="dept_pur.html" class="dept-card" data-code="PUR" data-name="Purchasing Procurement">
                 <div class="dept-header">
                     <div class="dept-code">PUR</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Purchasing / Procurement</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">5</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">1</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">7</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PUR-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PUR-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="PUR-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
 
-            <!-- QAD -->
-            <a href="dept_qad.html" class="dept-card">
+            <a href="dept_qad.html" class="dept-card" data-code="QAD" data-name="Quality Assurance Department">
                 <div class="dept-header">
                     <div class="dept-code">QAD</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Quality Assurance Department</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">10</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">18</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">47</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="QAD-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="QAD-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="QAD-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
 
-            <!-- Warehouse / Finished Goods -->
-            <a href="dept_mrp.html" class="dept-card">
+            <a href="dept_mrp.html" class="dept-card" data-code="MRP" data-name="Material Planning Finished Goods Warehouse">
                 <div class="dept-header">
                     <div class="dept-code">MRP / WH</div>
                     <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                 </div>
                 <div class="dept-name">Material Planning & Finished Goods Warehouse</div>
                 <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val">1</div><div class="breakdown-lbl">FM</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MRP-PR">0</div><div class="breakdown-lbl">PR</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MRP-IK">0</div><div class="breakdown-lbl">IK</div></div>
+                    <div class="breakdown-item"><div class="breakdown-val" id="MRP-FM">0</div><div class="breakdown-lbl">FM</div></div>
                 </div>
             </a>
+
+            <div id="noResults" class="no-results">Tidak ada departemen yang sesuai dengan kriteria pencarian.</div>
         </section>
-
-        <!-- Section: Live Document Explorer -->
-        <div class="section-header">
-            <h2 class="section-title">Database Informasi Terdokumentasi (Live Search)</h2>
-        </div>
-
-        <section class="results-section">
-            <div class="table-responsive">
-                <table id="documentTable">
-                    <thead>
-                        <tr>
-                            <th>Kode</th>
-                            <th>Nama Dokumen</th>
-                            <th>Departemen</th>
-                            <th>Jenis</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Documents will be dynamically rendered here -->
-                    </tbody>
-                </table>
-                <div id="noResults" class="no-results">Tidak ada dokumen yang sesuai dengan pencarian Anda.</div>
-            </div>
-        </section>
-
     </main>
 
-    <!-- Footer -->
     <footer>
         <div class="footer-brand">PT Karya Indah Multiguna</div>
-        <div>&copy; 2026 ISO Document Control Center Dashboard. All Rights Reserved. Confidential & Internal Corporate Use Only.</div>
+        <div>&copy; 2026 ISO Document Control Center Dashboard. Terintegrasi Live Google Sheets CSV.</div>
     </footer>
 
-    <!-- Interactive JavaScript -->
     <script>
-        // Sample authentic document data mapping from user data summary
-        const documents = [
-            { id: "DOC-ISO-001", title: "Manual Mutu ISO 9001:2015", dept: "ISO", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-ISO-002", title: "Prosedur Pengendalian Informasi Terdokumentasi", dept: "ISO", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-HRD-001", title: "Prosedur Rekrutmen dan Seleksi Karyawan", dept: "HRD", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-HRD-002", title: "Instruksi Kerja Pelaksanaan Pelatihan Karyawan Baru", dept: "HRD", type: "IK", typeName: "Instruksi Kerja" },
-            { id: "DOC-HRD-003", title: "Formulir Evaluasi Kinerja Karyawan Tahunan", dept: "HRD", type: "FM", typeName: "Formulir" },
-            { id: "DOC-MAN-001", title: "Prosedur Tinjauan Manajemen (Management Review)", dept: "MAN", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-MAN-002", title: "Instruksi Kerja Penanganan Keluhan Pelanggan Tingkat Akhir", dept: "MAN", type: "IK", typeName: "Instruksi Kerja" },
-            { id: "DOC-MKT-001", title: "Prosedur Tinjauan Kontrak Penjualan dan Pesanan", dept: "MKT", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-MKT-002", title: "Instruksi Kerja Pengukuran Indeks Kepuasan Pelanggan", dept: "MKT", type: "IK", typeName: "Instruksi Kerja" },
-            { id: "DOC-PPC-001", title: "Prosedur Perencanaan dan Pengendalian Produksi", dept: "PPC", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-PPC-002", title: "Instruksi Kerja Penyusunan Master Production Schedule (MPS)", dept: "PPC", type: "IK", typeName: "Instruksi Kerja" },
-            { id: "DOC-PRO-001", title: "Prosedur Pengendalian Proses Operasi Produksi", dept: "PRO", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-PRO-002", title: "Instruksi Kerja Manajemen Perubahan Upgrade Mesin Liantee ke Sunrise (Flexo)", dept: "PRO", type: "IK", typeName: "Instruksi Kerja" },
-            { id: "DOC-PRO-003", title: "Formulir Laporan Breakdown Mesin dan Severity Produksi", dept: "PRO", type: "FM", typeName: "Formulir" },
-            { id: "DOC-PUR-001", title: "Prosedur Evaluasi dan Pemilihan Pemasok (Supplier)", dept: "PUR", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-QAD-001", title: "Prosedur Pengendalian Produk Tidak Sesuai (NC)", dept: "QAD", type: "PR", typeName: "Prosedur" },
-            { id: "DOC-QAD-002", title: "Instruksi Kerja Pelaksanaan Internal Audit Mutu", dept: "QAD", type: "IK", typeName: "Instruksi Kerja" },
-            { id: "DOC-QAD-003", title: "Formulir Audit Checklist Klausul ISO 9001:2015", dept: "QAD", type: "FM", typeName: "Formulir" },
-            { id: "DOC-MRP-001", title: "Formulir Serah Terima Barang Jadi Gudang Finished Goods", dept: "MRP / WH", type: "FM", typeName: "Formulir" }
-        ];
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv";
 
-        const tableBody = document.getElementById('tableBody');
-        const searchInput = document.getElementById('searchInput');
-        const noResults = document.getElementById('noResults');
-
-        // Function to render documents table
-        function renderTable(data) {
-            tableBody.innerHTML = '';
-            if (data.length === 0) {
-                noResults.style.display = 'block';
-                return;
+        // Local Fallback Data Cache Structure
+        let masterData = {
+            total: { pr: 42, ik: 123, fm: 295, std: 15, ex: 47 },
+            depts: {
+                ISO: { pr: 2, ik: 0, fm: 0 }, HRD: { pr: 8, ik: 14, fm: 47 },
+                MAN: { pr: 1, ik: 25, fm: 65 }, MKT: { pr: 9, ik: 10, fm: 36 },
+                PPC: { pr: 4, ik: 13, fm: 36 }, PRO: { pr: 3, ik: 31, fm: 37 },
+                PUR: { pr: 5, ik: 1, fm: 7 }, QAD: { pr: 10, ik: 18, fm: 47 },
+                MRP: { pr: 0, ik: 0, fm: 1 }
             }
-            noResults.style.display = 'none';
+        };
 
-            data.forEach(doc => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><span class="doc-id">${doc.id}</span></td>
-                    <td><span class="doc-title">${doc.title}</span></td>
-                    <td><strong>${doc.dept}</strong></td>
-                    <td><span class="badge badge-${doc.type.toLowerCase()}">${doc.typeName}</span></td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="btn btn-primary" onclick="alert('Membuka file PDF pratinjau untuk: ' + '${doc.id}')">Buka PDF</button>
-                            <button class="btn" onclick="alert('Mengunduh dokumen: ' + '${doc.id}')">Unduh</button>
-                        </div>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
+        function renderMetrics() {
+            document.getElementById('stat-pr').innerText = masterData.total.pr;
+            document.getElementById('stat-ik').innerText = masterData.total.ik;
+            document.getElementById('stat-fm').innerText = masterData.total.fm;
+            document.getElementById('stat-std').innerText = masterData.total.std;
+            document.getElementById('stat-ex').innerText = masterData.total.ex;
+
+            for (const [dept, metrics] of Object.entries(masterData.depts)) {
+                const prE = document.getElementById(`${dept}-PR`);
+                const ikE = document.getElementById(`${dept}-IK`);
+                const fmE = document.getElementById(`${dept}-FM`);
+                if (prE) prE.innerText = metrics.pr;
+                if (ikE) ikE.innerText = metrics.ik;
+                if (fmE) fmE.innerText = metrics.fm;
+            }
         }
 
-        // Initialize table
-        renderTable(documents);
+        async function syncWithLiveSheet() {
+            const syncStatus = document.getElementById('syncStatus');
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) throw new Error("Gagal mengunduh file CSV");
+                const text = await response.text();
+                
+                const lines = text.split(/\r?\n/);
+                let currentType = "";
+                
+                let freshDepts = {
+                    ISO: { pr: 0, ik: 0, fm: 0 }, HRD: { pr: 0, ik: 0, fm: 0 },
+                    MAN: { pr: 0, ik: 0, fm: 0 }, MKT: { pr: 0, ik: 0, fm: 0 },
+                    PPC: { pr: 0, ik: 0, fm: 0 }, PRO: { pr: 0, ik: 0, fm: 0 },
+                    PUR: { pr: 0, ik: 0, fm: 0 }, QAD: { pr: 0, ik: 0, fm: 0 },
+                    MRP: { pr: 0, ik: 0, fm: 0 }
+                };
+                let freshTotals = { pr: 0, ik: 0, fm: 0, std: 0, ex: 0 };
 
-        // Live Search Filter Feature
+                lines.forEach(line => {
+                    const cols = line.split(',');
+                    if (cols.length < 3) return;
+
+                    let typeField = cols[0].trim();
+                    let deptField = cols[1].trim().toUpperCase();
+                    let numericVal = parseInt(cols[2]) || 0;
+
+                    if (typeField !== "") {
+                        if (typeField.includes("Prosedur")) currentType = "PR";
+                        else if (typeField.includes("Intruksi") || typeField.includes("Instruksi")) currentType = "IK";
+                        else if (typeField.includes("Formulir")) currentType = "FM";
+                        else if (typeField.includes("Standar")) currentType = "STD";
+                        else if (typeField.includes("External")) currentType = "EX";
+                    }
+
+                    if (deptField === "TOTAL") {
+                        if (currentType === "PR") freshTotals.pr = numericVal;
+                        else if (currentType === "IK") freshTotals.ik = numericVal;
+                        else if (currentType === "STD") freshTotals.std = numericVal;
+                        else if (currentType === "EX") freshTotals.ex = numericVal;
+                    }
+                    
+                    let resolvedKey = null;
+                    if (deptField.includes("ISO")) resolvedKey = "ISO";
+                    else if (deptField.includes("HRD")) resolvedKey = "HRD";
+                    else if (deptField.includes("MAN")) resolvedKey = "MAN";
+                    else if (deptField.includes("MKT")) resolvedKey = "MKT";
+                    else if (deptField.includes("PPC")) resolvedKey = "PPC";
+                    else if (deptField.includes("PRO")) resolvedKey = "PRO";
+                    else if (deptField.includes("PUR")) resolvedKey = "PUR";
+                    else if (deptField.includes("QAD")) resolvedKey = "QAD";
+                    else if (deptField.includes("MRP") || deptField.includes("WH")) resolvedKey = "MRP";
+
+                    if (resolvedKey && (currentType === "PR" || currentType === "IK" || currentType === "FM")) {
+                        freshDepts[resolvedKey][currentType.toLowerCase()] = numericVal;
+                    }
+                });
+
+                // Kalkulasi otomatis total formulir berdasarkan data riil akumulasi departemen
+                let calculatedFm = 0;
+                for (const d in freshDepts) { calculatedFm += freshDepts[d].fm; }
+                freshTotals.fm = calculatedFm > 0 ? calculatedFm : 295;
+
+                masterData.total = freshTotals;
+                masterData.depts = freshDepts;
+
+                renderMetrics();
+                syncStatus.innerText = "Sistem DCC: Terkoneksi Live";
+            } catch (err) {
+                console.warn("Gagal memuat data live, memuat cache lokal perusahaan:", err);
+                syncStatus.innerText = "Sistem DCC: Mode Lokal (Offline)";
+                renderMetrics();
+            }
+        }
+
+        // Jalankan sinkronisasi awal otomatis
+        syncWithLiveSheet();
+
+        // Fitur Pencarian Berkinerja Tinggi (Live Filtering)
+        const searchInput = document.getElementById('searchInput');
+        const deptCards = document.querySelectorAll('.dept-card');
+        const noResults = document.getElementById('noResults');
+
         searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            const filtered = documents.filter(doc => 
-                doc.id.toLowerCase().includes(query) || 
-                doc.title.toLowerCase().includes(query) || 
-                doc.dept.toLowerCase().includes(query) ||
-                doc.typeName.toLowerCase().includes(query)
-            );
-            renderTable(filtered);
+            const term = e.target.value.toLowerCase().trim();
+            let matchFound = false;
+
+            deptCards.forEach(card => {
+                const code = card.getAttribute('data-code').toLowerCase();
+                const name = card.getAttribute('data-name').toLowerCase();
+
+                if (code.includes(term) || name.includes(term)) {
+                    card.style.display = 'flex';
+                    matchFound = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            noResults.style.display = matchFound ? 'none' : 'block';
         });
 
-        // Theme Toggle Logic with Elegant Animation
+        // Logika Pengubah Tema (Dark/Light Micro-interaction)
         const themeToggle = document.getElementById('themeToggle');
         const body = document.body;
         const themeIcon = document.getElementById('themeIcon');
 
-        // Light Theme Icon SVG Path
-        const sunIconPath = `<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`;
-        // Dark Theme Icon SVG Path
-        const moonIconPath = `<path d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 3z"/>`;
+        const sunSvg = `<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`;
+        const moonSvg = `<path d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 3z"/>`;
 
         themeToggle.addEventListener('click', () => {
-            const currentTheme = body.getAttribute('data-theme');
-            if (currentTheme === 'dark') {
+            const activeTheme = body.getAttribute('data-theme');
+            if (activeTheme === 'dark') {
                 body.setAttribute('data-theme', 'light');
-                themeIcon.innerHTML = sunIconPath;
+                themeIcon.innerHTML = sunSvg;
                 themeIcon.setAttribute('stroke', 'currentColor');
                 themeIcon.setAttribute('stroke-width', '2');
                 themeIcon.setAttribute('stroke-linecap', 'round');
                 themeIcon.setAttribute('stroke-linejoin', 'round');
             } else {
                 body.setAttribute('data-theme', 'dark');
-                themeIcon.innerHTML = moonIconPath;
+                themeIcon.innerHTML = moonSvg;
                 themeIcon.removeAttribute('stroke');
             }
         });
