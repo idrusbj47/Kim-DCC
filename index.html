@@ -275,6 +275,10 @@
             border-radius: 14px;
             padding: 24px 15px;
             text-align: center;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            outline: none;
             transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--card-shadow);
         }
@@ -282,6 +286,11 @@
         .stat-card:hover {
             transform: translateY(-5px);
             border-color: var(--accent);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="light"] .stat-card:hover {
+            box-shadow: 0 15px 30px -5px rgba(44, 122, 123, 0.15);
         }
 
         .stat-number {
@@ -564,31 +573,31 @@
         </section>
 
         <section class="stats-grid">
-            <div class="stat-card">
+            <a href="daftar_prosedur.html" class="stat-card">
                 <div class="stat-number" id="stat-pr">--</div>
                 <div class="stat-label">Prosedur</div>
                 <div class="stat-sub">SOP (PR)</div>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="daftar_instruksi_kerja.html" class="stat-card">
                 <div class="stat-number" id="stat-ik">--</div>
                 <div class="stat-label">Instruksi Kerja</div>
                 <div class="stat-sub">Work Instructions (IK)</div>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="daftar_formulir.html" class="stat-card">
                 <div class="stat-number" id="stat-fm">--</div>
                 <div class="stat-label">Formulir</div>
                 <div class="stat-sub">Forms & Records (FM)</div>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="daftar_standar.html" class="stat-card">
                 <div class="stat-number" id="stat-std">--</div>
                 <div class="stat-label">Standar</div>
                 <div class="stat-sub">Technical Specs (STD)</div>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="daftar_eksternal.html" class="stat-card">
                 <div class="stat-number" id="stat-ex">--</div>
                 <div class="stat-label">Eksternal</div>
                 <div class="stat-sub">Regulations (EX)</div>
-            </div>
+            </a>
         </section>
 
         <div class="section-header">
@@ -812,7 +821,6 @@
                     }
                 });
 
-                // Kalkulasi otomatis total formulir berdasarkan data riil akumulasi departemen
                 let calculatedFm = 0;
                 for (const d in freshDepts) { calculatedFm += freshDepts[d].fm; }
                 freshTotals.fm = calculatedFm > 0 ? calculatedFm : 295;
