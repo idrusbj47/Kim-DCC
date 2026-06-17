@@ -254,7 +254,7 @@
         </div>
 
         <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-            <div>Versi 1.8.5 (Horizontal Unified Matrix Engine)</div>
+            <div>Versi 1.9.0 (Dynamic Smart Matrix Control)</div>
             <div class="flex items-center gap-1.5 font-semibold text-slate-500">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sinkronisasi Real-Time Sukses
             </div>
@@ -303,15 +303,15 @@
         }
 
         // =========================================================================================================
-        //  LINK SPREADSHEET CSV AKTIF (SUDAH DI-UPDATE)
+        //  LINK SPREADSHEET CSV AKTIF (SUDAH DI-UPDATE SESUAI KODE ANDA)
         // =========================================================================================================
-                const summaryCsvUrl      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
+        const summaryCsvUrl      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
         
         const linkCsvProsedur    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv';
-        const linkCsvIK          = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=68974277&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvFormulir    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=618894111&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvStandar     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=2101716872&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvEksternal   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1062935321&single=true&output=csv'; // Nanti ganti gid nya
+        const linkCsvIK          = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=2105156470&single=true&output=csv'; 
+        const linkCsvFormulir    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1152912401&single=true&output=csv'; 
+        const linkCsvStandar     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=174291880&single=true&output=csv';  
+        const linkCsvEksternal   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=282431666&single=true&output=csv';  
         // =========================================================================================================
 
         const deptMaster = {
@@ -467,24 +467,49 @@
                     departmentsData[code] = { pr: 0, ik: 0, fm: 0, std: 0, ex: 0 };
                 });
 
-                // LOGIKA BARU: Parsing Horizontal Baris Prosedur Berisi 5 Metrik Penuh
+                // ENGINE SCANNER CERDAS: Mencari baris yang mengandung nama departemen ISO, HRD, dll.
                 rawRows.forEach(row => {
-                    if (row.length < 10) return;
+                    if (row.length < 3) return;
 
-                    const firstCol = row[0] ? row[0].trim() : "";
-                    const secondCol = row[1] ? row[1].trim() : "";
-                    const deptCode = secondCol.toUpperCase();
+                    // Mengambil nilai kolom pertama & kedua (menghilangkan spasi)
+                    const col0 = row[0] ? row[0].trim().toUpperCase() : "";
+                    const col1 = row[1] ? row[1].trim().toUpperCase() : "";
 
-                    // Lewati baris header total global
-                    if (secondCol.toLowerCase() === 'total' || firstCol.toLowerCase() === 'total') return;
+                    // Tentukan kode departemen mana yang ada di baris ini
+                    let targetDept = "";
+                    if (deptMaster[col0]) targetDept = col0;
+                    else if (deptMaster[col1]) targetDept = col1;
 
-                    // Mengisi angka langsung secara horizontal (indeks 5=PR, 6=IK, 7=FM, 8=STD, 9=EX)
-                    if (departmentsData[deptCode]) {
-                        departmentsData[deptCode].pr  = parseInt(row[5]) || 0;
-                        departmentsData[deptCode].ik  = parseInt(row[6]) || 0;
-                        departmentsData[deptCode].fm  = parseInt(row[7]) || 0;
-                        departmentsData[deptCode].std = parseInt(row[8]) || 0;
-                        departmentsData[deptCode].ex  = parseInt(row[9]) || 0;
+                    // Jika baris mengandung kata 'TOTAL', abaikan agar tidak menggandakan hitungan
+                    if (col0.includes("TOTAL") || col1.includes("TOTAL")) return;
+
+                    if (targetDept) {
+                        // Scan otomatis indeks kolom yang menyimpan deretan angka asli berkas Anda
+                        // Berkas CSV Anda menaruh array angka di kisaran indeks 5 hingga 9 atau 4 hingga 8
+                        let candidateValues = [];
+                        for(let i = 2; i < row.length; i++) {
+                            if(row[i] !== "" && !isNaN(row[i])) {
+                                candidateValues.push(parseInt(row[i]));
+                            }
+                        }
+
+                        // Jika baris data valid memiliki 5 blok angka horizontal lengkap
+                        if (candidateValues.length >= 5) {
+                            departmentsData[targetDept].pr  = candidateValues[0];
+                            departmentsData[targetDept].ik  = candidateValues[1];
+                            departmentsData[targetDept].fm  = candidateValues[2];
+                            departmentsData[targetDept].std = candidateValues[3];
+                            departmentsData[targetDept].ex  = candidateValues[4];
+                        } 
+                        // Alternatif jika terpisah sebagian kolom kosong
+                        else {
+                            // Deteksi fallback manual berdasarkan indeks absolut kolom CSV Anda
+                            departmentsData[targetDept].pr  = parseInt(row[5]) || parseInt(row[4]) || 0;
+                            departmentsData[targetDept].ik  = parseInt(row[6]) || parseInt(row[5]) || 0;
+                            departmentsData[targetDept].fm  = parseInt(row[7]) || parseInt(row[6]) || 0;
+                            departmentsData[targetDept].std = parseInt(row[8]) || parseInt(row[7]) || 0;
+                            departmentsData[targetDept].ex  = parseInt(row[9]) || parseInt(row[8]) || 0;
+                        }
                     }
                 });
 
