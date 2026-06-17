@@ -254,7 +254,7 @@
         </div>
 
         <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-            <div>Versi 1.6.5 (Strict Filtering Engine Active)</div>
+            <div>Versi 1.7.0 (5-Metrics Dashboard Engine Active)</div>
             <div class="flex items-center gap-1.5 font-semibold text-slate-500">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sinkronisasi Real-Time Sukses
             </div>
@@ -300,9 +300,17 @@
             }
         });
 
-        // --- 3. CONFIG MASTER DATA & PARSER DATA SPREADSHEETS ---
-        const summaryCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
-        const prosedurCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv';
+        // =========================================================================================================
+        //  TEMPAT UNTUK MENEMPEL LINK SPREADSHEETS CSV KAMU (TINGGAL GANTI DI SINI)
+        // =========================================================================================================
+        const summaryCsvUrl      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
+        
+        const linkCsvProsedur    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv';
+        const linkCsvIK          = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=68974277&single=true&output=csv'; // Nanti ganti gid nya
+        const linkCsvFormulir    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=618894111&single=true&output=csv'; // Nanti ganti gid nya
+        const linkCsvStandar     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=2101716872&single=true&output=csv'; // Nanti ganti gid nya
+        const linkCsvEksternal   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1062935321&single=true&output=csv'; // Nanti ganti gid nya
+        // =========================================================================================================
 
         const deptMaster = {
             'PRP': { name: 'Prepress Department', icon: 'fa-print' },
@@ -331,7 +339,7 @@
             });
         }
 
-        // --- 4. ROUTER SPA (SINGLE PAGE APPLICATION) CONFIG ---
+        // --- 4. ROUTER SPA CONFIG ---
         const navItems = document.querySelectorAll('.nav-item');
         const pageDashboard = document.getElementById('page-dashboard');
         const pageProsedur = document.getElementById('page-prosedur');
@@ -359,6 +367,7 @@
             mainSubtitle.innerText = meta.sub;
 
             if (pageId === 'dashboard') {
+                pageDashboard.remove('hidden');
                 pageDashboard.classList.remove('hidden');
                 pageProsedur.classList.add('hidden');
                 pageGeneric.classList.add('hidden');
@@ -395,20 +404,18 @@
             });
         });
 
-
         // =========================================================================================================
-        //  KODE UNTUK MENAMPILKAN MENU PROSEDUR (LIVE PARSE DARI DATA CSV)
+        //  KODE UNTUK MENAMPILKAN MENU PROSEDUR
         // =========================================================================================================
         async function fetchProcedureData() {
             const tableBody = document.getElementById('procedure-table-body');
             try {
-                const response = await fetch(prosedurCsvUrl);
+                const response = await fetch(linkCsvProsedur);
                 const csvText = await response.text();
                 const rows = parseCSV(csvText);
 
                 tableBody.innerHTML = '';
 
-                // Filter data: Lewati baris header awal, pastikan kolom No ada, dan Kolom Nama Prosedur tidak kosong
                 const validRows = rows.slice(1).filter(row => {
                     return row.length >= 2 && row[0] !== "" && !isNaN(row[0]) && row[1].trim() !== "";
                 });
@@ -420,11 +427,11 @@
 
                 validRows.forEach(row => {
                     const no = row[0] || '-';
-                    const namaProsedur = row[1] || '-';  // Kolom B: Nama Prosedur
-                    const noProsedur = row[2] || '-';    // Kolom C: Nomor Prosedur
-                    const revisi = row[3] || '0';        // Kolom D: Revisi
-                    const tglBerlaku = row[4] || '-';    // Kolom E: Tanggal Berlaku
-                    const bagian = row[7] || '-';        // REVISI: Mengambil Kolom H (indeks 7) yaitu "BAGIAN"
+                    const namaProsedur = row[1] || '-';  
+                    const noProsedur = row[2] || '-';    
+                    const revisi = row[3] || '0';        
+                    const tglBerlaku = row[4] || '-';    
+                    const bagian = row[7] || '-';        
 
                     const trHtml = `
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
@@ -443,8 +450,6 @@
                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal memuat data langsung dari server Google Sheets.</td></tr>`;
             }
         }
-        // =========================================================================================================
-
 
         // --- 5. INITIAL ENGINE LOAD UTK DASHBOARD UTAMA ---
         async function initDashboard() {
@@ -453,12 +458,12 @@
                 const csvText = await response.text();
                 const rawRows = parseCSV(csvText);
 
+                // Buat struktur penampung data 5 info dokumen per departemen
                 const departmentsData = {};
                 Object.keys(deptMaster).forEach(code => {
-                    departmentsData[code] = { pr: 0, ik: 0, fm: 0 };
+                    departmentsData[code] = { pr: 0, ik: 0, fm: 0, std: 0, ex: 0 };
                 });
 
-                let grandPR = 0, grandIK = 0, grandFM = 0, grandSTD = 0, grandEX = 0;
                 let currentCategory = ''; 
 
                 rawRows.forEach(row => {
@@ -467,67 +472,80 @@
                     const firstCol = row[0] ? row[0].trim() : "";
                     const secondCol = row[1] ? row[1].trim() : "";
 
+                    // Deteksi kategori dokumen
                     if (firstCol.toLowerCase().includes("prosedur")) currentCategory = 'PR';
                     else if (firstCol.toLowerCase().includes("intruksi kerja")) currentCategory = 'IK';
                     else if (firstCol.toLowerCase().includes("formulir")) currentCategory = 'FM';
+                    else if (firstCol.toLowerCase().includes("standar")) currentCategory = 'STD';
+                    else if (firstCol.toLowerCase().includes("eksternal")) currentCategory = 'EX';
 
                     const deptCode = secondCol.toUpperCase();
 
-                    if (secondCol.toLowerCase() === 'total' || firstCol.toLowerCase() === 'total') {
-                        if (row[5] && !isNaN(row[5]) && grandPR === 0) {
-                            grandPR = parseInt(row[5]) || 0;
-                            grandIK = parseInt(row[6]) || 0;
-                            grandFM = parseInt(row[7]) || 0;
-                            grandSTD = parseInt(row[8]) || 0;
-                            grandEX = parseInt(row[9]) || 0;
-                        }
-                        return;
-                    }
+                    // Lewati baris bertuliskan total agar hitungan murni mandiri
+                    if (secondCol.toLowerCase() === 'total' || firstCol.toLowerCase() === 'total') return;
 
+                    // Mengisi angka jika baris tersebut valid milik departemen tertentu
                     if (departmentsData[deptCode] && currentCategory) {
                         const val = parseInt(row[2]) || 0;
                         if (currentCategory === 'PR') departmentsData[deptCode].pr = val;
                         if (currentCategory === 'IK') departmentsData[deptCode].ik = val;
                         if (currentCategory === 'FM') departmentsData[deptCode].fm = val;
+                        if (currentCategory === 'STD') departmentsData[deptCode].std = val;
+                        if (currentCategory === 'EX') departmentsData[deptCode].ex = val;
                     }
                 });
 
+                // HITUNG TOTAL GLOBAL SECARA MANDIRI AGAR AKURAT 100% SAMA DENGAN GRAFIK BAWAH
+                let totalPR = 0, totalIK = 0, totalFM = 0, totalSTD = 0, totalEX = 0;
+                Object.keys(departmentsData).forEach(code => {
+                    totalPR += departmentsData[code].pr;
+                    totalIK += departmentsData[code].ik;
+                    totalFM += departmentsData[code].fm;
+                    totalSTD += departmentsData[code].std;
+                    totalEX += departmentsData[code].ex;
+                });
+
+                // Cetak angka kalkulasi akurat ke dasbor atas
+                document.getElementById('total-pr').innerText = totalPR;
+                document.getElementById('total-ik').innerText = totalIK;
+                document.getElementById('total-fm').innerText = totalFM;
+                document.getElementById('total-std').innerText = totalSTD;
+                document.getElementById('total-ex').innerText = totalEX;
+
+                // Tampilkan Grid Menu Departemen berisi 5 info lengkap
                 const gridContainer = document.getElementById('department-grid');
                 gridContainer.innerHTML = ''; 
 
                 Object.keys(deptMaster).forEach(code => {
                     const info = deptMaster[code];
-                    const data = departmentsData[code] || { pr: 0, ik: 0, fm: 0 };
+                    const data = departmentsData[code];
 
                     const cardHtml = `
-                        <div class="glass-panel rounded-2xl p-5 border sharp-border group cursor-pointer hover:-translate-y-1" onclick="switchPage('departemen')">
-                            <div class="flex justify-between items-start mb-4">
+                        <div class="glass-panel rounded-2xl p-4 border sharp-border group cursor-pointer hover:-translate-y-1 transition duration-200" onclick="switchPage('departemen')">
+                            <div class="flex justify-between items-start mb-3">
                                 <div class="flex gap-3 items-center">
-                                    <div class="w-10 h-10 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-sm border border-teal-500/20 shrink-0">
+                                    <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-sm border border-teal-500/20 shrink-0">
                                         <i class="fa-solid ${info.icon}"></i>
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-sm text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">${code}</h4>
-                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-1">${info.name}</p>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-1 w-36">${info.name}</p>
                                     </div>
                                 </div>
                                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 group-hover:text-teal-500 transition pt-1"></i>
                             </div>
-                            <div class="grid grid-cols-3 text-center pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
-                                <div><p class="text-xs font-bold">${data.pr}</p><p class="text-[9px] font-bold text-slate-400 uppercase">PR</p></div>
-                                <div class="border-x border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.ik}</p><p class="text-[9px] font-bold text-slate-400 uppercase">IK</p></div>
-                                <div><p class="text-xs font-bold">${data.fm}</p><p class="text-[9px] font-bold text-slate-400 uppercase">FM</p></div>
+                            
+                            <div class="grid grid-cols-5 text-center pt-2.5 border-t border-slate-200/50 dark:border-slate-700/50 text-slate-700 dark:text-slate-300">
+                                <div><p class="text-xs font-bold">${data.pr}</p><p class="text-[8px] font-bold text-slate-400 uppercase">PR</p></div>
+                                <div class="border-l border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.ik}</p><p class="text-[8px] font-bold text-slate-400 uppercase">IK</p></div>
+                                <div class="border-l border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.fm}</p><p class="text-[8px] font-bold text-slate-400 uppercase">FM</p></div>
+                                <div class="border-l border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.std}</p><p class="text-[8px] font-bold text-slate-400 uppercase">STD</p></div>
+                                <div class="border-l border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.ex}</p><p class="text-[8px] font-bold text-slate-400 uppercase">EX</p></div>
                             </div>
                         </div>
                     `;
                     gridContainer.innerHTML += cardHtml;
                 });
-
-                document.getElementById('total-pr').innerText = grandPR || 42;
-                document.getElementById('total-ik').innerText = grandIK || 123;
-                document.getElementById('total-fm').innerText = grandFM || 276;
-                document.getElementById('total-std').innerText = grandSTD || 15;
-                document.getElementById('total-ex').innerText = grandEX || 47;
 
             } catch (error) {
                 console.error('Sinkronisasi Dashboard Gagal:', error);
