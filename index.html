@@ -224,7 +224,7 @@
                                     <th class="py-3 px-4">No. Prosedur</th>
                                     <th class="py-3 px-4 w-16 text-center">Revisi</th>
                                     <th class="py-3 px-4">Tgl. Berlaku</th>
-                                    <th class="py-3 px-4 w-20 text-center">Dept</th>
+                                    <th class="py-3 px-4 w-24 text-center">Bagian</th>
                                 </tr>
                             </thead>
                             <tbody id="procedure-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300">
@@ -254,7 +254,7 @@
         </div>
 
         <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-            <div>Versi 1.6.0 (Live Procedure Engine Active)</div>
+            <div>Versi 1.6.5 (Strict Filtering Engine Active)</div>
             <div class="flex items-center gap-1.5 font-semibold text-slate-500">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sinkronisasi Real-Time Sukses
             </div>
@@ -302,8 +302,6 @@
 
         // --- 3. CONFIG MASTER DATA & PARSER DATA SPREADSHEETS ---
         const summaryCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
-        
-        // Link CSV Khusus Menu Prosedur Gid: 1994664049
         const prosedurCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv';
 
         const deptMaster = {
@@ -360,7 +358,6 @@
             mainTitle.innerText = meta.title;
             mainSubtitle.innerText = meta.sub;
 
-            // Atur Visibilitas Konten Halaman
             if (pageId === 'dashboard') {
                 pageDashboard.classList.remove('hidden');
                 pageProsedur.classList.add('hidden');
@@ -369,7 +366,7 @@
                 pageDashboard.classList.add('hidden');
                 pageProsedur.classList.remove('hidden');
                 pageGeneric.classList.add('hidden');
-                fetchProcedureData(); // Panggil fungsi load data prosedur
+                fetchProcedureData(); 
             } else {
                 pageDashboard.classList.add('hidden');
                 pageProsedur.classList.add('hidden');
@@ -379,7 +376,6 @@
                 genericIcon.className = `fa-solid ${meta.icon}`;
             }
 
-            // Ubah Focus Button Menu aktif
             navItems.forEach(item => {
                 if (item.getAttribute('data-page') === pageId) {
                     item.className = "nav-item flex items-center gap-3 px-3 py-2.5 bg-teal-600 text-white rounded-xl font-medium text-sm shadow-md shadow-teal-600/10";
@@ -410,10 +406,12 @@
                 const csvText = await response.text();
                 const rows = parseCSV(csvText);
 
-                // Hilangkan header baris pertama CSV
-                const validRows = rows.slice(1).filter(row => row.length >= 4 && row[0] !== "" && !isNaN(row[0]));
-
                 tableBody.innerHTML = '';
+
+                // Filter data: Lewati baris header awal, pastikan kolom No ada, dan Kolom Nama Prosedur tidak kosong
+                const validRows = rows.slice(1).filter(row => {
+                    return row.length >= 2 && row[0] !== "" && !isNaN(row[0]) && row[1].trim() !== "";
+                });
 
                 if (validRows.length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data prosedur yang terdata.</td></tr>`;
@@ -422,11 +420,11 @@
 
                 validRows.forEach(row => {
                     const no = row[0] || '-';
-                    const namaProsedur = row[1] || '-';  // Kolom 2: Nama Prosedur
-                    const noProsedur = row[2] || '-';    // Kolom 3: Nomor Dokumen Prosedur
-                    const revisi = row[3] || '0';        // Kolom 4: Angka Revisi
-                    const tglBerlaku = row[4] || '-';    // Kolom 5: Tanggal Efektif Berlaku
-                    const dept = row[8] || row[6] || '-'; // Kolom 9 / 7: Singkatan Kode Departemen Pemilik
+                    const namaProsedur = row[1] || '-';  // Kolom B: Nama Prosedur
+                    const noProsedur = row[2] || '-';    // Kolom C: Nomor Prosedur
+                    const revisi = row[3] || '0';        // Kolom D: Revisi
+                    const tglBerlaku = row[4] || '-';    // Kolom E: Tanggal Berlaku
+                    const bagian = row[7] || '-';        // REVISI: Mengambil Kolom H (indeks 7) yaitu "BAGIAN"
 
                     const trHtml = `
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
@@ -435,7 +433,7 @@
                             <td class="py-3 px-4 text-slate-500 font-mono tracking-tight">${noProsedur}</td>
                             <td class="py-3 px-4 text-center"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">${revisi}</span></td>
                             <td class="py-3 px-4 text-slate-500">${tglBerlaku}</td>
-                            <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px]">${dept}</span></td>
+                            <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px]">${bagian}</span></td>
                         </tr>
                     `;
                     tableBody.innerHTML += trHtml;
