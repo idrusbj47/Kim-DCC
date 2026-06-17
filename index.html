@@ -251,7 +251,7 @@
                                         <th class="py-3.5 px-4 w-16 text-center">Revisi</th>
                                         <th class="py-3.5 px-4">Tgl. Berlaku</th>
                                         <th class="py-3.5 px-4 w-24 text-center">Bagian</th>
-                                        <th class="py-3.5 px-4 w-28 text-center">Akses Berkas</th>
+                                        <th class="py-3.5 px-4 w-32 text-center">Akses Berkas</th>
                                     </tr>
                                 </thead>
                                 <tbody id="procedure-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300">
@@ -290,7 +290,7 @@
             </div>
 
             <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-                <div>Versi 2.0.0 (Absolute Row-Coupling Engine)</div>
+                <div>Versi 2.1.0 (Absolute Row-Coupling Engine with Dynamic Badge)</div>
                 <div class="flex items-center gap-1.5 font-semibold text-slate-500">
                     <span class="relative flex h-2 w-2">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -471,7 +471,7 @@
                 const jam = String(sekarang.getHours()).padStart(2, '0');
                 const menit = String(sekarang.getMinutes()).padStart(2, '0');
                 const detik = String(sekarang.getSeconds()).padStart(2, '0');
-                const tanggal = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                const tanggal = Bird = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
                 elStatus.innerText = `Terakhir Sinkronisasi: ${tanggal} Pukul ${jam}:${menit}:${detik}`;
             }
         }
@@ -508,7 +508,6 @@
             if (!cleanUrl || cleanUrl === "" || cleanUrl.toUpperCase() === "#N/A" || cleanUrl.toUpperCase() === "N/A") {
                 alert("File tidak di temukan / belum di update silahkan hub admin dcc");
             } else {
-                // Jika tautan valid, buka tab browser baru ke arah Google Drive / Link Google
                 window.open(cleanUrl, '_blank');
             }
         }
@@ -540,7 +539,24 @@
                 const bagian = row[7] || '-';        
                 
                 // Mengambil nilai Kolom M (Indeks ke-12 di array JavaScript)
-                const fileLinkPdf = row[12] || '';
+                const fileLinkPdf = row[12] ? row[12].trim() : '';
+
+                // DETEKSI LOGIKA TOMBOL DINAMIS
+                let buttonStyle = "";
+                let buttonText = "";
+                let buttonIcon = "";
+
+                if (!fileLinkPdf || fileLinkPdf === "" || fileLinkPdf.toUpperCase() === "#N/A" || fileLinkPdf.toUpperCase() === "N/A") {
+                    // Jika Link Error / Rusak / #N/A
+                    buttonStyle = "bg-slate-400/80 dark:bg-slate-700/80 hover:bg-slate-500 dark:hover:bg-slate-600 border-slate-400 text-slate-100 dark:text-slate-300 shadow-none";
+                    buttonText = "BELUM UPDATE";
+                    buttonIcon = "fa-lock";
+                } else {
+                    // Jika Link Tersedia & Valid
+                    buttonStyle = "bg-rose-600 hover:bg-rose-700 text-white border-rose-700 shadow-rose-600/10";
+                    buttonText = "BACA PDF";
+                    buttonIcon = "fa-file-pdf";
+                }
 
                 const trHtml = `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
@@ -551,8 +567,8 @@
                         <td class="py-3 px-4 text-slate-500 dark:text-slate-400">${tglBerlaku}</td>
                         <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px]">${bagian}</span></td>
                         <td class="py-3 px-4 text-center">
-                            <button onclick="bukaPdfLink('${fileLinkPdf}')" class="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold px-2.5 py-1.5 rounded-lg border border-rose-700 shadow-sm shadow-rose-600/10 active:scale-95 transition-all text-[10px]">
-                                <i class="fa-solid fa-file-pdf text-xs"></i> BACA PDF
+                            <button onclick="bukaPdfLink('${fileLinkPdf}')" class="inline-flex items-center justify-center gap-1.5 w-28 py-1.5 rounded-lg border shadow-sm active:scale-95 transition-all text-[10px] font-bold ${buttonStyle}">
+                                <i class="fa-solid ${buttonIcon} text-xs"></i> ${buttonText}
                             </button>
                         </td>
                     </tr>
