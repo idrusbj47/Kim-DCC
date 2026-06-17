@@ -76,7 +76,7 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Menghilangkan scrollbar bawaan tapi fungsi scroll aktif */
+        /* Menghilangkan scrollbar bawaan */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -147,9 +147,9 @@
         <header id="sticky-header" class="sticky top-0 z-30 transition-all duration-300 px-4 md:px-8 py-4 flex flex-col gap-4 sm:flex-row sm:items-center justify-between bg-transparent">
             <div class="flex items-center justify-start w-full sm:w-auto gap-2 md:gap-0">
                 <button id="hamburger-btn" class="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1 bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl text-slate-700 dark:text-white shadow-sm shrink-0 active:scale-95 transition-transform">
-                    <span class="w-4 h-0.5 bg-current block rounded-full transition-all"></span>
-                    <span class="w-4 h-0.5 bg-current block rounded-full transition-all"></span>
-                    <span class="w-4 h-0.5 bg-current block rounded-full transition-all"></span>
+                    <span class="w-4 h-0.5 bg-current block rounded-full"></span>
+                    <span class="w-4 h-0.5 bg-current block rounded-full"></span>
+                    <span class="w-4 h-0.5 bg-current block rounded-full"></span>
                 </button>
                 
                 <div class="ml-1 sm:ml-0">
@@ -159,9 +159,14 @@
             </div>
             
             <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none sm:w-60">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
-                    <input type="text" id="main-search" placeholder="Cari data..." class="w-full pl-8 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
+                <div class="relative flex-1 sm:flex-none sm:w-64 flex gap-2">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
+                        <input type="text" id="main-search" placeholder="Cari data..." class="w-full pl-8 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
+                    </div>
+                    <button id="refresh-btn" title="Sinkronisasi Ulang Data CSV" class="w-9 h-8 bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl flex items-center justify-center text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition shadow-sm shrink-0">
+                        <i id="refresh-icon" class="fa-solid fa-rotate text-xs"></i>
+                    </button>
                 </div>
 
                 <button id="theme-toggle" class="w-14 h-8 bg-slate-200 dark:bg-slate-700 rounded-full p-1 flex items-center relative transition-colors duration-300 focus:outline-none border sharp-border shrink-0">
@@ -286,7 +291,11 @@
             <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
                 <div>Versi 2.0.0 (Absolute Row-Coupling Engine)</div>
                 <div class="flex items-center gap-1.5 font-semibold text-slate-500">
-                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sinkronisasi Real-Time Sukses
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span id="sync-status-text">Menghubungkan ke cloud server...</span>
                 </div>
             </footer>
         </main>
@@ -368,7 +377,7 @@
             'ISO': { name: 'Sistem Manajemen Mutu', icon: 'fa-shield-halved' }
         };
 
-        // Cache memori global data baris tabel agar pencarian responsif kilat tanpa re-fetch URL
+        let currentActivePage = 'dashboard';
         let globalCachedRows = [];
 
         function parseCSV(text) {
@@ -409,11 +418,11 @@
         };
 
         function switchPage(pageId) {
+            currentActivePage = pageId;
             const meta = pageMeta[pageId] || pageMeta['dashboard'];
             if(mainTitle) mainTitle.innerText = meta.title;
             if(mainSubtitle) mainSubtitle.innerText = meta.sub;
             
-            // Reset input pencarian saat berpindah menu agar tidak membingungkan
             if(mainSearchInput) mainSearchInput.value = '';
 
             if (pageId === 'dashboard') {
@@ -453,9 +462,20 @@
             });
         });
 
-        // =========================================================================================================
-        //  PENGAMBILAN DATA TABEL DETAIL SPREADSHEET & PENYAJIAN RAPI
-        // =========================================================================================================
+        // --- UPDATE TANGGAL & WAKTU SINKRONISASI PADA FOOTER ---
+        function updateTimestampText() {
+            const elStatus = document.getElementById('sync-status-text');
+            if(elStatus) {
+                const sekarang = new Date();
+                const jam = String(sekarang.getHours()).padStart(2, '0');
+                const menit = String(sekarang.getMinutes()).padStart(2, '0');
+                const detik = String(sekarang.getSeconds()).padStart(2, '0');
+                const tanggal = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                elStatus.innerText = `Terakhir Sinkronisasi: ${tanggal} Pukul ${jam}:${menit}:${detik}`;
+            }
+        }
+
+        // Pengambilan data berkas dari URL Publikasi CSV
         async function fetchTableData(csvSourceUrl) {
             const tableBody = document.getElementById('procedure-table-body');
             if(!tableBody) return;
@@ -466,13 +486,12 @@
                 const csvText = await response.text();
                 const rows = parseCSV(csvText);
 
-                // Filter baris valid (Baris pertama header dilewati)
                 globalCachedRows = rows.slice(1).filter(row => {
                     return row.length >= 2 && row[0] !== "" && !isNaN(row[0]) && row[1].trim() !== "";
                 });
 
-                // Tampilkan data murni awal default tanpa filter pencarian
                 renderFilteredTable(globalCachedRows);
+                updateTimestampText();
 
             } catch (error) {
                 console.error('Gagal memuat data Tabel:', error);
@@ -482,7 +501,7 @@
             }
         }
 
-        // --- RENDER DENGAN LOGIKA NUMERIK RE-INDEXING (TIDAK LONCAT-LONCAT SAAT SEARCH) ---
+        // Render baris dengan Re-indexing numerik (rapi dari angka 1)
         function renderFilteredTable(filteredRows) {
             const tableBody = document.getElementById('procedure-table-body');
             const shownCountEl = document.getElementById('shown-count');
@@ -491,7 +510,6 @@
             if (!tableBody) return;
             tableBody.innerHTML = '';
 
-            // Update total master data dari file csv aktif saat ini
             if(totalCountEl) totalCountEl.innerText = globalCachedRows.length;
 
             if (filteredRows.length === 0) {
@@ -502,7 +520,6 @@
 
             if(shownCountEl) shownCountEl.innerText = filteredRows.length;
 
-            // Loop menyusun baris dengan penomoran urut rapi (1 sampai N)
             filteredRows.forEach((row, index) => {
                 const namaDokumen = row[1] || '-';  
                 const noDokumen = row[2] || '-';    
@@ -524,12 +541,11 @@
             });
         }
 
-        // --- INTERSEPSI EVENT PENCARIAN REAL-TIME PADA SEARCH INPUT ---
+        // Listener input pencarian real-time lintas halaman
         if (mainSearchInput) {
             mainSearchInput.addEventListener('input', (e) => {
                 const keyword = e.target.value.toLowerCase().trim();
                 
-                // Jika sedang di dashboard, fungsionalitas murni input dilewati, melainkan hanya bekerja pada menu tabel
                 if (!pageProsedur.classList.contains('hidden')) {
                     if (keyword === "") {
                         renderFilteredTable(globalCachedRows);
@@ -547,7 +563,7 @@
         }
 
         // =========================================================================================================
-        //  STRUKTUR SCRIPT DASHBOARD MASTER MUTU
+        //  STRUKTUR SCRIPT DASHBOARD MASTER MUTU & MANUAL REFRESH BUTTON TRIGGER
         // =========================================================================================================
         async function initDashboard() {
             try {
@@ -555,7 +571,6 @@
                 const csvText = await response.text();
                 const rawRows = parseCSV(csvText);
 
-                // Default matrix untuk departemen
                 const departmentsData = {};
                 Object.keys(deptMaster).forEach(code => {
                     departmentsData[code] = { pr: 0, ik: 0, fm: 0, std: 0, ex: 0 };
@@ -567,7 +582,6 @@
                 rawRows.forEach((row, index) => {
                     if (row.length < 3) return;
 
-                    // --- LOGIKA 1: KLASTER CARD ATAS (BARIS TOTAL ABSOLUT) ---
                     const col4 = row[4] ? row[4].trim() : "";
                     if (col4.toLowerCase() === 'total' && index < 5) {
                         totalPR  = parseInt(row[5]) || 0;
@@ -577,7 +591,6 @@
                         totalEX  = parseInt(row[9]) || 0;
                     }
 
-                    // --- LOGIKA 2: KLASTER CARD DEPARTEMEN ---
                     const colA = row[0] ? row[0].trim() : "";
                     const colB = row[1] ? row[1].trim().toUpperCase() : "";
                     const colC = row[2] ? row[2].trim() : "";
@@ -603,7 +616,6 @@
                     }
                 });
 
-                // Tulis angka absolut total atas langsung ke DOM
                 const elPr = document.getElementById('total-pr');
                 const elIk = document.getElementById('total-ik');
                 const elFm = document.getElementById('total-fm');
@@ -616,7 +628,6 @@
                 if(elStd) elStd.innerText = totalSTD;
                 if(elEx) elEx.innerText = totalEX;
 
-                // Tampilkan Grid Card Departemen secara rapi
                 const gridContainer = document.getElementById('department-grid');
                 if(!gridContainer) return;
                 gridContainer.innerHTML = ''; 
@@ -652,9 +663,32 @@
                     gridContainer.innerHTML += cardHtml;
                 });
 
+                updateTimestampText();
             } catch (error) {
                 console.error('Sinkronisasi Dashboard Gagal:', error);
             }
+        }
+
+        // --- SCRIPT KLIK SINKRONISASI REFRESH MANUAL ---
+        const refreshBtn = document.getElementById('refresh-btn');
+        const refreshIcon = document.getElementById('refresh-icon');
+
+        if(refreshBtn && refreshIcon) {
+            refreshBtn.addEventListener('click', async () => {
+                refreshIcon.classList.add('animate-spin');
+                refreshBtn.disabled = true;
+
+                if (currentActivePage === 'dashboard') {
+                    await initDashboard();
+                } else if (pageMeta[currentActivePage] && pageMeta[currentActivePage].csv) {
+                    await fetchTableData(pageMeta[currentActivePage].csv);
+                }
+
+                setTimeout(() => {
+                    refreshIcon.classList.remove('animate-spin');
+                    refreshBtn.disabled = false;
+                }, 600);
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
