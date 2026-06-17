@@ -37,6 +37,23 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
         }
 
+        /* Efek Sticky Header Berubah Saat Scroll (iOS Style) */
+        header.scrolled {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
+        }
+        
+        .dark header.scrolled {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+
         /* Garis Tepi Dipertegas */
         .sharp-border {
             border: 1.5px solid rgba(0, 0, 0, 0.15);
@@ -69,9 +86,9 @@
     <div class="fixed -top-40 -left-40 w-96 h-96 bg-teal-400/20 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="fixed bottom-10 right-10 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 hidden md:hidden"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
-    <aside id="sidebar-menu" class="fixed inset-y-0 left-0 w-64 glass-panel border-r sharp-border flex flex-col justify-between p-4 z-30 sidebar-transition -translate-x-full md:translate-x-0 h-full rounded-none">
+    <aside id="sidebar-menu" class="fixed inset-y-0 left-0 w-64 glass-panel border-r sharp-border flex flex-col justify-between p-4 z-50 sidebar-transition -translate-x-full md:translate-x-0 h-full rounded-none">
         <div>
             <div class="flex items-center justify-between px-2 py-4 mb-4">
                 <div class="flex items-center gap-3">
@@ -125,29 +142,26 @@
         </div>
     </aside>
 
-    <main class="flex-1 p-4 md:p-8 relative z-0 md:ml-64 w-full overflow-x-hidden">
+    <div class="flex-1 flex flex-col md:ml-64 w-full relative">
         
-        <header class="flex flex-col gap-4 sm:flex-row sm:items-start justify-between mb-8">
-            <div class="flex items-center justify-between w-full sm:w-auto">
-                <button id="hamburger-btn" class="md:hidden w-10 h-10 flex items-center justify-center bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl text-slate-700 dark:text-white text-lg mr-3 shadow-sm">
-                    <i class="fa-solid fa-bars-staggered"></i>
+        <header id="sticky-header" class="sticky top-0 z-30 transition-all duration-300 px-4 md:px-8 py-4 flex flex-col gap-4 sm:flex-row sm:items-center justify-between bg-transparent">
+            <div class="flex items-center justify-start w-full sm:w-auto gap-2 md:gap-0">
+                <button id="hamburger-btn" class="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1 bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl text-slate-700 dark:text-white shadow-sm shrink-0 active:scale-95 transition-transform">
+                    <span class="w-4 h-0.5 bg-current block rounded-full transition-all"></span>
+                    <span class="w-4 h-0.5 bg-current block rounded-full transition-all"></span>
+                    <span class="w-4 h-0.5 bg-current block rounded-full transition-all"></span>
                 </button>
                 
-                <div>
-                    <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1" id="page-title">ISO Document Control Center</h2>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 max-w-xl hidden sm:block" id="page-subtitle">Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu perusahaan.</p>
+                <div class="ml-1 sm:ml-0">
+                    <h2 class="text-lg md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight" id="page-title">ISO Document Control Center</h2>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 max-w-xl hidden sm:block mt-0.5" id="page-subtitle">Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu perusahaan.</p>
                 </div>
             </div>
             
             <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none sm:w-60 flex gap-2">
-                    <div class="relative w-full">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
-                        <input type="text" id="main-search" placeholder="Cari data..." class="w-full pl-8 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
-                    </div>
-                    <button id="refresh-btn" title="Sinkronisasi Ulang Data CSV" class="w-9 h-8 bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl flex items-center justify-center text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition shadow-sm shrink-0">
-                        <i id="refresh-icon" class="fa-solid fa-rotate animate-none text-xs"></i>
-                    </button>
+                <div class="relative flex-1 sm:flex-none sm:w-60">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
+                    <input type="text" id="main-search" placeholder="Cari data..." class="w-full pl-8 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
                 </div>
 
                 <button id="theme-toggle" class="w-14 h-8 bg-slate-200 dark:bg-slate-700 rounded-full p-1 flex items-center relative transition-colors duration-300 focus:outline-none border sharp-border shrink-0">
@@ -165,110 +179,118 @@
             </div>
         </header>
 
-        <section class="flex overflow-x-auto pb-3 gap-4 mb-8 no-scrollbar snap-x">
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-teal-500/5" onclick="switchPage('prosedur')">
-                <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center border border-teal-500/20 shrink-0"><i class="fa-solid fa-file-invoice"></i></div>
-                <div>
-                    <div class="flex items-baseline gap-1"><span id="total-pr" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">PR</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Prosedur</p>
-                </div>
-            </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-blue-500/5" onclick="switchPage('instruksi-kerja')">
-                <div class="w-9 h-9 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0"><i class="fa-solid fa-clipboard-list"></i></div>
-                <div>
-                    <div class="flex items-baseline gap-1"><span id="total-ik" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">IK</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Instruksi Kerja</p>
-                </div>
-            </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-indigo-500/5" onclick="switchPage('formulir')">
-                <div class="w-9 h-9 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center border border-indigo-500/20 shrink-0"><i class="fa-solid fa-table-list"></i></div>
-                <div>
-                    <div class="flex items-baseline gap-1"><span id="total-fm" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">FM</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Formulir</p>
-                </div>
-            </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-purple-500/5" onclick="switchPage('standar')">
-                <div class="w-9 h-9 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center border border-purple-500/20 shrink-0"><i class="fa-solid fa-shield"></i></div>
-                <div>
-                    <div class="flex items-baseline gap-1"><span id="total-std" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">STD</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Standar</p>
-                </div>
-            </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-amber-500/5" onclick="switchPage('eksternal')">
-                <div class="w-9 h-9 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center border border-amber-500/20 shrink-0"><i class="fa-solid fa-earth-americas"></i></div>
-                <div>
-                    <div class="flex items-baseline gap-1"><span id="total-ex" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">EX</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Eksternal</p>
-                </div>
-            </div>
-        </section>
-
-        <div id="main-view-container">
+        <main class="flex-1 px-4 md:px-8 pb-8 w-full overflow-x-hidden pt-2">
             
-            <div id="page-dashboard" class="page-content">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
-                        <span class="w-1 h-3.5 bg-teal-600 dark:bg-teal-500 rounded-sm"></span> Eksplorasi Per Departemen
-                    </h3>
-                </div>
-                <section id="department-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <div class="col-span-full text-center py-8 text-sm text-slate-400">
-                        <i class="fa-solid fa-spinner animate-spin mr-2"></i> Sinkronisasi ringkasan berkas...
-                    </div>
-                </section>
-            </div>
-
-            <div id="page-prosedur" class="page-content hidden">
-                <div class="glass-panel rounded-3xl p-4 md:p-6 border sharp-border overflow-hidden">
-                    <div class="overflow-x-auto w-full no-scrollbar">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
-                                    <th class="py-3 px-4 w-12">No.</th>
-                                    <th class="py-3 px-4 min-w-[200px]">Nama Dokumen / Prosedur</th>
-                                    <th class="py-3 px-4">No. Dokumen</th>
-                                    <th class="py-3 px-4 w-16 text-center">Revisi</th>
-                                    <th class="py-3 px-4">Tgl. Berlaku</th>
-                                    <th class="py-3 px-4 w-24 text-center">Bagian</th>
-                                </tr>
-                            </thead>
-                            <tbody id="procedure-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300">
-                                <tr>
-                                    <td colspan="6" class="text-center py-10 text-slate-400">
-                                        <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload file berkas spreadsheet...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+            <section class="flex overflow-x-auto pb-3 gap-4 mb-8 no-scrollbar snap-x">
+                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-teal-500/5" onclick="switchPage('prosedur')">
+                    <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center border border-teal-500/20 shrink-0"><i class="fa-solid fa-file-invoice"></i></div>
+                    <div>
+                        <div class="flex items-baseline gap-1"><span id="total-pr" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">PR</span></div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Prosedur</p>
                     </div>
                 </div>
-            </div>
-
-            <div id="page-generic" class="page-content hidden">
-                <div class="glass-panel rounded-3xl p-8 border sharp-border min-h-[300px] flex flex-col items-center justify-center text-center">
-                    <div class="w-16 h-16 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-2xl flex items-center justify-center text-2xl mb-4 border border-teal-500/20">
-                        <i id="generic-icon" class="fa-solid fa-folder-open"></i>
+                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-blue-500/5" onclick="switchPage('instruksi-kerja')">
+                    <div class="w-9 h-9 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div>
+                        <div class="flex items-baseline gap-1"><span id="total-ik" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">IK</span></div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Instruksi Kerja</p>
                     </div>
-                    <h3 class="text-lg font-bold mb-2" id="generic-heading">Judul Halaman</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 max-w-md mb-6" id="generic-desc">Data ini sedang dikonfigurasi ke server pusat.</p>
-                    <button onclick="switchPage('dashboard')" class="bg-teal-600 hover:bg-teal-700 text-white font-medium text-xs px-4 py-2 rounded-xl transition shadow-md">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Dashboard
-                    </button>
+                </div>
+                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-indigo-500/5" onclick="switchPage('formulir')">
+                    <div class="w-9 h-9 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center border border-indigo-500/20 shrink-0"><i class="fa-solid fa-table-list"></i></div>
+                    <div>
+                        <div class="flex items-baseline gap-1"><span id="total-fm" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">FM</span></div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Formulir</p>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-purple-500/5" onclick="switchPage('standar')">
+                    <div class="w-9 h-9 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center border border-purple-500/20 shrink-0"><i class="fa-solid fa-shield"></i></div>
+                    <div>
+                        <div class="flex items-baseline gap-1"><span id="total-std" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">STD</span></div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Standar</p>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-amber-500/5" onclick="switchPage('eksternal')">
+                    <div class="w-9 h-9 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center border border-amber-500/20 shrink-0"><i class="fa-solid fa-earth-americas"></i></div>
+                    <div>
+                        <div class="flex items-baseline gap-1"><span id="total-ex" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">EX</span></div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Eksternal</p>
+                    </div>
+                </div>
+            </section>
+
+            <div id="main-view-container">
+                
+                <div id="page-dashboard" class="page-content">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+                            <span class="w-1 h-3.5 bg-teal-600 dark:bg-teal-500 rounded-sm"></span> Eksplorasi Per Departemen
+                        </h3>
+                    </div>
+                    <section id="department-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div class="col-span-full text-center py-8 text-sm text-slate-400">
+                            <i class="fa-solid fa-spinner animate-spin mr-2"></i> Sinkronisasi ringkasan berkas...
+                        </div>
+                    </section>
+                </div>
+
+                <div id="page-prosedur" class="page-content hidden">
+                    <div class="glass-panel rounded-3xl border sharp-border overflow-hidden">
+                        <div class="overflow-x-auto w-full no-scrollbar">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-white/20 dark:bg-slate-900/20">
+                                        <th class="py-3.5 px-4 w-12 text-center">No.</th>
+                                        <th class="py-3.5 px-4 min-w-[220px]">Nama Dokumen</th>
+                                        <th class="py-3.5 px-4">No. Dokumen</th>
+                                        <th class="py-3.5 px-4 w-16 text-center">Revisi</th>
+                                        <th class="py-3.5 px-4">Tgl. Berlaku</th>
+                                        <th class="py-3.5 px-4 w-24 text-center">Bagian</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="procedure-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-10 text-slate-400">
+                                            <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload file berkas spreadsheet...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="px-4 py-3 bg-white/30 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                            <div id="table-pagination-info">
+                                Menampilkan <span class="text-slate-700 dark:text-slate-300 font-bold" id="shown-count">0</span> dari <span class="text-slate-700 dark:text-slate-300 font-bold" id="total-count">0</span> dokumen terdaftar
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[10px] text-teal-600 dark:text-teal-400 bg-teal-500/5 px-2 py-0.5 rounded border border-teal-500/10">
+                                <i class="fa-solid fa-database"></i> Live Server Sync
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-generic" class="page-content hidden">
+                    <div class="glass-panel rounded-3xl p-8 border sharp-border min-h-[300px] flex flex-col items-center justify-center text-center">
+                        <div class="w-16 h-16 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-2xl flex items-center justify-center text-2xl mb-4 border border-teal-500/20">
+                            <i id="generic-icon" class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2" id="generic-heading">Judul Halaman</h3>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 max-w-md mb-6" id="generic-desc">Data ini sedang dikonfigurasi ke server pusat.</p>
+                        <button onclick="switchPage('dashboard')" class="bg-teal-600 hover:bg-teal-700 text-white font-medium text-xs px-4 py-2 rounded-xl transition shadow-md">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Dashboard
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-            <div>Versi 2.0.0 (Absolute Row-Coupling Engine)</div>
-            <div class="flex items-center gap-1.5 font-semibold text-slate-500">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span id="sync-status-text">Sinkronisasi Real-Time Sukses</span>
-            </div>
-        </footer>
-    </main>
+            <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+                <div>Versi 2.0.0 (Absolute Row-Coupling Engine)</div>
+                <div class="flex items-center gap-1.5 font-semibold text-slate-500">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sinkronisasi Real-Time Sukses
+                </div>
+            </footer>
+        </main>
+    </div>
 
     <script>
         // --- 1. SCRIPT SIDEBAR RESPONSIVE TOGGLE ---
@@ -311,8 +333,18 @@
             });
         }
 
+        // --- 3. DETECTION SCROLL UNTUK EFEK GLASS ALA IOS PADA HEADER ---
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('sticky-header');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
         // =========================================================================================================
-        //  LINK SPREADSHEET CSV AKTIF
+        //  LINK SPREADSHEET CSV MUTU AKTIF
         // =========================================================================================================
         const summaryCsvUrl      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
         
@@ -336,9 +368,8 @@
             'ISO': { name: 'Sistem Manajemen Mutu', icon: 'fa-shield-halved' }
         };
 
-        // Global State internal untuk melayani fitur pencarian real-time lintasan halaman
-        let currentActivePage = 'dashboard';
-        let originalTableRowsData = [];
+        // Cache memori global data baris tabel agar pencarian responsif kilat tanpa re-fetch URL
+        let globalCachedRows = [];
 
         function parseCSV(text) {
             return text.split('\n').map(line => {
@@ -365,6 +396,7 @@
         const genericHeading = document.getElementById('generic-heading');
         const genericDesc = document.getElementById('generic-desc');
         const genericIcon = document.getElementById('generic-icon');
+        const mainSearchInput = document.getElementById('main-search');
 
         const pageMeta = {
             'dashboard': { title: 'ISO Document Control Center', sub: 'Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu perusahaan.' },
@@ -377,21 +409,17 @@
         };
 
         function switchPage(pageId) {
-            currentActivePage = pageId;
             const meta = pageMeta[pageId] || pageMeta['dashboard'];
             if(mainTitle) mainTitle.innerText = meta.title;
             if(mainSubtitle) mainSubtitle.innerText = meta.sub;
-
-            // Reset input pencarian setiap kali berpindah menu halaman agar tidak membingungkan
-            const searchInput = document.getElementById('main-search');
-            if (searchInput) searchInput.value = '';
+            
+            // Reset input pencarian saat berpindah menu agar tidak membingungkan
+            if(mainSearchInput) mainSearchInput.value = '';
 
             if (pageId === 'dashboard') {
                 if(pageDashboard) pageDashboard.classList.remove('hidden');
                 if(pageProsedur) pageProsedur.classList.add('hidden');
                 if(pageGeneric) pageGeneric.classList.add('hidden');
-                // Tampilkan ulang semua departemen card
-                filterDashboardCards('');
             } else if (meta.csv) {
                 if(pageDashboard) pageDashboard.classList.add('hidden');
                 if(pageProsedur) pageProsedur.classList.remove('hidden');
@@ -425,21 +453,8 @@
             });
         });
 
-        // Update Waktu Terakhir Sinkronisasi pada bagian Footer
-        function updateTimestampText() {
-            const elStatus = document.getElementById('sync-status-text');
-            if(elStatus) {
-                const sekarang = new Date();
-                const jam = String(sekarang.getHours()).padStart(2, '0');
-                const menit = String(sekarang.getMinutes()).padStart(2, '0');
-                const detik = String(sekarang.getSeconds()).padStart(2, '0');
-                const tanggal = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-                elStatus.innerText = `Terakhir Sinkronisasi: ${tanggal} Pukul ${jam}:${menit}:${detik}`;
-            }
-        }
-
         // =========================================================================================================
-        //  PENGAMBILAN DATA TABEL DETAIL SPREADSHEET
+        //  PENGAMBILAN DATA TABEL DETAIL SPREADSHEET & PENYAJIAN RAPI
         // =========================================================================================================
         async function fetchTableData(csvSourceUrl) {
             const tableBody = document.getElementById('procedure-table-body');
@@ -451,31 +466,44 @@
                 const csvText = await response.text();
                 const rows = parseCSV(csvText);
 
-                originalTableRowsData = rows.slice(1).filter(row => {
+                // Filter baris valid (Baris pertama header dilewati)
+                globalCachedRows = rows.slice(1).filter(row => {
                     return row.length >= 2 && row[0] !== "" && !isNaN(row[0]) && row[1].trim() !== "";
                 });
 
-                renderTableRows(originalTableRowsData);
-                updateTimestampText();
+                // Tampilkan data murni awal default tanpa filter pencarian
+                renderFilteredTable(globalCachedRows);
+
             } catch (error) {
                 console.error('Gagal memuat data Tabel:', error);
                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal terhubung langsung dengan server file. Mohon cek kembali URL Publikasi CSV Anda.</td></tr>`;
+                document.getElementById('shown-count').innerText = '0';
+                document.getElementById('total-count').innerText = '0';
             }
         }
 
-        // Render baris data tabel dokumen ke DOM
-        function renderTableRows(dataRows) {
+        // --- RENDER DENGAN LOGIKA NUMERIK RE-INDEXING (TIDAK LONCAT-LONCAT SAAT SEARCH) ---
+        function renderFilteredTable(filteredRows) {
             const tableBody = document.getElementById('procedure-table-body');
-            if(!tableBody) return;
+            const shownCountEl = document.getElementById('shown-count');
+            const totalCountEl = document.getElementById('total-count');
+            
+            if (!tableBody) return;
             tableBody.innerHTML = '';
 
-            if (dataRows.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data dokumen yang cocok dengan kata kunci pencarian.</td></tr>`;
+            // Update total master data dari file csv aktif saat ini
+            if(totalCountEl) totalCountEl.innerText = globalCachedRows.length;
+
+            if (filteredRows.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 dark:text-slate-500">Tidak ada data dokumen terdaftar yang cocok dengan kata kunci.</td></tr>`;
+                if(shownCountEl) shownCountEl.innerText = '0';
                 return;
             }
 
-            dataRows.forEach(row => {
-                const no = row[0] || '-';
+            if(shownCountEl) shownCountEl.innerText = filteredRows.length;
+
+            // Loop menyusun baris dengan penomoran urut rapi (1 sampai N)
+            filteredRows.forEach((row, index) => {
                 const namaDokumen = row[1] || '-';  
                 const noDokumen = row[2] || '-';    
                 const revisi = row[3] || '0';        
@@ -483,21 +511,43 @@
                 const bagian = row[7] || '-';        
 
                 const trHtml = `
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150 data-row-item">
-                        <td class="py-3 px-4 font-medium text-slate-400">${no}</td>
-                        <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white row-doc-name">${namaDokumen}</td>
-                        <td class="py-3 px-4 text-slate-500 font-mono tracking-tight row-doc-code">${noDokumen}</td>
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
+                        <td class="py-3 px-4 font-semibold text-center text-slate-400 dark:text-slate-500 w-12">${index + 1}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${namaDokumen}</td>
+                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono tracking-tight">${noDokumen}</td>
                         <td class="py-3 px-4 text-center"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">${revisi}</span></td>
-                        <td class="py-3 px-4 text-slate-500">${tglBerlaku}</td>
-                        <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px] row-doc-dept">${bagian}</span></td>
+                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400">${tglBerlaku}</td>
+                        <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px]">${bagian}</span></td>
                     </tr>
                 `;
                 tableBody.innerHTML += trHtml;
             });
         }
 
+        // --- INTERSEPSI EVENT PENCARIAN REAL-TIME PADA SEARCH INPUT ---
+        if (mainSearchInput) {
+            mainSearchInput.addEventListener('input', (e) => {
+                const keyword = e.target.value.toLowerCase().trim();
+                
+                // Jika sedang di dashboard, fungsionalitas murni input dilewati, melainkan hanya bekerja pada menu tabel
+                if (!pageProsedur.classList.contains('hidden')) {
+                    if (keyword === "") {
+                        renderFilteredTable(globalCachedRows);
+                    } else {
+                        const filtered = globalCachedRows.filter(row => {
+                            const namaDoc = (row[1] || '').toLowerCase();
+                            const noDoc   = (row[2] || '').toLowerCase();
+                            const bagian  = (row[7] || '').toLowerCase();
+                            return namaDoc.includes(keyword) || noDoc.includes(keyword) || bagian.includes(keyword);
+                        });
+                        renderFilteredTable(filtered);
+                    }
+                }
+            });
+        }
+
         // =========================================================================================================
-        //  STRUKTUR SCRIPT DASHBOARD BARU (SCAN VERTIKAL DAN ABSOLUT TOTAL ATAS)
+        //  STRUKTUR SCRIPT DASHBOARD MASTER MUTU
         // =========================================================================================================
         async function initDashboard() {
             try {
@@ -527,7 +577,7 @@
                         totalEX  = parseInt(row[9]) || 0;
                     }
 
-                    // --- LOGIKA 2: KLASTER CARD DEPARTEMEN (KOLOM A, B, C) ---
+                    // --- LOGIKA 2: KLASTER CARD DEPARTEMEN ---
                     const colA = row[0] ? row[0].trim() : "";
                     const colB = row[1] ? row[1].trim().toUpperCase() : "";
                     const colC = row[2] ? row[2].trim() : "";
@@ -553,6 +603,7 @@
                     }
                 });
 
+                // Tulis angka absolut total atas langsung ke DOM
                 const elPr = document.getElementById('total-pr');
                 const elIk = document.getElementById('total-ik');
                 const elFm = document.getElementById('total-fm');
@@ -565,6 +616,7 @@
                 if(elStd) elStd.innerText = totalSTD;
                 if(elEx) elEx.innerText = totalEX;
 
+                // Tampilkan Grid Card Departemen secara rapi
                 const gridContainer = document.getElementById('department-grid');
                 if(!gridContainer) return;
                 gridContainer.innerHTML = ''; 
@@ -574,7 +626,7 @@
                     const data = departmentsData[code];
 
                     const cardHtml = `
-                        <div class="glass-panel rounded-2xl p-4 border sharp-border group cursor-pointer hover:-translate-y-1 transition duration-200 dept-card-item" data-code="${code}" data-name="${info.name}">
+                        <div class="glass-panel rounded-2xl p-4 border sharp-border group cursor-pointer hover:-translate-y-1 transition duration-200" onclick="switchPage('departemen')">
                             <div class="flex justify-between items-start mb-3">
                                 <div class="flex gap-3 items-center">
                                     <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-sm border border-teal-500/20 shrink-0">
@@ -600,72 +652,9 @@
                     gridContainer.innerHTML += cardHtml;
                 });
 
-                updateTimestampText();
             } catch (error) {
                 console.error('Sinkronisasi Dashboard Gagal:', error);
             }
-        }
-
-        // --- SCRIPT FILTER PENCARIAN DATA (REAL-TIME) ---
-        function filterDashboardCards(keyword) {
-            const cards = document.querySelectorAll('.dept-card-item');
-            cards.forEach(card => {
-                const code = card.getAttribute('data-code').toLowerCase();
-                const name = card.getAttribute('data-name').toLowerCase();
-                if(code.includes(keyword) || name.includes(keyword)) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-        }
-
-        function filterTableDataRows(keyword) {
-            if(originalTableRowsData.length === 0) return;
-            const filtered = originalTableRowsData.filter(row => {
-                const namaDokumen = (row[1] || '').toLowerCase();
-                const noDokumen = (row[2] || '').toLowerCase();
-                const bagian = (row[7] || '').toLowerCase();
-                return namaDokumen.includes(keyword) || noDokumen.includes(keyword) || bagian.includes(keyword);
-            });
-            renderTableRows(filtered);
-        }
-
-        // Listener Kolom Pencarian
-        const searchInput = document.getElementById('main-search');
-        if(searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                const keyword = e.target.value.toLowerCase().trim();
-                if(currentActivePage === 'dashboard') {
-                    filterDashboardCards(keyword);
-                } else if(pageMeta[currentActivePage] && pageMeta[currentActivePage].csv) {
-                    filterTableDataRows(keyword);
-                }
-            });
-        }
-
-        // --- SCRIPT TOMBOL REFRESH SINKRONISASI MANUAL ---
-        const refreshBtn = document.getElementById('refresh-btn');
-        const refreshIcon = document.getElementById('refresh-icon');
-
-        if(refreshBtn && refreshIcon) {
-            refreshBtn.addEventListener('click', async () => {
-                // Efek animasi berputar saat proses pengambilan data
-                refreshIcon.classList.add('animate-spin');
-                refreshBtn.disabled = true;
-
-                if (currentActivePage === 'dashboard') {
-                    await initDashboard();
-                } else if (pageMeta[currentActivePage] && pageMeta[currentActivePage].csv) {
-                    await fetchTableData(pageMeta[currentActivePage].csv);
-                }
-
-                // Matikan animasi putar dengan sedikit delay agar terasa natural
-                setTimeout(() => {
-                    refreshIcon.classList.remove('animate-spin');
-                    refreshBtn.disabled = false;
-                }, 600);
-            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
