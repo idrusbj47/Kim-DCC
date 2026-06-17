@@ -254,7 +254,7 @@
         </div>
 
         <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-            <div>Versi 1.9.0 (Dynamic Smart Matrix Control)</div>
+            <div>Versi 2.0.0 (Absolute Row-Coupling Engine)</div>
             <div class="flex items-center gap-1.5 font-semibold text-slate-500">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sinkronisasi Real-Time Sukses
             </div>
@@ -303,7 +303,7 @@
         }
 
         // =========================================================================================================
-        //  LINK SPREADSHEET CSV AKTIF (SUDAH DI-UPDATE SESUAI KODE ANDA)
+        //  LINK SPREADSHEET CSV AKTIF
         // =========================================================================================================
         const summaryCsvUrl      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
         
@@ -406,7 +406,7 @@
         });
 
         // =========================================================================================================
-        //  PENGAMBILAN DATA TABEL MENURUT MENU YANG DI-KLIK
+        //  PENGAMBILAN DATA TABEL DETAIL SPREADSHEET
         // =========================================================================================================
         async function fetchTableData(csvSourceUrl) {
             const tableBody = document.getElementById('procedure-table-body');
@@ -455,75 +455,67 @@
             }
         }
 
-        // --- 5. AUTOMATED ENGINE LOAD COUPLING DATASHEET SUMMARY ---
+        // =========================================================================================================
+        //  STRUKTUR SCRIPT DASHBOARD BARU (SCAN VERTIKAL DAN ABSOLUT TOTAL ATAS)
+        // =========================================================================================================
         async function initDashboard() {
             try {
                 const response = await fetch(summaryCsvUrl);
                 const csvText = await response.text();
                 const rawRows = parseCSV(csvText);
 
+                // Default matrix untuk departemen
                 const departmentsData = {};
                 Object.keys(deptMaster).forEach(code => {
                     departmentsData[code] = { pr: 0, ik: 0, fm: 0, std: 0, ex: 0 };
                 });
 
-                // ENGINE SCANNER CERDAS: Mencari baris yang mengandung nama departemen ISO, HRD, dll.
-                rawRows.forEach(row => {
+                let totalPR = 0, totalIK = 0, totalFM = 0, totalSTD = 0, totalEX = 0;
+                let currentCategory = ""; // Menyimpan kategori aktif: Prosedur, Instruksi Kerja, dll.
+
+                rawRows.forEach((row, index) => {
                     if (row.length < 3) return;
 
-                    // Mengambil nilai kolom pertama & kedua (menghilangkan spasi)
-                    const col0 = row[0] ? row[0].trim().toUpperCase() : "";
-                    const col1 = row[1] ? row[1].trim().toUpperCase() : "";
+                    // --- LOGIKA 1: KLASTER CARD ATAS (BARIS TOTAL ABSOLUT) ---
+                    // Membaca Baris ke-2 (Baris tepat setelah judul metrik PR, IK, FM...)
+                    const col4 = row[4] ? row[4].trim() : "";
+                    if (col4.toLowerCase() === 'total' && index < 5) {
+                        totalPR  = parseInt(row[5]) || 0;
+                        totalIK  = parseInt(row[6]) || 0;
+                        totalFM  = parseInt(row[7]) || 0;
+                        totalSTD = parseInt(row[8]) || 0;
+                        totalEX  = parseInt(row[9]) || 0;
+                    }
 
-                    // Tentukan kode departemen mana yang ada di baris ini
-                    let targetDept = "";
-                    if (deptMaster[col0]) targetDept = col0;
-                    else if (deptMaster[col1]) targetDept = col1;
+                    // --- LOGIKA 2: KLASTER CARD DEPARTEMEN (KOLOM A, B, C) ---
+                    const colA = row[0] ? row[0].trim() : "";
+                    const colB = row[1] ? row[1].trim().toUpperCase() : "";
+                    const colC = row[2] ? row[2].trim() : "";
 
-                    // Jika baris mengandung kata 'TOTAL', abaikan agar tidak menggandakan hitungan
-                    if (col0.includes("TOTAL") || col1.includes("TOTAL")) return;
+                    // Update kategori jika kolom A terisi nama Master Dokumen baru
+                    if (colA !== "" && !deptMaster[colA.toUpperCase()] && colA.toLowerCase() !== 'total') {
+                        currentCategory = colA.toLowerCase();
+                    }
 
-                    if (targetDept) {
-                        // Scan otomatis indeks kolom yang menyimpan deretan angka asli berkas Anda
-                        // Berkas CSV Anda menaruh array angka di kisaran indeks 5 hingga 9 atau 4 hingga 8
-                        let candidateValues = [];
-                        for(let i = 2; i < row.length; i++) {
-                            if(row[i] !== "" && !isNaN(row[i])) {
-                                candidateValues.push(parseInt(row[i]));
-                            }
-                        }
+                    // Pastikan baris bukan baris total/header dan kode departemen terdaftar di master
+                    if (colB !== "" && colB !== "TOTAL" && deptMaster[colB] && colC !== "") {
+                        const countValue = parseInt(colC) || 0;
 
-                        // Jika baris data valid memiliki 5 blok angka horizontal lengkap
-                        if (candidateValues.length >= 5) {
-                            departmentsData[targetDept].pr  = candidateValues[0];
-                            departmentsData[targetDept].ik  = candidateValues[1];
-                            departmentsData[targetDept].fm  = candidateValues[2];
-                            departmentsData[targetDept].std = candidateValues[3];
-                            departmentsData[targetDept].ex  = candidateValues[4];
-                        } 
-                        // Alternatif jika terpisah sebagian kolom kosong
-                        else {
-                            // Deteksi fallback manual berdasarkan indeks absolut kolom CSV Anda
-                            departmentsData[targetDept].pr  = parseInt(row[5]) || parseInt(row[4]) || 0;
-                            departmentsData[targetDept].ik  = parseInt(row[6]) || parseInt(row[5]) || 0;
-                            departmentsData[targetDept].fm  = parseInt(row[7]) || parseInt(row[6]) || 0;
-                            departmentsData[targetDept].std = parseInt(row[8]) || parseInt(row[7]) || 0;
-                            departmentsData[targetDept].ex  = parseInt(row[9]) || parseInt(row[8]) || 0;
+                        if (currentCategory.includes("prosedur")) {
+                            departmentsData[colB].pr = countValue;
+                        } else if (currentCategory.includes("intruksi") || currentCategory.includes("kerja") || currentCategory.includes("ik")) {
+                            departmentsData[colB].ik = countValue;
+                        } else if (currentCategory.includes("formulir") || currentCategory.includes("fm")) {
+                            departmentsData[colB].fm = countValue;
+                        } else if (currentCategory.includes("standar") || currentCategory.includes("std")) {
+                            departmentsData[colB].std = countValue;
+                        } else if (currentCategory.includes("eksternal") || currentCategory.includes("ex")) {
+                            departmentsData[colB].ex = countValue;
                         }
                     }
                 });
 
-                // HITUNG TOTAL GLOBAL SECARA REAL-TIME DARI HASIL PARSING HORIZONTAL
-                let totalPR = 0, totalIK = 0, totalFM = 0, totalSTD = 0, totalEX = 0;
-                Object.keys(departmentsData).forEach(code => {
-                    totalPR  += departmentsData[code].pr;
-                    totalIK  += departmentsData[code].ik;
-                    totalFM  += departmentsData[code].fm;
-                    totalSTD += departmentsData[code].std;
-                    totalEX  += departmentsData[code].ex;
-                });
-
-                // Tulis hasil kalkulasi akurat ke Dasbor Atas
+                // Tulis angka absolut total atas langsung ke DOM
                 const elPr = document.getElementById('total-pr');
                 const elIk = document.getElementById('total-ik');
                 const elFm = document.getElementById('total-fm');
@@ -536,7 +528,7 @@
                 if(elStd) elStd.innerText = totalSTD;
                 if(elEx) elEx.innerText = totalEX;
 
-                // Tampilkan Grid Card Departemen Terintegrasi 5 Metrik Flat
+                // Tampilkan Grid Card Departemen secara rapi
                 const gridContainer = document.getElementById('department-grid');
                 if(!gridContainer) return;
                 gridContainer.innerHTML = ''; 
