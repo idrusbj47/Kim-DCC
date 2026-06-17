@@ -93,9 +93,6 @@
                 <a href="#departemen" data-page="departemen" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
                     <i class="fa-solid fa-building w-5 text-center"></i> Departemen
                 </a>
-                <a href="#dokumen" data-page="dokumen" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
-                    <i class="fa-solid fa-file-lines w-5 text-center"></i> Dokumen
-                </a>
                 <a href="#standar" data-page="standar" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
                     <i class="fa-solid fa-shield-halved w-5 text-center"></i> Standar
                 </a>
@@ -107,6 +104,9 @@
                 </a>
                 <a href="#prosedur" data-page="prosedur" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
                     <i class="fa-solid fa-circle-check w-5 text-center"></i> Prosedur
+                </a>
+                <a href="#eksternal" data-page="eksternal" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-earth-americas w-5 text-center"></i> Eksternal
                 </a>
             </nav>
         </div>
@@ -161,35 +161,35 @@
         </header>
 
         <section class="flex overflow-x-auto pb-3 gap-4 mb-8 no-scrollbar snap-x">
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-teal-500/5" onclick="switchPage('prosedur')">
                 <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center border border-teal-500/20 shrink-0"><i class="fa-solid fa-file-invoice"></i></div>
                 <div>
                     <div class="flex items-baseline gap-1"><span id="total-pr" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">PR</span></div>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Prosedur</p>
                 </div>
             </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-blue-500/5" onclick="switchPage('instruksi-kerja')">
                 <div class="w-9 h-9 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0"><i class="fa-solid fa-clipboard-list"></i></div>
                 <div>
                     <div class="flex items-baseline gap-1"><span id="total-ik" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">IK</span></div>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Instruksi Kerja</p>
                 </div>
             </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-indigo-500/5" onclick="switchPage('formulir')">
                 <div class="w-9 h-9 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center border border-indigo-500/20 shrink-0"><i class="fa-solid fa-table-list"></i></div>
                 <div>
                     <div class="flex items-baseline gap-1"><span id="total-fm" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">FM</span></div>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Formulir</p>
                 </div>
             </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-purple-500/5" onclick="switchPage('standar')">
                 <div class="w-9 h-9 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center border border-purple-500/20 shrink-0"><i class="fa-solid fa-shield"></i></div>
                 <div>
                     <div class="flex items-baseline gap-1"><span id="total-std" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">STD</span></div>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Standar</p>
                 </div>
             </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-amber-500/5" onclick="switchPage('eksternal')">
                 <div class="w-9 h-9 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center border border-amber-500/20 shrink-0"><i class="fa-solid fa-earth-americas"></i></div>
                 <div>
                     <div class="flex items-baseline gap-1"><span id="total-ex" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">EX</span></div>
@@ -220,8 +220,8 @@
                             <thead>
                                 <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
                                     <th class="py-3 px-4 w-12">No.</th>
-                                    <th class="py-3 px-4 min-w-[200px]">Nama Prosedur</th>
-                                    <th class="py-3 px-4">No. Prosedur</th>
+                                    <th class="py-3 px-4 min-w-[200px]">Nama Dokumen / Prosedur</th>
+                                    <th class="py-3 px-4">No. Dokumen</th>
                                     <th class="py-3 px-4 w-16 text-center">Revisi</th>
                                     <th class="py-3 px-4">Tgl. Berlaku</th>
                                     <th class="py-3 px-4 w-24 text-center">Bagian</th>
@@ -230,7 +230,7 @@
                             <tbody id="procedure-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300">
                                 <tr>
                                     <td colspan="6" class="text-center py-10 text-slate-400">
-                                        <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload file SOP Prosedur...
+                                        <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload file berkas spreadsheet...
                                     </td>
                                 </tr>
                             </tbody>
@@ -254,7 +254,7 @@
         </div>
 
         <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-            <div>Versi 1.7.0 (5-Metrics Dashboard Engine Active)</div>
+            <div>Versi 1.8.0 (Auto-Switch Unified Engine Active)</div>
             <div class="flex items-center gap-1.5 font-semibold text-slate-500">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sinkronisasi Real-Time Sukses
             </div>
@@ -301,15 +301,15 @@
         });
 
         // =========================================================================================================
-        //  TEMPAT UNTUK MENEMPEL LINK SPREADSHEETS CSV KAMU (TINGGAL GANTI DI SINI)
+        //  TEMPAT UNTUK MENEMPEL LINK SPREADSHEETS CSV KAMU (GANTI DI SINI)
         // =========================================================================================================
         const summaryCsvUrl      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
         
         const linkCsvProsedur    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv';
-        const linkCsvIK          = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=68974277&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvFormulir    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=618894111&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvStandar     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=2101716872&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvEksternal   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1062935321&single=true&output=csv'; // Nanti ganti gid nya
+        const linkCsvIK          = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv'; // <--- SILAKAN GANTI LINK IK DISINI
+        const linkCsvFormulir    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv'; // <--- SILAKAN GANTI LINK FORMULIR DISINI
+        const linkCsvStandar     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv'; // <--- SILAKAN GANTI LINK STANDAR DISINI
+        const linkCsvEksternal   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv'; // <--- SILAKAN GANTI LINK EKSTERNAL DISINI
         // =========================================================================================================
 
         const deptMaster = {
@@ -353,12 +353,12 @@
 
         const pageMeta = {
             'dashboard': { title: 'ISO Document Control Center', sub: 'Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu perusahaan.' },
-            'prosedur': { title: 'Prosedur Operasional (PR)', sub: 'SOP utama pengendali alur koordinasi lintas divisi perusahaan.' },
-            'departemen': { title: 'Daftar Departemen', sub: 'Struktur klasterisasi unit kerja ISO mutlak penjamin mutu produk.', icon: 'fa-building', heading: 'Eksplorasi Departemen Aktif', desc: 'Menampilkan rangkuman total arsip terkendali dari 9 unit kerja aktif di perusahaan.' },
-            'dokumen': { title: 'Semua Arsip Dokumen', sub: 'Pangkalan data berkas induk terkendali sistem manajemen terintegrasi.', icon: 'fa-file-lines', heading: 'Master Dokumen Terdaftar', desc: 'Gunakan filter di atas untuk menelusuri nomor kode dokumen, tanggal penerbitan, maupun nomor revisi.' },
-            'standar': { title: 'Spesifikasi Standar (STD)', sub: 'Rujukan parameter mutu acuan regulasi internasional & nasional.', icon: 'fa-shield-halved', heading: 'Berkas Standar Mutu', desc: 'Berisi berkas rujukan legalitas mutu berskala global seperti sistem sertifikasi ISO 9001.' },
-            'instruksi-kerja': { title: 'Instruksi Kerja (IK)', sub: 'Panduan teknis langkah kerja operasional mendetail unit lapangan.', icon: 'fa-file-signature', heading: 'Log File Instruksi Kerja', desc: 'Daftar berkas panduan praktis (Work Instructions) pembimbing jalannya lini kerja mesin dan operator.' },
-            'formulir': { title: 'Formulir & Rekaman (FM)', sub: 'Lembar pencatatan pembuktian implementasi riil sistem di lapangan.', icon: 'fa-list-check', heading: 'Kumpulan Lembar Formulir', desc: 'Kumpulan blanko isian baku siap cetak guna menjamin ketertelusuran data di setiap departemen.' }
+            'prosedur': { title: 'Prosedur Operasional (PR)', sub: 'SOP utama pengendali alur koordinasi lintas divisi perusahaan.', csv: linkCsvProsedur },
+            'instruksi-kerja': { title: 'Instruksi Kerja (IK)', sub: 'Panduan teknis langkah kerja operasional mendetail unit lapangan.', csv: linkCsvIK },
+            'formulir': { title: 'Formulir & Rekaman (FM)', sub: 'Lembar pencatatan pembuktian implementasi riil sistem di lapangan.', csv: linkCsvFormulir },
+            'standar': { title: 'Spesifikasi Standar (STD)', sub: 'Rujukan parameter mutu acuan regulasi internasional & nasional.', csv: linkCsvStandar },
+            'eksternal': { title: 'Dokumen Eksternal (EX)', sub: 'Berkas regulasi luar instansi pengendali standar mutu perusahaan.', csv: linkCsvEksternal },
+            'departemen': { title: 'Daftar Departemen', sub: 'Struktur klasterisasi unit kerja ISO mutlak penjamin mutu produk.', icon: 'fa-building', heading: 'Eksplorasi Departemen Aktif', desc: 'Menampilkan rangkuman total arsip terkendali dari unit kerja aktif di perusahaan.' }
         };
 
         function switchPage(pageId) {
@@ -366,17 +366,19 @@
             mainTitle.innerText = meta.title;
             mainSubtitle.innerText = meta.sub;
 
+            // Perbaikan Logika Tampilan Mobile & Desktop Terpadu
             if (pageId === 'dashboard') {
-                pageDashboard.remove('hidden');
                 pageDashboard.classList.remove('hidden');
                 pageProsedur.classList.add('hidden');
                 pageGeneric.classList.add('hidden');
-            } else if (pageId === 'prosedur') {
+            } else if (meta.csv) {
+                // JIKA SUB-MENU MEMILIKI DATA SPREADSHEETS (PR, IK, FM, STD, EX)
                 pageDashboard.classList.add('hidden');
                 pageProsedur.classList.remove('hidden');
                 pageGeneric.classList.add('hidden');
-                fetchProcedureData(); 
+                fetchTableData(meta.csv); 
             } else {
+                // JIKA HALAMAN STATIK LAINNYA
                 pageDashboard.classList.add('hidden');
                 pageProsedur.classList.add('hidden');
                 pageGeneric.classList.remove('hidden');
@@ -405,30 +407,33 @@
         });
 
         // =========================================================================================================
-        //  KODE UNTUK MENAMPILKAN MENU PROSEDUR
+        //  KODE DYNAMIC LOAD ENGINE UNTUK MENAMPILKAN DATA TABEL SESUAI KLIK MENU SPREADSHEET
         // =========================================================================================================
-        async function fetchProcedureData() {
+        async function fetchTableData(csvSourceUrl) {
             const tableBody = document.getElementById('procedure-table-body');
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload dan memetakan data spreadsheet...</td></tr>`;
+            
             try {
-                const response = await fetch(linkCsvProsedur);
+                const response = await fetch(csvSourceUrl);
                 const csvText = await response.text();
                 const rows = parseCSV(csvText);
 
                 tableBody.innerHTML = '';
 
+                // Validasi baris kosong kolom B & nomor baris tidak kosong
                 const validRows = rows.slice(1).filter(row => {
                     return row.length >= 2 && row[0] !== "" && !isNaN(row[0]) && row[1].trim() !== "";
                 });
 
                 if (validRows.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data prosedur yang terdata.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data dokumen terdaftar dalam berkas ini.</td></tr>`;
                     return;
                 }
 
                 validRows.forEach(row => {
                     const no = row[0] || '-';
-                    const namaProsedur = row[1] || '-';  
-                    const noProsedur = row[2] || '-';    
+                    const namaDokumen = row[1] || '-';  
+                    const noDokumen = row[2] || '-';    
                     const revisi = row[3] || '0';        
                     const tglBerlaku = row[4] || '-';    
                     const bagian = row[7] || '-';        
@@ -436,8 +441,8 @@
                     const trHtml = `
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
                             <td class="py-3 px-4 font-medium text-slate-400">${no}</td>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${namaProsedur}</td>
-                            <td class="py-3 px-4 text-slate-500 font-mono tracking-tight">${noProsedur}</td>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${namaDokumen}</td>
+                            <td class="py-3 px-4 text-slate-500 font-mono tracking-tight">${noDokumen}</td>
                             <td class="py-3 px-4 text-center"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">${revisi}</span></td>
                             <td class="py-3 px-4 text-slate-500">${tglBerlaku}</td>
                             <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px]">${bagian}</span></td>
@@ -446,8 +451,8 @@
                     tableBody.innerHTML += trHtml;
                 });
             } catch (error) {
-                console.error('Gagal memuat data Prosedur:', error);
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal memuat data langsung dari server Google Sheets.</td></tr>`;
+                console.error('Gagal memuat data Tabel:', error);
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal terhubung langsung dengan server file. Mohon cek kembali URL Publikasi CSV Anda.</td></tr>`;
             }
         }
 
@@ -458,7 +463,6 @@
                 const csvText = await response.text();
                 const rawRows = parseCSV(csvText);
 
-                // Buat struktur penampung data 5 info dokumen per departemen
                 const departmentsData = {};
                 Object.keys(deptMaster).forEach(code => {
                     departmentsData[code] = { pr: 0, ik: 0, fm: 0, std: 0, ex: 0 };
@@ -472,7 +476,7 @@
                     const firstCol = row[0] ? row[0].trim() : "";
                     const secondCol = row[1] ? row[1].trim() : "";
 
-                    // Deteksi kategori dokumen
+                    // REVISI DETEKSI KATA KUNCI: Menyesuaikan string teks murni dari file SMMRY GSheet
                     if (firstCol.toLowerCase().includes("prosedur")) currentCategory = 'PR';
                     else if (firstCol.toLowerCase().includes("intruksi kerja")) currentCategory = 'IK';
                     else if (firstCol.toLowerCase().includes("formulir")) currentCategory = 'FM';
@@ -481,10 +485,8 @@
 
                     const deptCode = secondCol.toUpperCase();
 
-                    // Lewati baris bertuliskan total agar hitungan murni mandiri
                     if (secondCol.toLowerCase() === 'total' || firstCol.toLowerCase() === 'total') return;
 
-                    // Mengisi angka jika baris tersebut valid milik departemen tertentu
                     if (departmentsData[deptCode] && currentCategory) {
                         const val = parseInt(row[2]) || 0;
                         if (currentCategory === 'PR') departmentsData[deptCode].pr = val;
@@ -495,7 +497,7 @@
                     }
                 });
 
-                // HITUNG TOTAL GLOBAL SECARA MANDIRI AGAR AKURAT 100% SAMA DENGAN GRAFIK BAWAH
+                // HITUNG TOTAL GLOBAL MANDIRI SECARA REALTIME
                 let totalPR = 0, totalIK = 0, totalFM = 0, totalSTD = 0, totalEX = 0;
                 Object.keys(departmentsData).forEach(code => {
                     totalPR += departmentsData[code].pr;
@@ -505,14 +507,13 @@
                     totalEX += departmentsData[code].ex;
                 });
 
-                // Cetak angka kalkulasi akurat ke dasbor atas
                 document.getElementById('total-pr').innerText = totalPR;
                 document.getElementById('total-ik').innerText = totalIK;
                 document.getElementById('total-fm').innerText = totalFM;
                 document.getElementById('total-std').innerText = totalSTD;
                 document.getElementById('total-ex').innerText = totalEX;
 
-                // Tampilkan Grid Menu Departemen berisi 5 info lengkap
+                // TAMPILKAN GRID CARD DEPARTEMEN DENGAN 5 INFO FLAT
                 const gridContainer = document.getElementById('department-grid');
                 gridContainer.innerHTML = ''; 
 
