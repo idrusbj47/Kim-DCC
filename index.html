@@ -1,892 +1,349 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISO Document Control Center (DCC) | KIM</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+    <title>ISO Document Control Center - Dynamic CSV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            /* Dark Theme (Default - Corporate Dark Style) */
-            --bg-primary: #1A202C;
-            --bg-secondary: #2D3748;
-            --bg-tertiary: #4A5568;
-            --accent: #38B2AC;
-            --accent-hover: #319795;
-            --accent-light: rgba(56, 178, 172, 0.12);
-            --text-primary: #F7FAFC;
-            --text-secondary: #A0AEC0;
-            --text-muted: #718096;
-            --border-color: #4A5568;
-            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
-            --pulse-color: rgba(56, 178, 172, 0.6);
-            --transition-speed: 0.4s;
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
-        [data-theme="light"] {
-            /* Light Theme (Clean, High-End Minimalist) */
-            --bg-primary: #F8FAFC;
-            --bg-secondary: #FFFFFF;
-            --bg-tertiary: #E2E8F0;
-            --accent: #2C7A7B;
-            --accent-hover: #234E52;
-            --accent-light: rgba(44, 122, 123, 0.08);
-            --text-primary: #1A202C;
-            --text-secondary: #4A5568;
-            --text-muted: #718096;
-            --border-color: #E2E8F0;
-            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            --pulse-color: rgba(44, 122, 123, 0.4);
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1.5px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+            transition: all 0.3s ease;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
-            min-height: 100vh;
-            line-height: 1.6;
-            overflow-x: hidden;
+        .sharp-border {
+            border: 1.5px solid rgba(0, 0, 0, 0.12);
+        }
+        .dark .sharp-border {
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
         }
 
-        h1, h2, h3 {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
+        .toggle-thumb {
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), background-color 0.3s;
         }
-
-        /* Header Style */
-        header {
-            background-color: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--card-shadow);
-            transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+        .rotate-icon {
+            transition: transform 0.5s ease;
         }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .logo-icon {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.3rem;
-            box-shadow: 0 4px 15px var(--pulse-color);
-        }
-
-        .logo-title {
-            font-size: 1.1rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            font-weight: 700;
-        }
-
-        .logo-subtitle {
-            font-size: 0.75rem;
-            color: var(--accent);
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-        }
-
-        .nav-controls {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .system-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            background-color: var(--bg-primary);
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: 1px solid var(--border-color);
-            transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
-        }
-
-        .pulse-dot {
-            width: 9px;
-            height: 9px;
-            background-color: #38A169;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .pulse-dot::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            background-color: #38A169;
-            border-radius: 50%;
-            animation: pulse-animation 2s infinite ease-in-out;
-        }
-
-        @keyframes pulse-animation {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-
-        .theme-toggle-btn {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            padding: 8px;
-            border-radius: 50%;
-            cursor: pointer;
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-primary);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color var(--transition-speed);
-        }
-
-        .theme-toggle-btn:hover {
-            transform: rotate(45deg) scale(1.05);
-            border-color: var(--accent);
-        }
-
-        .theme-toggle-btn svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        /* Layout Container */
-        .main-container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 50px 40px;
-        }
-
-        /* Hero Area */
-        .hero-section {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        .hero-title {
-            font-size: 2.4rem;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
-            background: linear-gradient(90deg, var(--text-primary), var(--text-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-desc {
-            color: var(--text-secondary);
-            font-size: 1.05rem;
-            max-width: 650px;
-            margin: 0 auto 35px auto;
-            font-weight: 300;
-        }
-
-        .search-wrapper {
-            position: relative;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .search-bar-container {
-            display: flex;
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 8px;
-            box-shadow: var(--card-shadow);
-            transition: all var(--transition-speed) ease;
-        }
-
-        .search-bar-container:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px var(--accent-light);
-        }
-
-        .search-icon {
-            display: flex;
-            align-items: center;
-            padding-left: 15px;
-            color: var(--text-muted);
-        }
-
-        .search-icon svg {
-            width: 22px;
-            height: 22px;
-        }
-
-        .search-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            outline: none;
-            padding: 10px 15px;
-            font-size: 1.1rem;
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .search-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        /* Statistics Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
-            margin-bottom: 60px;
-        }
-
-        .stat-card {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 24px 15px;
-            text-align: center;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            outline: none;
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: var(--card-shadow);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent);
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
-        }
-
-        [data-theme="light"] .stat-card:hover {
-            box-shadow: 0 15px 30px -5px rgba(44, 122, 123, 0.15);
-        }
-
-        .stat-number {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 6px;
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .stat-sub {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        /* Section Header */
-        .section-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            border-left: 4px solid var(--accent);
-            padding-left: 16px;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            color: var(--text-primary);
-        }
-
-        /* Department Grid */
-        .dept-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-        }
-
-        .dept-card {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: var(--card-shadow);
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .dept-card:hover {
-            transform: translateY(-6px);
-            border-color: var(--accent);
-            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4);
-        }
-
-        [data-theme="light"] .dept-card:hover {
-            box-shadow: 0 20px 35px -10px rgba(44, 122, 123, 0.15);
-        }
-
-        .dept-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .dept-code {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .dept-arrow {
-            width: 22px;
-            height: 22px;
-            color: var(--text-muted);
-            transition: transform var(--transition-speed), color var(--transition-speed);
-        }
-
-        .dept-card:hover .dept-arrow {
-            transform: translateX(6px);
-            color: var(--accent);
-        }
-
-        .dept-name {
-            font-size: 1.05rem;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 25px;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-        }
-
-        .dept-breakdown {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            background-color: var(--bg-primary);
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        .breakdown-item {
-            text-align: center;
-        }
-
-        .breakdown-val {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .breakdown-lbl {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-top: 2px;
-        }
-
-        .no-results {
-            text-align: center;
-            grid-column: 1 / -1;
-            padding: 40px;
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            background-color: var(--bg-secondary);
-            border: 1px dashed var(--border-color);
-            border-radius: 16px;
-            display: none;
-        }
-
-        /* Footer */
-        footer {
-            margin-top: 100px;
-            border-top: 1px solid var(--border-color);
-            background-color: var(--bg-secondary);
-            padding: 35px 40px;
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .footer-brand {
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-
-        /* --- RESPONSIVE DESIGN (MOBILE OPTIMIZATION) --- */
-        @media (max-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            header {
-                padding: 15px 20px;
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .nav-controls {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .main-container {
-                padding: 30px 20px;
-            }
-
-            .hero-title {
-                font-size: 1.85rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-                margin-bottom: 40px;
-            }
-
-            .stat-card {
-                padding: 18px 10px;
-            }
-
-            .stat-number {
-                font-size: 1.8rem;
-            }
-
-            .dept-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .dept-card {
-                padding: 22px;
-            }
-            
-            .dept-name {
-                min-height: auto;
-                margin-bottom: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .logo-container {
-                flex-direction: column;
-                gap: 8px;
-                text-align: center;
-            }
-
-            .nav-controls {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .system-status {
-                width: 100%;
-                justify-content: center;
-            }
+        #theme-toggle:hover .rotate-icon {
+            transform: rotate(45deg);
         }
     </style>
 </head>
-<body data-theme="dark">
+<body class="bg-gradient-to-tr from-slate-100 via-teal-50/30 to-blue-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-200 flex min-h-screen">
 
-    <header>
-        <div class="logo-container">
-            <div class="logo-icon">M</div>
-            <div class="logo-text">
-                <div class="logo-title">PT Karya Indah Multiguna</div>
-                <div class="logo-subtitle">Document Control Center</div>
-            </div>
-        </div>
-        <div class="nav-controls">
-            <div class="system-status">
-                <div class="pulse-dot"></div>
-                <span id="syncStatus">Menghubungkan ke Live Sheet...</span>
-            </div>
-            <button class="theme-toggle-btn" id="themeToggle" title="Ubah Tema">
-                <svg id="themeIcon" viewBox="0 0 24 24">
-                    <path d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 3z"/>
-                </svg>
-            </button>
-        </div>
-    </header>
+    <div class="fixed -top-40 -left-40 w-96 h-96 bg-teal-400/20 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed bottom-10 right-10 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-    <main class="main-container">
+    <aside class="w-64 glass-panel border-r sharp-border flex flex-col justify-between p-4 fixed h-full z-10 m-0 rounded-none">
+        <div>
+            <div class="flex items-center gap-3 px-2 py-4 mb-4">
+                <div class="w-8 h-8 bg-teal-600 dark:bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-teal-500/20">⬡</div>
+                <div>
+                    <h1 class="font-bold text-slate-900 dark:text-white leading-tight tracking-tight">ISO DCC</h1>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Document Control</p>
+                </div>
+            </div>
+
+            <nav class="space-y-1">
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 bg-teal-600 text-white rounded-xl font-medium text-sm shadow-md shadow-teal-600/10">
+                    <i class="fa-solid fa-house"></i> Dashboard
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-building w-5 text-center"></i> Departemen
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-file-lines w-5 text-center"></i> Dokumen
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-shield-halved w-5 text-center"></i> Standar
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-file-signature w-5 text-center"></i> Instruksi Kerja
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-list-check w-5 text-center"></i> Formulir
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-circle-check w-5 text-center"></i> Prosedur
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-globe w-5 text-center"></i> Eksternal
+                </a>
+            </nav>
+        </div>
+
+        <div>
+            <div class="bg-white/40 dark:bg-slate-800/40 border sharp-border rounded-2xl p-4 mb-4">
+                <div class="flex items-center gap-2 mb-1.5 text-teal-700 dark:text-teal-400 font-bold text-xs">
+                    <i class="fa-solid fa-folder-open"></i> Akses Cepat
+                </div>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3 leading-relaxed">Temukan dokumen mutu internal dengan instan.</p>
+                <button class="w-full bg-white dark:bg-slate-700 border sharp-border text-slate-700 dark:text-slate-200 text-xs py-2 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-slate-600 transition flex items-center justify-center gap-1">
+                    Lihat Semua <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+            </div>
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 px-2">© 2026 ISO Document Control.<br>All rights reserved.</p>
+        </div>
+    </aside>
+
+    <main class="flex-1 ml-64 p-8 relative z-0">
         
-        <section class="hero-section">
-            <h1 class="hero-title">ISO Document Control Center</h1>
-            <p class="hero-desc">Portal otomatisasi data seketika untuk penelusuran, klasifikasi, dan akses dokumen mutu penjaminan perusahaan.</p>
+        <header class="flex justify-between items-start mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">ISO Document Control Center</h2>
+                <p class="text-xs text-slate-400 dark:text-slate-500 max-w-xl">Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu perusahaan.</p>
+            </div>
             
-            <div class="search-wrapper">
-                <div class="search-bar-container">
-                    <div class="search-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
+            <div class="flex items-center gap-4">
+                <div class="relative w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 dark:text-slate-500 text-sm"></i>
+                    <input type="text" placeholder="Cari kode departemen..." class="w-full pl-9 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
+                </div>
+
+                <button id="theme-toggle" class="w-14 h-8 bg-slate-200 dark:bg-slate-700 rounded-full p-1 flex items-center relative transition-colors duration-300 focus:outline-none border sharp-border">
+                    <div class="toggle-thumb w-6 h-6 bg-white dark:bg-slate-900 rounded-full shadow-md flex items-center justify-center transform translate-x-0 dark:translate-x-6">
+                        <i class="rotate-icon fa-solid fa-sun text-amber-500 text-xs dark:hidden"></i>
+                        <i class="rotate-icon fa-solid fa-moon text-indigo-400 text-xs hidden dark:block"></i>
                     </div>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Cari kode atau nama departemen...">
+                </button>
+
+                <div class="flex items-center gap-3 pl-2 border-l border-slate-200 dark:border-slate-800">
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Admin DCC</p>
+                        <p class="text-[10px] font-medium text-teal-600 dark:text-teal-400">System Admin</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-teal-500/50">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar Admin" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-5 gap-4 mb-8">
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
+                <div class="w-10 h-10 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-md border border-teal-500/20"><i class="fa-solid fa-file-invoice"></i></div>
+                <div>
+                    <div class="flex items-baseline gap-1"><span id="total-pr" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">PR</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">SOP (Prosedur)</p>
+                </div>
+            </div>
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
+                <div class="w-10 h-10 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-md border border-blue-500/20"><i class="fa-solid fa-clipboard-list"></i></div>
+                <div>
+                    <div class="flex items-baseline gap-1"><span id="total-ik" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">IK</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Instruksi Kerja</p>
+                </div>
+            </div>
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
+                <div class="w-10 h-10 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-md border border-indigo-500/20"><i class="fa-solid fa-table-list"></i></div>
+                <div>
+                    <div class="flex items-baseline gap-1"><span id="total-fm" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">FM</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Forms & Records</p>
+                </div>
+            </div>
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
+                <div class="w-10 h-10 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-md border border-purple-500/20"><i class="fa-solid fa-shield"></i></div>
+                <div>
+                    <div class="flex items-baseline gap-1"><span id="total-std" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">STD</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Technical Specs</p>
+                </div>
+            </div>
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
+                <div class="w-10 h-10 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center text-md border border-amber-500/20"><i class="fa-solid fa-earth-americas"></i></div>
+                <div>
+                    <div class="flex items-baseline gap-1"><span id="total-ek" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">EK</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Regulasi Eksternal</p>
                 </div>
             </div>
         </section>
 
-        <section class="stats-grid">
-            <a href="daftar_prosedur.html" class="stat-card">
-                <div class="stat-number" id="stat-pr">--</div>
-                <div class="stat-label">Prosedur</div>
-                <div class="stat-sub">SOP (PR)</div>
-            </a>
-            <a href="daftar_instruksi_kerja.html" class="stat-card">
-                <div class="stat-number" id="stat-ik">--</div>
-                <div class="stat-label">Instruksi Kerja</div>
-                <div class="stat-sub">Work Instructions (IK)</div>
-            </a>
-            <a href="daftar_formulir.html" class="stat-card">
-                <div class="stat-number" id="stat-fm">--</div>
-                <div class="stat-label">Formulir</div>
-                <div class="stat-sub">Forms & Records (FM)</div>
-            </a>
-            <a href="daftar_standar.html" class="stat-card">
-                <div class="stat-number" id="stat-std">--</div>
-                <div class="stat-label">Standar</div>
-                <div class="stat-sub">Technical Specs (STD)</div>
-            </a>
-            <a href="daftar_eksternal.html" class="stat-card">
-                <div class="stat-number" id="stat-ex">--</div>
-                <div class="stat-label">Eksternal</div>
-                <div class="stat-sub">Regulations (EX)</div>
-            </a>
-        </section>
-
-        <div class="section-header">
-            <h2 class="section-title">Eksplorasi Per Departemen</h2>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+                <span class="w-1 h-3.5 bg-teal-600 dark:bg-teal-500 rounded-sm"></span> Eksplorasi Per Departemen
+            </h3>
+            <a href="#" class="text-xs text-teal-600 dark:text-teal-400 font-semibold flex items-center gap-1 hover:underline">Lihat Semua <i class="fa-solid fa-arrow-right text-[10px]"></i></a>
         </div>
 
-        <section class="dept-grid" id="deptGrid">
-            <a href="dept_iso.html" class="dept-card" data-code="ISO" data-name="Sistem Manajemen Mutu ISO Section">
-                <div class="dept-header">
-                    <div class="dept-code">ISO</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Sistem Manajemen Mutu / ISO Section</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="ISO-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="ISO-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="ISO-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <a href="dept_hrd.html" class="dept-card" data-code="HRD" data-name="Human Resources Department">
-                <div class="dept-header">
-                    <div class="dept-code">HRD</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Human Resources Department</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="HRD-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="HRD-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="HRD-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <a href="dept_man.html" class="dept-card" data-code="MAN" data-name="Management Direksi Maintenance">
-                <div class="dept-header">
-                    <div class="dept-code">MAN</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Management / Direksi & Maintenance</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="MAN-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="MAN-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="MAN-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <a href="dept_mkt.html" class="dept-card" data-code="MKT" data-name="Marketing Sales Department">
-                <div class="dept-header">
-                    <div class="dept-code">MKT</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Marketing & Sales Department</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="MKT-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="MKT-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="MKT-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <a href="dept_ppc.html" class="dept-card" data-code="PPC" data-name="Production Planning Control">
-                <div class="dept-header">
-                    <div class="dept-code">PPC</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Production Planning & Control</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="PPC-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="PPC-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="PPC-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <a href="dept_pro.html" class="dept-card" data-code="PRO" data-name="Production Department Flexo">
-                <div class="dept-header">
-                    <div class="dept-code">PRO</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Production Department</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="PRO-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="PRO-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="PRO-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <a href="dept_pur.html" class="dept-card" data-code="PUR" data-name="Purchasing Procurement">
-                <div class="dept-header">
-                    <div class="dept-code">PUR</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Purchasing / Procurement</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="PUR-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="PUR-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="PUR-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <a href="dept_qad.html" class="dept-card" data-code="QAD" data-name="Quality Assurance Department">
-                <div class="dept-header">
-                    <div class="dept-code">QAD</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Quality Assurance Department</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="QAD-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="QAD-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="QAD-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <a href="dept_mrp.html" class="dept-card" data-code="MRP" data-name="Material Planning Finished Goods Warehouse">
-                <div class="dept-header">
-                    <div class="dept-code">MRP / WH</div>
-                    <svg class="dept-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="dept-name">Material Planning & Finished Goods Warehouse</div>
-                <div class="dept-breakdown">
-                    <div class="breakdown-item"><div class="breakdown-val" id="MRP-PR">0</div><div class="breakdown-lbl">PR</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="MRP-IK">0</div><div class="breakdown-lbl">IK</div></div>
-                    <div class="breakdown-item"><div class="breakdown-val" id="MRP-FM">0</div><div class="breakdown-lbl">FM</div></div>
-                </div>
-            </a>
-
-            <div id="noResults" class="no-results">Tidak ada departemen yang sesuai dengan kriteria pencarian.</div>
+        <section id="department-grid" class="grid grid-cols-3 gap-5">
+            <div class="col-span-3 text-center py-8 text-sm text-slate-400">Memuat data departemen...</div>
         </section>
+
+        <footer class="mt-12 flex justify-between items-center text-[11px] text-slate-400 dark:text-slate-500">
+            <div>Versi 1.2.0 (Live CSV Edition)</div>
+            <div class="flex items-center gap-1.5 font-semibold text-slate-500">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sistem Terintegrasi Live Sheets
+            </div>
+        </footer>
     </main>
 
-    <footer>
-        <div class="footer-brand">PT Karya Indah Multiguna</div>
-        <div>&copy; 2026 ISO Document Control Center Dashboard. Terintegrasi Live Google Sheets CSV.</div>
-    </footer>
-
     <script>
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv";
+        // --- 1. LOGIKA TOGGLE DARK MODE ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
 
-        // Local Fallback Data Cache Structure
-        let masterData = {
-            total: { pr: 42, ik: 123, fm: 295, std: 15, ex: 47 },
-            depts: {
-                ISO: { pr: 2, ik: 0, fm: 0 }, HRD: { pr: 8, ik: 14, fm: 47 },
-                MAN: { pr: 1, ik: 25, fm: 65 }, MKT: { pr: 9, ik: 10, fm: 36 },
-                PPC: { pr: 4, ik: 13, fm: 36 }, PRO: { pr: 3, ik: 31, fm: 37 },
-                PUR: { pr: 5, ik: 1, fm: 7 }, QAD: { pr: 10, ik: 18, fm: 47 },
-                MRP: { pr: 0, ik: 0, fm: 1 }
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlElement.classList.add('dark');
+        } else {
+            htmlElement.classList.remove('dark');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
             }
+        });
+
+        // --- 2. INTEGRASI LIVE DATA GOOGLE SHEETS (CSV) ---
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
+
+        // Peta ikon berdasarkan singkatan departemen agar visualnya menarik
+        const deptIcons = {
+            'ISO': 'fa-shield-halved',
+            'HRD': 'fa-users-gear',
+            'MAN': 'fa-sitemap',
+            'MKT': 'fa-chart-line',
+            'PPC': 'fa-cubes',
+            'PRO': 'fa-industry',
+            'PUR': 'fa-cart-shopping',
+            'QAD': 'fa-circle-check',
+            'MRP': 'fa-warehouse'
         };
 
-        function renderMetrics() {
-            document.getElementById('stat-pr').innerText = masterData.total.pr;
-            document.getElementById('stat-ik').innerText = masterData.total.ik;
-            document.getElementById('stat-fm').innerText = masterData.total.fm;
-            document.getElementById('stat-std').innerText = masterData.total.std;
-            document.getElementById('stat-ex').innerText = masterData.total.ex;
-
-            for (const [dept, metrics] of Object.entries(masterData.depts)) {
-                const prE = document.getElementById(`${dept}-PR`);
-                const ikE = document.getElementById(`${dept}-IK`);
-                const fmE = document.getElementById(`${dept}-FM`);
-                if (prE) prE.innerText = metrics.pr;
-                if (ikE) ikE.innerText = metrics.ik;
-                if (fmE) fmE.innerText = metrics.fm;
-            }
+        // Fungsi pembantu untuk memparsing CSV sederhana (menangani baris & kolom)
+        function parseCSV(text) {
+            let lines = text.split('\n');
+            return lines.map(line => {
+                // Menangani kemungkinan ada koma di dalam tanda kutip teks
+                let result = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    let char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            });
         }
 
-        async function syncWithLiveSheet() {
-            const syncStatus = document.getElementById('syncStatus');
+        async function fetchDashboardData() {
             try {
                 const response = await fetch(csvUrl);
-                if (!response.ok) throw new Error("Gagal mengunduh file CSV");
-                const text = await response.text();
-                
-                const lines = text.split(/\r?\n/);
-                let currentType = "";
-                
-                let freshDepts = {
-                    ISO: { pr: 0, ik: 0, fm: 0 }, HRD: { pr: 0, ik: 0, fm: 0 },
-                    MAN: { pr: 0, ik: 0, fm: 0 }, MKT: { pr: 0, ik: 0, fm: 0 },
-                    PPC: { pr: 0, ik: 0, fm: 0 }, PRO: { pr: 0, ik: 0, fm: 0 },
-                    PUR: { pr: 0, ik: 0, fm: 0 }, QAD: { pr: 0, ik: 0, fm: 0 },
-                    MRP: { pr: 0, ik: 0, fm: 0 }
-                };
-                let freshTotals = { pr: 0, ik: 0, fm: 0, std: 0, ex: 0 };
+                const csvText = await response.text();
+                const data = parseCSV(csvText);
 
-                lines.forEach(line => {
-                    const cols = line.split(',');
-                    if (cols.length < 3) return;
+                // Asumsi baris 0 adalah Header: [Departemen, Nama_Panjang, PR, IK, FM, STD, EK]
+                // Ambil data mulai dari baris indeks 1 dan bersihkan baris kosong
+                const rows = data.slice(1).filter(row => row.length > 1 && row[0] !== "");
 
-                    let typeField = cols[0].trim();
-                    let deptField = cols[1].trim().toUpperCase();
-                    let numericVal = parseInt(cols[2]) || 0;
+                let grandTotalPR = 0;
+                let grandTotalIK = 0;
+                let grandTotalFM = 0;
+                let grandTotalSTD = 0;
+                let grandTotalEK = 0;
 
-                    if (typeField !== "") {
-                        if (typeField.includes("Prosedur")) currentType = "PR";
-                        else if (typeField.includes("Intruksi") || typeField.includes("Instruksi")) currentType = "IK";
-                        else if (typeField.includes("Formulir")) currentType = "FM";
-                        else if (typeField.includes("Standar")) currentType = "STD";
-                        else if (typeField.includes("External")) currentType = "EX";
-                    }
+                const gridContainer = document.getElementById('department-grid');
+                gridContainer.innerHTML = ''; // Bersihkan loading state
 
-                    if (deptField === "TOTAL") {
-                        if (currentType === "PR") freshTotals.pr = numericVal;
-                        else if (currentType === "IK") freshTotals.ik = numericVal;
-                        else if (currentType === "STD") freshTotals.std = numericVal;
-                        else if (currentType === "EX") freshTotals.ex = numericVal;
-                    }
-                    
-                    let resolvedKey = null;
-                    if (deptField.includes("ISO")) resolvedKey = "ISO";
-                    else if (deptField.includes("HRD")) resolvedKey = "HRD";
-                    else if (deptField.includes("MAN")) resolvedKey = "MAN";
-                    else if (deptField.includes("MKT")) resolvedKey = "MKT";
-                    else if (deptField.includes("PPC")) resolvedKey = "PPC";
-                    else if (deptField.includes("PRO")) resolvedKey = "PRO";
-                    else if (deptField.includes("PUR")) resolvedKey = "PUR";
-                    else if (deptField.includes("QAD")) resolvedKey = "QAD";
-                    else if (deptField.includes("MRP") || deptField.includes("WH")) resolvedKey = "MRP";
+                rows.forEach(row => {
+                    const deptCode = row[0] || 'DEPT';
+                    const deptName = row[1] || 'Department Description';
+                    const pr = parseInt(row[2]) || 0;
+                    const ik = parseInt(row[3]) || 0;
+                    const fm = parseInt(row[4]) || 0;
+                    const std = parseInt(row[5]) || 0; // Kolom Standar jika ada
+                    const ek = parseInt(row[6]) || 0;  // Kolom Eksternal jika ada
 
-                    if (resolvedKey && (currentType === "PR" || currentType === "IK" || currentType === "FM")) {
-                        freshDepts[resolvedKey][currentType.toLowerCase()] = numericVal;
-                    }
+                    // Akumulasi total untuk Counter Atas
+                    grandTotalPR += pr;
+                    grandTotalIK += ik;
+                    grandTotalFM += fm;
+                    grandTotalSTD += std;
+                    grandTotalEK += ek;
+
+                    // Tentukan ikon, jika tidak terdaftar pakai ikon bawaan folder
+                    const iconClass = deptIcons[deptCode.toUpperCase()] || 'fa-folder';
+
+                    // Buat elemen Card Departemen secara dinamis
+                    const cardHtml = `
+                        <div class="glass-panel rounded-2xl p-5 border sharp-border group cursor-pointer hover:-translate-y-1">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex gap-3 items-center">
+                                    <div class="w-10 h-10 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-sm border border-teal-500/20">
+                                        <i class="fa-solid ${iconClass}"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">${deptCode}</h4>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500">${deptName}</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 group-hover:text-teal-500 transition pt-1"></i>
+                            </div>
+                            <div class="grid grid-cols-3 text-center pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
+                                <div><p class="text-xs font-bold">${pr}</p><p class="text-[9px] font-bold text-slate-400 uppercase">PR</p></div>
+                                <div class="border-x border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${ik}</p><p class="text-[9px] font-bold text-slate-400 uppercase">IK</p></div>
+                                <div><p class="text-xs font-bold">${fm}</p><p class="text-[9px] font-bold text-slate-400 uppercase">FM</p></div>
+                            </div>
+                        </div>
+                    `;
+                    gridContainer.innerHTML += cardHtml;
                 });
 
-                let calculatedFm = 0;
-                for (const d in freshDepts) { calculatedFm += freshDepts[d].fm; }
-                freshTotals.fm = calculatedFm > 0 ? calculatedFm : 295;
+                // Update Angka Counter Atas dengan hasil akumulasi data CSV
+                document.getElementById('total-pr').innerText = grandTotalPR;
+                document.getElementById('total-ik').innerText = grandTotalIK;
+                document.getElementById('total-fm').innerText = grandTotalFM;
+                document.getElementById('total-std').innerText = grandTotalSTD;
+                document.getElementById('total-ek').innerText = grandTotalEK;
 
-                masterData.total = freshTotals;
-                masterData.depts = freshDepts;
-
-                renderMetrics();
-                syncStatus.innerText = "Sistem DCC: Terkoneksi Live";
-            } catch (err) {
-                console.warn("Gagal memuat data live, memuat cache lokal perusahaan:", err);
-                syncStatus.innerText = "Sistem DCC: Mode Lokal (Offline)";
-                renderMetrics();
+            } catch (error) {
+                console.error('Gagal memuat data CSV:', error);
+                document.getElementById('department-grid').innerHTML = `
+                    <div class="col-span-3 text-center py-8 text-sm text-red-500 font-semibold">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal memuat data dari Google Sheets. Pastikan link dapat diakses.
+                    </div>
+                `;
             }
         }
 
-        // Jalankan sinkronisasi awal otomatis
-        syncWithLiveSheet();
-
-        // Fitur Pencarian Berkinerja Tinggi (Live Filtering)
-        const searchInput = document.getElementById('searchInput');
-        const deptCards = document.querySelectorAll('.dept-card');
-        const noResults = document.getElementById('noResults');
-
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase().trim();
-            let matchFound = false;
-
-            deptCards.forEach(card => {
-                const code = card.getAttribute('data-code').toLowerCase();
-                const name = card.getAttribute('data-name').toLowerCase();
-
-                if (code.includes(term) || name.includes(term)) {
-                    card.style.display = 'flex';
-                    matchFound = true;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            noResults.style.display = matchFound ? 'none' : 'block';
-        });
-
-        // Logika Pengubah Tema (Dark/Light Micro-interaction)
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-        const themeIcon = document.getElementById('themeIcon');
-
-        const sunSvg = `<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`;
-        const moonSvg = `<path d="M12 3c.132 0 .263 0 .393.007a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 3z"/>`;
-
-        themeToggle.addEventListener('click', () => {
-            const activeTheme = body.getAttribute('data-theme');
-            if (activeTheme === 'dark') {
-                body.setAttribute('data-theme', 'light');
-                themeIcon.innerHTML = sunSvg;
-                themeIcon.setAttribute('stroke', 'currentColor');
-                themeIcon.setAttribute('stroke-width', '2');
-                themeIcon.setAttribute('stroke-linecap', 'round');
-                themeIcon.setAttribute('stroke-linejoin', 'round');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                themeIcon.innerHTML = moonSvg;
-                themeIcon.removeAttribute('stroke');
-            }
-        });
+        // Jalankan fungsi saat halaman selesai dimuat
+        window.addEventListener('DOMContentLoaded', fetchDashboardData);
     </script>
 </body>
 </html>
