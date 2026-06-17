@@ -140,9 +140,14 @@
             </div>
             
             <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none sm:w-60">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
-                    <input type="text" id="main-search" placeholder="Cari data..." class="w-full pl-8 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
+                <div class="relative flex-1 sm:flex-none sm:w-60 flex gap-2">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
+                        <input type="text" id="main-search" placeholder="Cari data..." class="w-full pl-8 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
+                    </div>
+                    <button id="refresh-btn" title="Sinkronisasi Ulang Data CSV" class="w-9 h-8 bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl flex items-center justify-center text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition shadow-sm shrink-0">
+                        <i id="refresh-icon" class="fa-solid fa-rotate animate-none text-xs"></i>
+                    </button>
                 </div>
 
                 <button id="theme-toggle" class="w-14 h-8 bg-slate-200 dark:bg-slate-700 rounded-full p-1 flex items-center relative transition-colors duration-300 focus:outline-none border sharp-border shrink-0">
@@ -256,7 +261,11 @@
         <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
             <div>Versi 2.0.0 (Absolute Row-Coupling Engine)</div>
             <div class="flex items-center gap-1.5 font-semibold text-slate-500">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sinkronisasi Real-Time Sukses
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span id="sync-status-text">Sinkronisasi Real-Time Sukses</span>
             </div>
         </footer>
     </main>
@@ -308,10 +317,10 @@
         const summaryCsvUrl      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
         
         const linkCsvProsedur    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv';
-        const linkCsvIK          = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=68974277&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvFormulir    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=618894111&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvStandar     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=2101716872&single=true&output=csv'; // Nanti ganti gid nya
-        const linkCsvEksternal   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1062935321&single=true&output=csv'; // Nanti ganti gid nya
+        const linkCsvIK          = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=68974277&single=true&output=csv'; 
+        const linkCsvFormulir    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=618894111&single=true&output=csv'; 
+        const linkCsvStandar     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=2101716872&single=true&output=csv'; 
+        const linkCsvEksternal   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1062935321&single=true&output=csv'; 
         // =========================================================================================================
 
         const deptMaster = {
@@ -326,6 +335,10 @@
             'MRP': { name: 'Management Representative', icon: 'fa-user-tie' },
             'ISO': { name: 'Sistem Manajemen Mutu', icon: 'fa-shield-halved' }
         };
+
+        // Global State internal untuk melayani fitur pencarian real-time lintasan halaman
+        let currentActivePage = 'dashboard';
+        let originalTableRowsData = [];
 
         function parseCSV(text) {
             return text.split('\n').map(line => {
@@ -364,14 +377,21 @@
         };
 
         function switchPage(pageId) {
+            currentActivePage = pageId;
             const meta = pageMeta[pageId] || pageMeta['dashboard'];
             if(mainTitle) mainTitle.innerText = meta.title;
             if(mainSubtitle) mainSubtitle.innerText = meta.sub;
+
+            // Reset input pencarian setiap kali berpindah menu halaman agar tidak membingungkan
+            const searchInput = document.getElementById('main-search');
+            if (searchInput) searchInput.value = '';
 
             if (pageId === 'dashboard') {
                 if(pageDashboard) pageDashboard.classList.remove('hidden');
                 if(pageProsedur) pageProsedur.classList.add('hidden');
                 if(pageGeneric) pageGeneric.classList.add('hidden');
+                // Tampilkan ulang semua departemen card
+                filterDashboardCards('');
             } else if (meta.csv) {
                 if(pageDashboard) pageDashboard.classList.add('hidden');
                 if(pageProsedur) pageProsedur.classList.remove('hidden');
@@ -405,6 +425,19 @@
             });
         });
 
+        // Update Waktu Terakhir Sinkronisasi pada bagian Footer
+        function updateTimestampText() {
+            const elStatus = document.getElementById('sync-status-text');
+            if(elStatus) {
+                const sekarang = new Date();
+                const jam = String(sekarang.getHours()).padStart(2, '0');
+                const menit = String(sekarang.getMinutes()).padStart(2, '0');
+                const detik = String(sekarang.getSeconds()).padStart(2, '0');
+                const tanggal = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                elStatus.innerText = `Terakhir Sinkronisasi: ${tanggal} Pukul ${jam}:${menit}:${detik}`;
+            }
+        }
+
         // =========================================================================================================
         //  PENGAMBILAN DATA TABEL DETAIL SPREADSHEET
         // =========================================================================================================
@@ -418,41 +451,49 @@
                 const csvText = await response.text();
                 const rows = parseCSV(csvText);
 
-                tableBody.innerHTML = '';
-
-                const validRows = rows.slice(1).filter(row => {
+                originalTableRowsData = rows.slice(1).filter(row => {
                     return row.length >= 2 && row[0] !== "" && !isNaN(row[0]) && row[1].trim() !== "";
                 });
 
-                if (validRows.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data dokumen terdaftar dalam berkas ini.</td></tr>`;
-                    return;
-                }
-
-                validRows.forEach(row => {
-                    const no = row[0] || '-';
-                    const namaDokumen = row[1] || '-';  
-                    const noDokumen = row[2] || '-';    
-                    const revisi = row[3] || '0';        
-                    const tglBerlaku = row[4] || '-';    
-                    const bagian = row[7] || '-';        
-
-                    const trHtml = `
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
-                            <td class="py-3 px-4 font-medium text-slate-400">${no}</td>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${namaDokumen}</td>
-                            <td class="py-3 px-4 text-slate-500 font-mono tracking-tight">${noDokumen}</td>
-                            <td class="py-3 px-4 text-center"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">${revisi}</span></td>
-                            <td class="py-3 px-4 text-slate-500">${tglBerlaku}</td>
-                            <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px]">${bagian}</span></td>
-                        </tr>
-                    `;
-                    tableBody.innerHTML += trHtml;
-                });
+                renderTableRows(originalTableRowsData);
+                updateTimestampText();
             } catch (error) {
                 console.error('Gagal memuat data Tabel:', error);
                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal terhubung langsung dengan server file. Mohon cek kembali URL Publikasi CSV Anda.</td></tr>`;
             }
+        }
+
+        // Render baris data tabel dokumen ke DOM
+        function renderTableRows(dataRows) {
+            const tableBody = document.getElementById('procedure-table-body');
+            if(!tableBody) return;
+            tableBody.innerHTML = '';
+
+            if (dataRows.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data dokumen yang cocok dengan kata kunci pencarian.</td></tr>`;
+                return;
+            }
+
+            dataRows.forEach(row => {
+                const no = row[0] || '-';
+                const namaDokumen = row[1] || '-';  
+                const noDokumen = row[2] || '-';    
+                const revisi = row[3] || '0';        
+                const tglBerlaku = row[4] || '-';    
+                const bagian = row[7] || '-';        
+
+                const trHtml = `
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150 data-row-item">
+                        <td class="py-3 px-4 font-medium text-slate-400">${no}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white row-doc-name">${namaDokumen}</td>
+                        <td class="py-3 px-4 text-slate-500 font-mono tracking-tight row-doc-code">${noDokumen}</td>
+                        <td class="py-3 px-4 text-center"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">${revisi}</span></td>
+                        <td class="py-3 px-4 text-slate-500">${tglBerlaku}</td>
+                        <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px] row-doc-dept">${bagian}</span></td>
+                    </tr>
+                `;
+                tableBody.innerHTML += trHtml;
+            });
         }
 
         // =========================================================================================================
@@ -471,13 +512,12 @@
                 });
 
                 let totalPR = 0, totalIK = 0, totalFM = 0, totalSTD = 0, totalEX = 0;
-                let currentCategory = ""; // Menyimpan kategori aktif: Prosedur, Instruksi Kerja, dll.
+                let currentCategory = ""; 
 
                 rawRows.forEach((row, index) => {
                     if (row.length < 3) return;
 
                     // --- LOGIKA 1: KLASTER CARD ATAS (BARIS TOTAL ABSOLUT) ---
-                    // Membaca Baris ke-2 (Baris tepat setelah judul metrik PR, IK, FM...)
                     const col4 = row[4] ? row[4].trim() : "";
                     if (col4.toLowerCase() === 'total' && index < 5) {
                         totalPR  = parseInt(row[5]) || 0;
@@ -492,12 +532,10 @@
                     const colB = row[1] ? row[1].trim().toUpperCase() : "";
                     const colC = row[2] ? row[2].trim() : "";
 
-                    // Update kategori jika kolom A terisi nama Master Dokumen baru
                     if (colA !== "" && !deptMaster[colA.toUpperCase()] && colA.toLowerCase() !== 'total') {
                         currentCategory = colA.toLowerCase();
                     }
 
-                    // Pastikan baris bukan baris total/header dan kode departemen terdaftar di master
                     if (colB !== "" && colB !== "TOTAL" && deptMaster[colB] && colC !== "") {
                         const countValue = parseInt(colC) || 0;
 
@@ -515,7 +553,6 @@
                     }
                 });
 
-                // Tulis angka absolut total atas langsung ke DOM
                 const elPr = document.getElementById('total-pr');
                 const elIk = document.getElementById('total-ik');
                 const elFm = document.getElementById('total-fm');
@@ -528,7 +565,6 @@
                 if(elStd) elStd.innerText = totalSTD;
                 if(elEx) elEx.innerText = totalEX;
 
-                // Tampilkan Grid Card Departemen secara rapi
                 const gridContainer = document.getElementById('department-grid');
                 if(!gridContainer) return;
                 gridContainer.innerHTML = ''; 
@@ -538,7 +574,7 @@
                     const data = departmentsData[code];
 
                     const cardHtml = `
-                        <div class="glass-panel rounded-2xl p-4 border sharp-border group cursor-pointer hover:-translate-y-1 transition duration-200" onclick="switchPage('departemen')">
+                        <div class="glass-panel rounded-2xl p-4 border sharp-border group cursor-pointer hover:-translate-y-1 transition duration-200 dept-card-item" data-code="${code}" data-name="${info.name}">
                             <div class="flex justify-between items-start mb-3">
                                 <div class="flex gap-3 items-center">
                                     <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-sm border border-teal-500/20 shrink-0">
@@ -564,9 +600,72 @@
                     gridContainer.innerHTML += cardHtml;
                 });
 
+                updateTimestampText();
             } catch (error) {
                 console.error('Sinkronisasi Dashboard Gagal:', error);
             }
+        }
+
+        // --- SCRIPT FILTER PENCARIAN DATA (REAL-TIME) ---
+        function filterDashboardCards(keyword) {
+            const cards = document.querySelectorAll('.dept-card-item');
+            cards.forEach(card => {
+                const code = card.getAttribute('data-code').toLowerCase();
+                const name = card.getAttribute('data-name').toLowerCase();
+                if(code.includes(keyword) || name.includes(keyword)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        function filterTableDataRows(keyword) {
+            if(originalTableRowsData.length === 0) return;
+            const filtered = originalTableRowsData.filter(row => {
+                const namaDokumen = (row[1] || '').toLowerCase();
+                const noDokumen = (row[2] || '').toLowerCase();
+                const bagian = (row[7] || '').toLowerCase();
+                return namaDokumen.includes(keyword) || noDokumen.includes(keyword) || bagian.includes(keyword);
+            });
+            renderTableRows(filtered);
+        }
+
+        // Listener Kolom Pencarian
+        const searchInput = document.getElementById('main-search');
+        if(searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const keyword = e.target.value.toLowerCase().trim();
+                if(currentActivePage === 'dashboard') {
+                    filterDashboardCards(keyword);
+                } else if(pageMeta[currentActivePage] && pageMeta[currentActivePage].csv) {
+                    filterTableDataRows(keyword);
+                }
+            });
+        }
+
+        // --- SCRIPT TOMBOL REFRESH SINKRONISASI MANUAL ---
+        const refreshBtn = document.getElementById('refresh-btn');
+        const refreshIcon = document.getElementById('refresh-icon');
+
+        if(refreshBtn && refreshIcon) {
+            refreshBtn.addEventListener('click', async () => {
+                // Efek animasi berputar saat proses pengambilan data
+                refreshIcon.classList.add('animate-spin');
+                refreshBtn.disabled = true;
+
+                if (currentActivePage === 'dashboard') {
+                    await initDashboard();
+                } else if (pageMeta[currentActivePage] && pageMeta[currentActivePage].csv) {
+                    await fetchTableData(pageMeta[currentActivePage].csv);
+                }
+
+                // Matikan animasi putar dengan sedikit delay agar terasa natural
+                setTimeout(() => {
+                    refreshIcon.classList.remove('animate-spin');
+                    refreshBtn.disabled = false;
+                }, 600);
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
