@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISO Document Control Center - Dynamic CSV</title>
+    <title>ISO Document Control Center - Adaptive Mobile & Live CSV</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -19,6 +19,7 @@
             transition: background-color 0.4s ease, color 0.4s ease;
         }
 
+        /* Efek Glassmorphism ala iPhone iOS */
         .glass-panel {
             background: rgba(255, 255, 255, 0.45);
             backdrop-filter: blur(20px);
@@ -36,6 +37,7 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
         }
 
+        /* Garis panel dipertegas */
         .sharp-border {
             border: 1.5px solid rgba(0, 0, 0, 0.12);
         }
@@ -43,8 +45,9 @@
             border: 1.5px solid rgba(255, 255, 255, 0.15);
         }
 
+        /* Animasi Transisi Halus */
         .toggle-thumb {
-            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), background-color 0.3s;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
         .rotate-icon {
             transition: transform 0.5s ease;
@@ -52,21 +55,33 @@
         #theme-toggle:hover .rotate-icon {
             transform: rotate(45deg);
         }
+
+        /* Transisi Slide-in Sidebar Mobile */
+        .sidebar-transition {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-tr from-slate-100 via-teal-50/30 to-blue-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-200 flex min-h-screen">
+<body class="bg-gradient-to-tr from-slate-100 via-teal-50/30 to-blue-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col md:flex-row">
 
     <div class="fixed -top-40 -left-40 w-96 h-96 bg-teal-400/20 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="fixed bottom-10 right-10 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-    <aside class="w-64 glass-panel border-r sharp-border flex flex-col justify-between p-4 fixed h-full z-10 m-0 rounded-none">
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 hidden md:hidden"></div>
+
+    <aside id="sidebar-menu" class="fixed inset-y-0 left-0 w-64 glass-panel border-r sharp-border flex flex-col justify-between p-4 z-30 sidebar-transition -translate-x-full md:translate-x-0 h-full rounded-none">
         <div>
-            <div class="flex items-center gap-3 px-2 py-4 mb-4">
-                <div class="w-8 h-8 bg-teal-600 dark:bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-teal-500/20">⬡</div>
-                <div>
-                    <h1 class="font-bold text-slate-900 dark:text-white leading-tight tracking-tight">ISO DCC</h1>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Document Control</p>
+            <div class="flex items-center justify-between px-2 py-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-teal-600 dark:bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-teal-500/20">⬡</div>
+                    <div>
+                        <h1 class="font-bold text-slate-900 dark:text-white leading-tight tracking-tight">ISO DCC</h1>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Document Control</p>
+                    </div>
                 </div>
+                <button id="close-sidebar" class="md:hidden w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg border sharp-border bg-white/50 dark:bg-slate-800/50">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
             <nav class="space-y-1">
@@ -111,73 +126,75 @@
         </div>
     </aside>
 
-    <main class="flex-1 ml-64 p-8 relative z-0">
+    <main class="flex-1 p-4 md:p-8 relative z-0 md:ml-64 w-full overflow-x-hidden">
         
-        <header class="flex justify-between items-start mb-8">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">ISO Document Control Center</h2>
-                <p class="text-xs text-slate-400 dark:text-slate-500 max-w-xl">Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu perusahaan.</p>
+        <header class="flex flex-col gap-4 sm:flex-row sm:items-start justify-between mb-8">
+            <div class="flex items-center justify-between w-full sm:w-auto">
+                <button id="hamburger-btn" class="md:hidden w-10 h-10 flex items-center justify-center bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl text-slate-700 dark:text-white text-lg mr-3 shadow-sm">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
+                
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">ISO Document Control Center</h2>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 max-w-xl hidden sm:block">Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu.</p>
+                </div>
             </div>
             
-            <div class="flex items-center gap-4">
-                <div class="relative w-64">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 dark:text-slate-500 text-sm"></i>
-                    <input type="text" placeholder="Cari kode departemen..." class="w-full pl-9 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
+            <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                <div class="relative flex-1 sm:flex-none sm:w-60">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
+                    <input type="text" placeholder="Cari departemen..." class="w-full pl-8 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
                 </div>
 
-                <button id="theme-toggle" class="w-14 h-8 bg-slate-200 dark:bg-slate-700 rounded-full p-1 flex items-center relative transition-colors duration-300 focus:outline-none border sharp-border">
+                <button id="theme-toggle" class="w-14 h-8 bg-slate-200 dark:bg-slate-700 rounded-full p-1 flex items-center relative transition-colors duration-300 focus:outline-none border sharp-border shrink-0">
                     <div class="toggle-thumb w-6 h-6 bg-white dark:bg-slate-900 rounded-full shadow-md flex items-center justify-center transform translate-x-0 dark:translate-x-6">
                         <i class="rotate-icon fa-solid fa-sun text-amber-500 text-xs dark:hidden"></i>
                         <i class="rotate-icon fa-solid fa-moon text-indigo-400 text-xs hidden dark:block"></i>
                     </div>
                 </button>
 
-                <div class="flex items-center gap-3 pl-2 border-l border-slate-200 dark:border-slate-800">
-                    <div class="text-right">
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Admin DCC</p>
-                        <p class="text-[10px] font-medium text-teal-600 dark:text-teal-400">System Admin</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-teal-500/50">
+                <div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800 shrink-0">
+                    <div class="w-8 h-8 rounded-full overflow-hidden border border-teal-500/50">
                         <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar Admin" class="w-full h-full object-cover">
                     </div>
                 </div>
             </div>
         </header>
 
-        <section class="grid grid-cols-5 gap-4 mb-8">
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
-                <div class="w-10 h-10 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-md border border-teal-500/20"><i class="fa-solid fa-file-invoice"></i></div>
+        <section class="flex overflow-x-auto pb-3 gap-4 mb-8 no-scrollbar snap-x [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+                <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center border border-teal-500/20 shrink-0"><i class="fa-solid fa-file-invoice"></i></div>
                 <div>
-                    <div class="flex items-baseline gap-1"><span id="total-pr" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">PR</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">SOP (Prosedur)</p>
+                    <div class="flex items-baseline gap-1"><span id="total-pr" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">PR</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Prosedur</p>
                 </div>
             </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
-                <div class="w-10 h-10 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-md border border-blue-500/20"><i class="fa-solid fa-clipboard-list"></i></div>
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+                <div class="w-9 h-9 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0"><i class="fa-solid fa-clipboard-list"></i></div>
                 <div>
-                    <div class="flex items-baseline gap-1"><span id="total-ik" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">IK</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Instruksi Kerja</p>
+                    <div class="flex items-baseline gap-1"><span id="total-ik" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">IK</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Instruksi Kerja</p>
                 </div>
             </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
-                <div class="w-10 h-10 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-md border border-indigo-500/20"><i class="fa-solid fa-table-list"></i></div>
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+                <div class="w-9 h-9 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center border border-indigo-500/20 shrink-0"><i class="fa-solid fa-table-list"></i></div>
                 <div>
-                    <div class="flex items-baseline gap-1"><span id="total-fm" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">FM</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Forms & Records</p>
+                    <div class="flex items-baseline gap-1"><span id="total-fm" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">FM</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Formulir</p>
                 </div>
             </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
-                <div class="w-10 h-10 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center text-md border border-purple-500/20"><i class="fa-solid fa-shield"></i></div>
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+                <div class="w-9 h-9 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center border border-purple-500/20 shrink-0"><i class="fa-solid fa-shield"></i></div>
                 <div>
-                    <div class="flex items-baseline gap-1"><span id="total-std" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">STD</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Technical Specs</p>
+                    <div class="flex items-baseline gap-1"><span id="total-std" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">STD</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Standar</p>
                 </div>
             </div>
-            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border">
-                <div class="w-10 h-10 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center text-md border border-amber-500/20"><i class="fa-solid fa-earth-americas"></i></div>
+            <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start">
+                <div class="w-9 h-9 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center border border-amber-500/20 shrink-0"><i class="fa-solid fa-earth-americas"></i></div>
                 <div>
-                    <div class="flex items-baseline gap-1"><span id="total-ek" class="text-xl font-bold">...</span><span class="text-[9px] font-bold uppercase text-slate-400">EK</span></div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Regulasi Eksternal</p>
+                    <div class="flex items-baseline gap-1"><span id="total-ek" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">EK</span></div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Eksternal</p>
                 </div>
             </div>
         </section>
@@ -189,12 +206,14 @@
             <a href="#" class="text-xs text-teal-600 dark:text-teal-400 font-semibold flex items-center gap-1 hover:underline">Lihat Semua <i class="fa-solid fa-arrow-right text-[10px]"></i></a>
         </div>
 
-        <section id="department-grid" class="grid grid-cols-3 gap-5">
-            <div class="col-span-3 text-center py-8 text-sm text-slate-400">Memuat data departemen...</div>
+        <section id="department-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div class="col-span-full text-center py-8 text-sm text-slate-400">
+                <i class="fa-solid fa-spinner animate-spin mr-2"></i> Sinkronisasi data Google Sheets...
+            </div>
         </section>
 
-        <footer class="mt-12 flex justify-between items-center text-[11px] text-slate-400 dark:text-slate-500">
-            <div>Versi 1.2.0 (Live CSV Edition)</div>
+        <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+            <div>Versi 1.3.0 (Responsive Full-Data Cloud)</div>
             <div class="flex items-center gap-1.5 font-semibold text-slate-500">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sistem Terintegrasi Live Sheets
             </div>
@@ -202,7 +221,28 @@
     </main>
 
     <script>
-        // --- 1. LOGIKA TOGGLE DARK MODE ---
+        // --- 1. LOGIKA RESPONSIVE HAMBURGER SIDEBAR ---
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        function openSidebar() {
+            sidebarMenu.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+        }
+
+        function closeSidebar() {
+            sidebarMenu.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidebar);
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+
+        // --- 2. LOGIKA TOGGLE DARK MODE ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
 
@@ -222,40 +262,26 @@
             }
         });
 
-        // --- 2. INTEGRASI LIVE DATA GOOGLE SHEETS (CSV) ---
+
+        // --- 3. LIVE CSV INTEGRASI SINKRONISASI OTOMATIS ---
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
 
-        // Peta ikon berdasarkan singkatan departemen agar visualnya menarik
         const deptIcons = {
-            'ISO': 'fa-shield-halved',
-            'HRD': 'fa-users-gear',
-            'MAN': 'fa-sitemap',
-            'MKT': 'fa-chart-line',
-            'PPC': 'fa-cubes',
-            'PRO': 'fa-industry',
-            'PUR': 'fa-cart-shopping',
-            'QAD': 'fa-circle-check',
-            'MRP': 'fa-warehouse'
+            'ISO': 'fa-shield-halved', 'HRD': 'fa-users-gear', 'MAN': 'fa-sitemap',
+            'MKT': 'fa-chart-line', 'PPC': 'fa-cubes', 'PRO': 'fa-industry',
+            'PUR': 'fa-cart-shopping', 'QAD': 'fa-circle-check', 'MRP': 'fa-warehouse',
+            'MRP / WH': 'fa-warehouse'
         };
 
-        // Fungsi pembantu untuk memparsing CSV sederhana (menangani baris & kolom)
         function parseCSV(text) {
             let lines = text.split('\n');
             return lines.map(line => {
-                // Menangani kemungkinan ada koma di dalam tanda kutip teks
-                let result = [];
-                let current = '';
-                let inQuotes = false;
+                let result = []; let current = ''; let InQuotes = false;
                 for (let i = 0; i < line.length; i++) {
                     let char = line[i];
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        result.push(current.trim());
-                        current = '';
-                    } else {
-                        current += char;
-                    }
+                    if (char === '"') { InQuotes = !InQuotes; }
+                    else if (char === ',' && !InQuotes) { result.push(current.trim()); current = ''; }
+                    else { current += char; }
                 }
                 result.push(current.trim());
                 return result;
@@ -268,49 +294,37 @@
                 const csvText = await response.text();
                 const data = parseCSV(csvText);
 
-                // Asumsi baris 0 adalah Header: [Departemen, Nama_Panjang, PR, IK, FM, STD, EK]
-                // Ambil data mulai dari baris indeks 1 dan bersihkan baris kosong
+                // Mengambil data baris mengabaikan baris judul paling atas
                 const rows = data.slice(1).filter(row => row.length > 1 && row[0] !== "");
 
-                let grandTotalPR = 0;
-                let grandTotalIK = 0;
-                let grandTotalFM = 0;
-                let grandTotalSTD = 0;
-                let grandTotalEK = 0;
-
+                let totalPR = 0, totalIK = 0, totalFM = 0, totalSTD = 0, totalEK = 0;
                 const gridContainer = document.getElementById('department-grid');
-                gridContainer.innerHTML = ''; // Bersihkan loading state
+                gridContainer.innerHTML = ''; 
 
+                // Melakukan looping otomatis untuk SEMUA baris departemen yang ada di CSV
                 rows.forEach(row => {
                     const deptCode = row[0] || 'DEPT';
-                    const deptName = row[1] || 'Department Description';
+                    const deptName = row[1] || 'Deskripsi Departemen';
                     const pr = parseInt(row[2]) || 0;
                     const ik = parseInt(row[3]) || 0;
                     const fm = parseInt(row[4]) || 0;
-                    const std = parseInt(row[5]) || 0; // Kolom Standar jika ada
-                    const ek = parseInt(row[6]) || 0;  // Kolom Eksternal jika ada
+                    const std = parseInt(row[5]) || 0;
+                    const ek = parseInt(row[6]) || 0;
 
-                    // Akumulasi total untuk Counter Atas
-                    grandTotalPR += pr;
-                    grandTotalIK += ik;
-                    grandTotalFM += fm;
-                    grandTotalSTD += std;
-                    grandTotalEK += ek;
+                    totalPR += pr; totalIK += ik; totalFM += fm; totalSTD += std; totalEK += ek;
 
-                    // Tentukan ikon, jika tidak terdaftar pakai ikon bawaan folder
-                    const iconClass = deptIcons[deptCode.toUpperCase()] || 'fa-folder';
+                    const iconClass = deptIcons[deptCode.toUpperCase()] || 'fa-folder-closed';
 
-                    // Buat elemen Card Departemen secara dinamis
                     const cardHtml = `
                         <div class="glass-panel rounded-2xl p-5 border sharp-border group cursor-pointer hover:-translate-y-1">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex gap-3 items-center">
-                                    <div class="w-10 h-10 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-sm border border-teal-500/20">
+                                    <div class="w-10 h-10 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-sm border border-teal-500/20 shrink-0">
                                         <i class="fa-solid ${iconClass}"></i>
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-sm text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">${deptCode}</h4>
-                                        <p class="text-[10px] text-slate-400 dark:text-slate-500">${deptName}</p>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-1">${deptName}</p>
                                     </div>
                                 </div>
                                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 group-hover:text-teal-500 transition pt-1"></i>
@@ -325,24 +339,23 @@
                     gridContainer.innerHTML += cardHtml;
                 });
 
-                // Update Angka Counter Atas dengan hasil akumulasi data CSV
-                document.getElementById('total-pr').innerText = grandTotalPR;
-                document.getElementById('total-ik').innerText = grandTotalIK;
-                document.getElementById('total-fm').innerText = grandTotalFM;
-                document.getElementById('total-std').innerText = grandTotalSTD;
-                document.getElementById('total-ek').innerText = grandTotalEK;
+                // Update Total Counter Atas secara dinamis
+                document.getElementById('total-pr').innerText = totalPR;
+                document.getElementById('total-ik').innerText = totalIK;
+                document.getElementById('total-fm').innerText = totalFM;
+                document.getElementById('total-std').innerText = totalSTD;
+                document.getElementById('total-ek').innerText = totalEK;
 
             } catch (error) {
-                console.error('Gagal memuat data CSV:', error);
+                console.error('Koneksi database Gagal:', error);
                 document.getElementById('department-grid').innerHTML = `
-                    <div class="col-span-3 text-center py-8 text-sm text-red-500 font-semibold">
-                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal memuat data dari Google Sheets. Pastikan link dapat diakses.
+                    <div class="col-span-full text-center py-8 text-sm text-red-500 font-semibold">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal memuat data dari cloud Google Sheets.
                     </div>
                 `;
             }
         }
 
-        // Jalankan fungsi saat halaman selesai dimuat
         window.addEventListener('DOMContentLoaded', fetchDashboardData);
     </script>
 </body>
