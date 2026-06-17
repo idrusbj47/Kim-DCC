@@ -251,11 +251,12 @@
                                         <th class="py-3.5 px-4 w-16 text-center">Revisi</th>
                                         <th class="py-3.5 px-4">Tgl. Berlaku</th>
                                         <th class="py-3.5 px-4 w-24 text-center">Bagian</th>
+                                        <th class="py-3.5 px-4 w-28 text-center">Akses Berkas</th>
                                     </tr>
                                 </thead>
                                 <tbody id="procedure-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300">
                                     <tr>
-                                        <td colspan="6" class="text-center py-10 text-slate-400">
+                                        <td colspan="7" class="text-center py-10 text-slate-400">
                                             <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload file berkas spreadsheet...
                                         </td>
                                     </tr>
@@ -479,7 +480,7 @@
         async function fetchTableData(csvSourceUrl) {
             const tableBody = document.getElementById('procedure-table-body');
             if(!tableBody) return;
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload dan memetakan data spreadsheet...</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload dan memetakan data spreadsheet...</td></tr>`;
             
             try {
                 const response = await fetch(csvSourceUrl);
@@ -495,9 +496,20 @@
 
             } catch (error) {
                 console.error('Gagal memuat data Tabel:', error);
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal terhubung langsung dengan server file. Mohon cek kembali URL Publikasi CSV Anda.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal terhubung langsung dengan server file. Mohon cek kembali URL Publikasi CSV Anda.</td></tr>`;
                 document.getElementById('shown-count').innerText = '0';
                 document.getElementById('total-count').innerText = '0';
+            }
+        }
+
+        // --- LOGIKA UTAMA: JIKA KLIK PDF #N/A MAKA MUNCULKAN NOTIFIKASI ---
+        window.bukaPdfLink = function(url) {
+            const cleanUrl = url ? url.trim() : "";
+            if (!cleanUrl || cleanUrl === "" || cleanUrl.toUpperCase() === "#N/A" || cleanUrl.toUpperCase() === "N/A") {
+                alert("File tidak di temukan / belum di update silahkan hub admin dcc");
+            } else {
+                // Jika tautan valid, buka tab browser baru ke arah Google Drive / Link Google
+                window.open(cleanUrl, '_blank');
             }
         }
 
@@ -513,7 +525,7 @@
             if(totalCountEl) totalCountEl.innerText = globalCachedRows.length;
 
             if (filteredRows.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 dark:text-slate-500">Tidak ada data dokumen terdaftar yang cocok dengan kata kunci.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 dark:text-slate-500">Tidak ada data dokumen terdaftar yang cocok dengan kata kunci.</td></tr>`;
                 if(shownCountEl) shownCountEl.innerText = '0';
                 return;
             }
@@ -526,6 +538,9 @@
                 const revisi = row[3] || '0';        
                 const tglBerlaku = row[4] || '-';    
                 const bagian = row[7] || '-';        
+                
+                // Mengambil nilai Kolom M (Indeks ke-12 di array JavaScript)
+                const fileLinkPdf = row[12] || '';
 
                 const trHtml = `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
@@ -535,6 +550,11 @@
                         <td class="py-3 px-4 text-center"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">${revisi}</span></td>
                         <td class="py-3 px-4 text-slate-500 dark:text-slate-400">${tglBerlaku}</td>
                         <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px]">${bagian}</span></td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="bukaPdfLink('${fileLinkPdf}')" class="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold px-2.5 py-1.5 rounded-lg border border-rose-700 shadow-sm shadow-rose-600/10 active:scale-95 transition-all text-[10px]">
+                                <i class="fa-solid fa-file-pdf text-xs"></i> BACA PDF
+                            </button>
+                        </td>
                     </tr>
                 `;
                 tableBody.innerHTML += trHtml;
