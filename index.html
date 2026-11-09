@@ -76,7 +76,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 // ====== ISI DENGAN PROYEK SUPABASE ANDA (kosong = mode demo) ======
-const SB_URL='', SB_KEY='', BUCKET='iso-pages';
+const SB_URL='https://jvrcmvazuhbxlktnzwer.supabase.co', SB_KEY='sb_publishable_De5UwPKibjXjQ2dFSbaAgw_jPMluQxS', BUCKET='iso-pages';
 // ==================================================================
 const demo=!SB_URL, sb=demo?null:supabase.createClient(SB_URL,SB_KEY);
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
