@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1f4d">
+<title>Atur Ulang Kata Sandi | Dokumen ISO</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif;background:linear-gradient(160deg,#0b1f4d,#081638);color:#0f1f3d}
+.c{background:#fff;border-radius:24px;padding:30px;width:min(400px,100%)}h1{margin:0 0 4px;font-size:22px}p{margin:0 0 16px;color:#64748b;font-size:13px;line-height:1.5}
+label{font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:4px}
+.w{position:relative;margin-bottom:12px}input{width:100%;background:#f3f6fb;border:1px solid #e2e8f0;border-radius:12px;padding:12px 44px 12px 14px;font:inherit;outline:none}input:focus{border-color:#0a5bd6}
+.e{position:absolute;right:6px;bottom:5px;width:34px;height:34px;border:0;background:none;cursor:pointer;color:#64748b}.e svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+button.b,a.b{display:block;width:100%;text-align:center;text-decoration:none;border:0;background:linear-gradient(135deg,#0a5bd6,#3b8bff);color:#fff;font:inherit;font-weight:800;padding:13px;border-radius:12px;cursor:pointer;margin-top:6px}button.b:disabled{opacity:.6}
+.m{font-size:13px;min-height:18px;margin:4px 0 8px;color:#d6336c}.m.ok{color:#0a7a4b}
+</style></head><body>
+<div class="c" id="c"><h1>Atur ulang kata sandi</h1><p id="t">Memeriksa tautan Anda...</p></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL='https://jvrcmvazuhbxlktnzwer.supabase.co', SB_KEY='sb_publishable_De5UwPKibjXjQ2dFSbaAgw_jPMluQxS';
+const sb=supabase.createClient(SB_URL,SB_KEY),c=document.getElementById('c'),hash=location.hash;
+const EYE='<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',OFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.1A9.6 9.6 0 0112 6c6 0 10 6 10 6a17 17 0 01-3.2 3.8M6.6 6.7A17 17 0 002 12s4 7 10 7a9.7 9.7 0 004.3-1"/></svg>';
+let shown=false;
+function bad(){c.innerHTML='<h1>Tautan tidak berlaku</h1><p>Tautan ini sudah kedaluwarsa atau pernah dipakai. Minta tautan baru lewat Lupa kata sandi di halaman login.</p><a class="b" href="./">Kembali ke login</a>'}
+function form(){if(shown)return;shown=true;
+  c.innerHTML=`<h1>Buat kata sandi baru</h1><p>Gunakan minimal 8 karakter yang mudah Anda ingat tetapi sulit ditebak orang lain.</p>
+  <div class="w"><label>Kata sandi baru</label><input id="a" type="password" autocomplete="new-password"><button type="button" class="e" id="ea" aria-label="Lihat kata sandi">${EYE}</button></div>
+  <div class="w"><label>Ulangi kata sandi baru</label><input id="b" type="password" autocomplete="new-password"></div>
+  <div class="m" id="m"></div><button class="b" id="s">Simpan Kata Sandi</button>`;
+  document.getElementById('ea').onclick=()=>{const a=document.getElementById('a'),b=document.getElementById('b'),h=a.type==='password';a.type=b.type=h?'text':'password';document.getElementById('ea').innerHTML=h?OFF:EYE};
+  document.getElementById('s').onclick=async()=>{const a=document.getElementById('a').value,m=document.getElementById('m'),s=document.getElementById('s');m.className='m';
+    if(a.length<8){m.textContent='Kata sandi minimal 8 karakter.';return}
+    if(a!==document.getElementById('b').value){m.textContent='Pengulangan kata sandi belum sama.';return}
+    s.disabled=true;const {error}=await sb.auth.updateUser({password:a});
+    if(error){m.textContent=/different from the old/i.test(error.message)?'Kata sandi baru harus berbeda dari yang lama.':'Gagal: '+error.message;s.disabled=false;return}
+    await sb.auth.signOut();c.innerHTML='<h1>Kata sandi diganti</h1><p>Silakan masuk dengan kata sandi baru Anda.</p><a class="b" href="./">Ke halaman login</a>'}}
+if(/error/i.test(hash))bad();
+else{sb.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY'||(ev==='SIGNED_IN'&&/type=recovery/.test(hash)))form()});
+  setTimeout(()=>{if(!shown)bad()},5000)}
+</script></body></html>
