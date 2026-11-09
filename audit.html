@@ -56,7 +56,7 @@ const JENIS=[['MM','Manual Mutu'],['PR','Prosedur'],['IK','Instruksi Kerja'],['F
 const jOf=d=>{if(d.jenis&&JENIS.some(j=>j[0]===d.jenis))return d.jenis;const p=String(d.kode||'').split(/[-_ .]/)[0].toUpperCase();return ['MM','PR','IK','FM'].includes(p)?p:'LN'};
 const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[4])[1];
 const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
-let DOCS=[],S=null,F='',Q='',timer=null;
+let DOCS=[],S=null,F='',Q='',timer=null,DRAW=null;
 
 // ---------- kode akses ----------
 function codeView(msg){
@@ -75,27 +75,30 @@ function codeView(msg){
       const r=await sb.rpc('audit_redeem',{p_code:code});if(r.error)throw r.error;
       const d=r.data;
       if(!d||!d.ok){er.textContent=d&&d.reason==='limit'?'Terlalu banyak percobaan salah. Coba lagi beberapa menit lagi.':'Kode salah atau sudah kedaluwarsa. Minta kode baru ke admin.';b.disabled=false;return}
-      S={exp:new Date(d.expires_at).getTime(),label:d.label||'Auditor'};await start()
+      S={exp:new Date(d.expires_at).getTime(),label:d.label||'Auditor',mode:d.mode||'semua'};await start()
     }catch(e){er.textContent='Gagal: '+(e.message||e);b.disabled=false}};
   $('#go').onclick=go;$('#cd').addEventListener('keydown',e=>{if(e.key==='Enter')go()});$('#cd').focus()}
 
 // ---------- daftar dokumen ----------
 const left=()=>{const m=Math.max(0,Math.round((S.exp-Date.now())/60000));return m>=60?`${Math.floor(m/60)} jam ${m%60} menit`:`${m} menit`};
-const tick=()=>{if(!S)return;if(Date.now()>=S.exp){toast('Kode akses sudah berakhir');codeView('Kode akses sudah berakhir. Minta kode baru ke admin.')}else if($('#sl'))$('#sl').textContent='Sisa '+left()};
+const tick=()=>{if(!S)return;if(Date.now()>=S.exp){toast('Kode akses sudah berakhir');codeView('Kode akses sudah berakhir. Minta kode baru ke admin.')}else{if($('#sl'))$('#sl').textContent='Sisa '+left();refresh(true)}};
+async function refresh(quiet){const r=await sb.from('iso_documents').select('*').order('kode');if(r.error){if(!quiet)toast('Gagal memuat daftar');return}
+  const n=sortDocs(r.data||[]),a=DOCS.map(d=>d.id).join(),b=n.map(d=>d.id).join();
+  if(a!==b){const more=n.some(d=>!DOCS.some(o=>o.id===d.id));DOCS=n;if(DRAW&&!document.querySelector('.rd'))DRAW();if(more)toast('Admin mengirim dokumen baru')}else if(!quiet)toast('Daftar sudah terbaru')}
 async function start(){
   const r=await sb.from('iso_documents').select('*').order('kode');if(r.error)throw r.error;
   DOCS=sortDocs(r.data||[]);view();clearInterval(timer);timer=setInterval(tick,15000)}
 const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div style="flex:1;min-width:0"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><span class="tag">${esc(jName(jOf(d)))}</span><span class="tag o">${esc(d.dept)}</span></div></div>`;
 function view(){
   $('#app').innerHTML=`<header class="tb"><div><b>Ruang Audit</b><small>PT KARYA INDAH MULTIGUNA</small></div><div class="tr"><span class="sl" id="sl"></span><button class="btn g bs" id="lo">Keluar</button></div></header>
-  <main class="wrap"><div class="box"><div class="bh"><h3>Dokumen Mutu</h3><span>Hanya baca &middot; berwatermark</span></div><div class="jf" id="jf"></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"></div><div id="ls"></div></div></main>`;
+  <main class="wrap"><div class="box"><div class="bh"><h3>Dokumen Mutu</h3><span>Hanya baca &middot; berwatermark</span><button class="btn g bs" id="rf">Perbarui</button></div><div class="jf" id="jf"></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"></div><div id="ls"></div></div></main>`;
   const draw=()=>{const base=DOCS.filter(d=>(d.kode+d.judul).toLowerCase().includes(Q.toLowerCase()));
     $('#jf').innerHTML=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]])].map(x=>`<button class="jb${F===x[0]?' on':''}" data-j="${x[0]}">${x[1]}</button>`).join('');
     document.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{F=b.dataset.j;draw()});
     const g={};base.filter(d=>!F||jOf(d)===F).forEach(d=>(g[jOf(d)]??=[]).push(d));
-    $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<div class="grp">${j[0]} &middot; ${j[1]}<i>${g[j[0]].length}</i></div>${g[j[0]].map(item).join('')}`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';
+    $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<div class="grp">${j[0]} &middot; ${j[1]}<i>${g[j[0]].length}</i></div>${g[j[0]].map(item).join('')}`).join('')||(DOCS.length?'<div class="empty">Dokumen tidak ditemukan.</div>':S.mode==='pilihan'?'<div class="empty"><b>Belum ada dokumen yang dikirim.</b><br>Sampaikan permintaan dokumen Anda ke admin KIM. Dokumen yang dikirim akan muncul di sini otomatis.</div>':'<div class="empty">Belum ada dokumen.</div>');
     document.querySelectorAll('.it').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)))};
-  $('#q').oninput=e=>{Q=e.target.value;draw()};draw();tick();
+  DRAW=draw;$('#q').oninput=e=>{Q=e.target.value;draw()};$('#rf').onclick=()=>refresh(false);draw();$('#sl').textContent='Sisa '+left();
   $('#lo').onclick=async()=>{if(confirm('Keluar dari ruang audit?')){await sb.auth.signOut();codeView()}}}
 
 // ---------- pembaca ----------
@@ -127,6 +130,6 @@ document.addEventListener('visibilitychange',()=>veil(document.hidden));addEvent
 (async()=>{
   try{const {data:{session}}=await sb.auth.getSession();
     if(session){const r=await sb.rpc('audit_status');
-      if(r.data&&r.data.ok){S={exp:new Date(r.data.expires_at).getTime(),label:r.data.label||'Auditor'};await start();return}}}catch(e){}
+      if(r.data&&r.data.ok){S={exp:new Date(r.data.expires_at).getTime(),label:r.data.label||'Auditor',mode:r.data.mode||'semua'};await start();return}}}catch(e){}
   codeView()})();
 </script></body></html>
