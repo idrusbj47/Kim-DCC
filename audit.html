@@ -102,7 +102,7 @@ function view(){
   $('#lo').onclick=async()=>{if(confirm('Keluar dari ruang audit?')){await sb.auth.signOut();codeView()}}}
 
 // ---------- pembaca ----------
-function mark(c){const x=c.getContext('2d');x.save();x.globalAlpha=.16;x.fillStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
+function mark(c){const x=c.getContext('2d');x.save();x.globalAlpha=.07;x.fillStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
   const t=`AUDITOR \u2022 ${S.label} \u2022 ${fmt(Date.now())}`;for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)x.fillText(t,xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
 async function openDoc(d){
   if(!d)return;const r=document.createElement('div');r.className='rd';
