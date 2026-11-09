@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0b1f4d"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dokumen ISO">
 <title>Dokumen ISO | PT Karya Indah Multiguna</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -72,13 +73,14 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 </style></head>
 <body>
 <div id="app"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 // ====== ISI DENGAN PROYEK SUPABASE ANDA (kosong = mode demo) ======
 const SB_URL='https://jvrcmvazuhbxlktnzwer.supabase.co', SB_KEY='sb_publishable_De5UwPKibjXjQ2dFSbaAgw_jPMluQxS', BUCKET='iso-pages';
 // ==================================================================
-const demo=!SB_URL, sb=demo?null:supabase.createClient(SB_URL,SB_KEY);
+const demo=!SB_URL, sb=demo?null:(window.supabase?supabase.createClient(SB_URL,SB_KEY):null);
+if(!demo&&!sb)document.addEventListener('DOMContentLoaded',()=>alert('Pustaka Supabase gagal dimuat. Periksa koneksi internet.'));
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const IC={home:'<path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',doc:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',moon:'<path d="M20 14A8 8 0 0110 4a8 8 0 1010 10z"/>'};
 const ic=n=>`<svg viewBox="0 0 24 24">${IC[n]}</svg>`;
@@ -104,14 +106,19 @@ function loginView(){
   ${demo?'<button class="btn" id="dm">Coba mode demo</button><p style="margin-top:12px">Belum terhubung ke Supabase. Isi SB_URL dan SB_KEY di file ini untuk memakai data asli.</p>':
   '<input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password"><button class="btn" id="go">Masuk</button><div class="err" id="er"></div>'}</div></div>`;
   if(demo)$('#dm').onclick=()=>{U={id:'demo',nama:'Tamu Demo',dept:'Gudang Barang Jadi',role:'admin'};start()};
-  else $('#go').onclick=async()=>{const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
-    if(error){$('#er').textContent='Email atau kata sandi salah.';return}boot()};
-}
+  else{const go=async()=>{const er=$('#er'),b=$('#go');er.textContent='';b.disabled=true;
+    try{const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
+      if(error){const m=error.message||'';
+        er.textContent=/invalid login/i.test(m)?'Email atau kata sandi salah, atau akun ini belum dibuat di Supabase.':/not confirmed/i.test(m)?'Email belum dikonfirmasi. Konfirmasi akun di dashboard Supabase (Authentication > Users).':'Gagal masuk: '+m;b.disabled=false;return}
+      await boot()}catch(e){er.textContent='Gagal: '+(e.message||e);b.disabled=false}};
+    $('#go').onclick=go;['#em','#pw'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}))}
+};
 async function boot(){
   if(demo){loginView();return}
   const {data:{session}}=await sb.auth.getSession();if(!session){loginView();return}
   const p=await sb.from('profiles').select('*').eq('id',session.user.id).single();
-  U={id:session.user.id,nama:p.data?.nama||session.user.email,dept:p.data?.dept||'-',role:p.data?.role||'user'};start();
+  U={id:session.user.id,nama:p.data?.nama||session.user.email,dept:p.data?.dept||'-',role:p.data?.role||'user'};
+  try{await start();if(!p.data)toast('Profil belum dibuat di tabel profiles')}catch(e){loginView();$('#er').textContent='Gagal memuat data: '+(e.message||e)}
 }
 async function start(){await loadData();shell()}
 // ---------- shell ----------
@@ -194,5 +201,6 @@ addEventListener('keydown',e=>{const k=e.key.toLowerCase();
   if((e.ctrlKey||e.metaKey)&&['s','p','u','c','a'].includes(k)&&!/INPUT/.test(document.activeElement.tagName)||k==='f12'||k==='printscreen'){e.preventDefault();if(k==='printscreen'){navigator.clipboard?.writeText('');toast('Tangkapan layar dicatat sebagai pelanggaran kebijakan')}}});
 const veil=on=>{const r=$('.rd');if(r)r.classList.toggle('veil',on)};
 document.addEventListener('visibilitychange',()=>veil(document.hidden));addEventListener('blur',()=>veil(true));addEventListener('focus',()=>veil(false));
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 boot();
 </script></body></html>
