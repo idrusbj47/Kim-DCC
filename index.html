@@ -42,6 +42,8 @@ button,input,select{font:inherit;color:inherit}
 .bh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.bh h3{margin:0;font-size:17px}.bh span{font-size:12px;color:var(--mut)}
 .fl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .fl input,.fl select,.f input,.f select{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;outline:none;min-width:0}.fl input{flex:1;min-width:180px}
+.jf{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.jb{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.jb i{font-style:normal;font-size:11px;background:var(--soft);color:var(--pri);border-radius:999px;padding:1px 8px}.jb.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}.jb.on i{background:rgba(255,255,255,.25);color:#fff}
 .grp{background:var(--soft);border-radius:12px;padding:9px 14px;font-weight:800;font-size:14px;margin:12px 0 8px;display:flex;justify-content:space-between}
 .grp i{font-style:normal;background:var(--nav);color:#fff;border-radius:999px;font-size:12px;padding:1px 10px}
 .it{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;background:var(--card)}
@@ -58,7 +60,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 .rs canvas{width:min(820px,100%);height:auto;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
 .rd.veil .rs{filter:blur(28px)}
 .lg{position:fixed;inset:0;background:linear-gradient(160deg,var(--nav),#081638);display:grid;place-items:center;z-index:30;padding:20px}
-.lc{background:var(--card);border-radius:24px;padding:30px;width:min(380px,100%)}.lc h2{margin:0 0 4px}.lc p{margin:0 0 16px;color:var(--mut);font-size:13px}.lc input{width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lc .btn{width:100%;margin-top:4px}
+.lc{background:var(--card);border-radius:24px;padding:30px;width:min(380px,100%)}.lc h2{margin:0 0 4px}.lc p{margin:0 0 16px;color:var(--mut);font-size:13px}.lc select{width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lc input{width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lc .btn{width:100%;margin-top:4px}
 .lk{background:none;border:0;color:var(--pri);font-weight:700;font-size:13px;cursor:pointer;padding:0}.lk:hover{text-decoration:underline}.lfr{text-align:center;margin-top:12px}.ok{color:#0a7a4b!important}
 .err{color:#d6336c;font-size:12px;min-height:16px;margin-top:6px}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--nav);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;z-index:40}
@@ -92,6 +94,12 @@ if(!demo&&!sb)document.addEventListener('DOMContentLoaded',()=>alert('Pustaka Su
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const IC={home:'<path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',doc:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',moon:'<path d="M20 14A8 8 0 0110 4a8 8 0 1010 10z"/>'};
 const ic=n=>`<svg viewBox="0 0 24 24">${IC[n]}</svg>`;
+const JENIS=[['MM','Manual Mutu'],['PR','Prosedur'],['IK','Instruksi Kerja'],['FM','Formulir'],['LN','Lainnya']];
+const jOf=d=>{if(d.jenis&&JENIS.some(j=>j[0]===d.jenis))return d.jenis;const p=String(d.kode||'').split(/[-_ .]/)[0].toUpperCase();return ['MM','PR','IK','FM'].includes(p)?p:'LN'};
+const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[4])[1];
+const jOpts=sel=>JENIS.map(j=>`<option value="${j[0]}"${j[0]===sel?' selected':''}>${j[0]} - ${j[1]}</option>`).join('');
+const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
+let JF='';
 let U=null, DOCS=[], LOG=[], V='home', Q='', DF='';
 const DEMO_DOCS=[{id:'d1',kode:'MM-01',judul:'Manual Mutu',dept:'Semua',revisi:'Rev 03',pages:5},{id:'d2',kode:'SOP-GBJ-02',judul:'SOP Penerimaan dan Penyimpanan Barang Jadi',dept:'Gudang Barang Jadi',revisi:'Rev 01',pages:4},{id:'d3',kode:'IK-GBJ-05',judul:'Instruksi Kerja Produk Tidak Sesuai',dept:'Gudang Barang Jadi',revisi:'Rev 02',pages:3}];
 const fmt=d=>new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -99,8 +107,8 @@ const toast=m=>{const t=document.createElement('div');t.className='toast';t.text
 
 // ---------- data ----------
 async function loadData(){
-  if(demo){DOCS=DEMO_DOCS;return}
-  const a=await sb.from('iso_documents').select('*').order('kode');DOCS=a.data||[];
+  if(demo){DOCS=sortDocs(DEMO_DOCS);return}
+  const a=await sb.from('iso_documents').select('*').order('kode');DOCS=sortDocs(a.data||[]);
   const l=await sb.from('iso_access_log').select('*').order('at',{ascending:false}).limit(U.role==='admin'?200:50);LOG=l.data||[];
 }
 async function logAccess(d){
@@ -159,7 +167,7 @@ function shell(){
   $('#me').onclick=()=>{V='prof';shell()};
   ({home:vHome,docs:vDocs,log:vLog,adm:vAdm,prof:vProf})[V]();
 }
-const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${esc(d.kode.split('-')[0])}</div><div style="flex:1;min-width:0"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><span class="tag">${esc(d.revisi||'Rev')}</span><span class="tag o">${esc(d.dept)}</span></div></div>`;
+const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div style="flex:1;min-width:0"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><span class="tag">${esc(jName(jOf(d)))}</span><span class="tag">${esc(d.revisi||'Rev')}</span><span class="tag o">${esc(d.dept)}</span></div></div>`;
 const bindItems=()=>document.querySelectorAll('.it').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)));
 function vHome(){
   const today=LOG.filter(l=>new Date(l.at).toDateString()===new Date().toDateString()).length;
@@ -170,10 +178,12 @@ function vHome(){
 }
 function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))];
-  $('#v').innerHTML=`<div class="box"><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"><select id="df"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ls"></div></div>`;
-  const draw=()=>{const f=DOCS.filter(d=>(!DF||d.dept===DF)&&(d.kode+d.judul).toLowerCase().includes(Q.toLowerCase()));
-    const g={};f.forEach(d=>(g[d.dept]??=[]).push(d));
-    $('#ls').innerHTML=Object.keys(g).map(k=>`<div class="grp">${esc(k)}<i>${g[k].length}</i></div>${g[k].map(item).join('')}`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';bindItems()};
+  $('#v').innerHTML=`<div class="box"><div class="jf" id="jf"></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"><select id="df"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ls"></div></div>`;
+  const draw=()=>{const base=DOCS.filter(d=>(!DF||d.dept===DF)&&(d.kode+d.judul).toLowerCase().includes(Q.toLowerCase()));
+    $('#jf').innerHTML=[['','Semua',base.length],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lainnya':j[0]+' \u00b7 '+j[1],base.filter(d=>jOf(d)===j[0]).length])].map(x=>`<button class="jb${JF===x[0]?' on':''}" data-j="${x[0]}">${x[1]}<i>${x[2]}</i></button>`).join('');
+    document.querySelectorAll('#jf .jb').forEach(b=>b.onclick=()=>{JF=b.dataset.j;draw()});
+    const f=base.filter(d=>!JF||jOf(d)===JF),g={};f.forEach(d=>(g[jOf(d)]??=[]).push(d));
+    $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<div class="grp">${j[0]} &middot; ${j[1]}<i>${g[j[0]].length}</i></div>${g[j[0]].map(item).join('')}`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';bindItems()};
   $('#q').oninput=e=>{Q=e.target.value;draw()};$('#df').onchange=e=>{DF=e.target.value;draw()};draw();
 }
 function vLog(){
@@ -196,21 +206,23 @@ async function pdfToPages(f,id,prog){
 function vAdm(){
   $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Unggah Dokumen Baru</h3><span id="pg">Dipecah menjadi gambar per halaman</span></div><div class="f">
   <div><label>Kode</label><input id="k" placeholder="SOP-GBJ-01"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
-  <div class="w"><label>Judul</label><input id="j"></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div>
+  <div class="w"><label>Judul</label><input id="j"></div><div><label>Jenis Dokumen</label><select id="jn">${jOpts('LN')}</select></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div>
   <div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>
-  <div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span>${DOCS.length} dokumen</span></div>${DOCS.map(d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div><input type="file" id="rf" accept="application/pdf" hidden>`;
+  <div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span>${DOCS.length} dokumen</span></div>${DOCS.map(d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${jOf(d)} &middot; ${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div><input type="file" id="rf" accept="application/pdf" hidden>`;
+  let jTouched=false;$('#jn').onchange=()=>jTouched=true;
+  $('#k').oninput=()=>{if(!jTouched)$('#jn').value=jOf({kode:$('#k').value})};
   const busy=m=>$('#pg').textContent=m, done=async m=>{toast(m);if(!demo)await loadData();shell()};
   $('#up').onclick=async()=>{
     const f=$('#fl').files[0],k=$('#k').value.trim(),j=$('#j').value.trim();if(!f||!k||!j){toast('Lengkapi kode, judul, dan file');return}
     if(demo){toast('Mode demo: unggah aktif setelah Supabase dihubungkan');return}
     $('#up').disabled=true;const id=crypto.randomUUID();
     try{const n=await pdfToPages(f,id,busy);
-      const ins=await sb.from('iso_documents').insert({id,kode:k,judul:j,dept:$('#dp').value.trim()||'Semua',revisi:$('#r').value.trim(),pages:n});if(ins.error)throw ins.error;
+      const ins=await sb.from('iso_documents').insert({id,kode:k,judul:j,dept:$('#dp').value.trim()||'Semua',jenis:$('#jn').value,revisi:$('#r').value.trim(),pages:n});if(ins.error)throw ins.error;
       V='docs';await done('Dokumen berhasil diunggah')}catch(e){toast('Gagal: '+(e.message||e));$('#up').disabled=false}};
   document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>act(b.dataset.a,DOCS.find(d=>d.id===b.dataset.id)));
   async function act(a,d){
-    if(a==='e')modal(`<h2>Ubah Dokumen</h2><p>Mengubah nama dan keterangan, bukan isi file.</p><label>Kode</label><input id="ek" value="${esc(d.kode)}"><label>Judul</label><input id="ej" value="${esc(d.judul)}"><label>Departemen</label><input id="ed" value="${esc(d.dept)}"><label>Revisi</label><input id="er2" value="${esc(d.revisi||'')}">`,async()=>{
-      const v={kode:$('#ek').value.trim(),judul:$('#ej').value.trim(),dept:$('#ed').value.trim()||'Semua',revisi:$('#er2').value.trim()};if(!v.kode||!v.judul)throw new Error('Kode dan judul wajib diisi');
+    if(a==='e')modal(`<h2>Ubah Dokumen</h2><p>Mengubah nama dan keterangan, bukan isi file.</p><label>Kode</label><input id="ek" value="${esc(d.kode)}"><label>Judul</label><input id="ej" value="${esc(d.judul)}"><label>Jenis Dokumen</label><select id="ejn">${jOpts(jOf(d))}</select><label>Departemen</label><input id="ed" value="${esc(d.dept)}"><label>Revisi</label><input id="er2" value="${esc(d.revisi||'')}">`,async()=>{
+      const v={kode:$('#ek').value.trim(),judul:$('#ej').value.trim(),dept:$('#ed').value.trim()||'Semua',jenis:$('#ejn').value,revisi:$('#er2').value.trim()};if(!v.kode||!v.judul)throw new Error('Kode dan judul wajib diisi');
       if(demo)Object.assign(d,v);else{const r=await sb.from('iso_documents').update(v).eq('id',d.id);if(r.error)throw r.error}
       await done('Dokumen diubah')});
     if(a==='x'){if(!confirm(`Hapus "${d.kode}" beserta semua halamannya? Tindakan ini tidak bisa dibatalkan.`))return;
