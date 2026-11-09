@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1f4d">
+<title>Ruang Audit | PT Karya Indah Multiguna</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--ink:#0f1f3d;--mut:#64748b;--line:#e2e8f0;--nav:#0b1f4d;--pri:#0a5bd6;--pri2:#3b8bff;--soft:#eaf1fd}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button,input{font:inherit;color:inherit}
+.btn{border:0;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-weight:800;padding:12px 20px;border-radius:12px;cursor:pointer;font-size:14px;box-shadow:0 6px 16px rgba(10,91,214,.35)}
+.btn.g{background:var(--soft);color:var(--pri);box-shadow:none}.btn.bs{padding:8px 14px;font-size:12px}.btn:disabled{opacity:.6}
+.lg{position:fixed;inset:0;background:linear-gradient(160deg,var(--nav),#081638);display:grid;place-items:center;z-index:30;padding:20px;overflow:auto}
+.lc{background:var(--card);border-radius:24px;padding:30px;width:min(400px,100%)}.lc h2{margin:8px 0 4px}.lc p{margin:0 0 16px;color:var(--mut);font-size:13px;line-height:1.5}
+.lc .btn{width:100%;margin-top:4px}
+.bdg{display:inline-block;background:var(--soft);color:var(--pri);font-size:11px;font-weight:800;letter-spacing:2px;padding:4px 12px;border-radius:999px}
+.cd{width:100%;text-align:center;font-size:28px;font-weight:800;letter-spacing:12px;padding:14px 10px 14px 22px;background:var(--bg);border:1px solid var(--line);border-radius:14px;outline:none;margin-bottom:10px}.cd:focus{border-color:var(--pri)}
+.err{color:#d6336c;font-size:12px;min-height:16px;margin:6px 0 10px}
+.note{background:#fff7e0;border:1px solid #f3dfa2;color:#7a5b00;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5}
+.lfr{text-align:center;margin-top:14px}.lk{color:var(--pri);font-weight:700;font-size:13px;text-decoration:none}
+.tb{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--nav);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 18px 12px;position:sticky;top:0;z-index:5}
+.tb b{display:block;font-size:16px}.tb small{display:block;font-size:11px;color:#9db8ea;letter-spacing:.5px}
+.tr{display:flex;align-items:center;gap:10px}.sl{font-size:12px;color:#cbd9f5;font-weight:700}
+.wrap{max-width:900px;margin:0 auto;padding:18px 16px calc(40px + env(safe-area-inset-bottom))}
+.box{background:var(--card);border-radius:22px;padding:20px;border-top:3px solid var(--pri);box-shadow:0 8px 24px rgba(15,31,61,.06)}
+.bh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.bh h3{margin:0;font-size:17px}.bh span{font-size:12px;color:var(--mut)}
+.jf{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}.jf::-webkit-scrollbar{display:none}
+.jb{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-weight:800;font-size:13px;cursor:pointer}.jb.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
+.fl input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;outline:none;margin-bottom:6px}
+.grp{background:var(--soft);border-radius:12px;padding:9px 14px;font-weight:800;font-size:14px;margin:12px 0 8px;display:flex;justify-content:space-between}
+.grp i{font-style:normal;background:var(--nav);color:#fff;border-radius:999px;font-size:12px;padding:1px 10px}
+.it{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;background:var(--card)}
+.th{width:48px;height:58px;border-radius:8px;background:var(--soft);color:var(--pri);display:grid;place-items:center;flex:none;font-weight:800;font-size:12px}
+.it b{font-size:14px}.it p{margin:2px 0 6px;font-size:12px;color:var(--mut)}
+.tag{display:inline-block;background:var(--pri);color:#fff;font-size:11px;font-weight:800;padding:2px 10px;border-radius:999px;margin-right:6px}.tag.o{background:#e8f0fe;color:var(--pri)}
+.empty{text-align:center;color:var(--mut);padding:30px 10px;font-size:14px}
+.rd{position:fixed;inset:0;background:#0a1228;z-index:20;display:flex;flex-direction:column}
+.rb{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 18px 12px;background:var(--nav);color:#fff}.rb b{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rs{flex:1;overflow:auto;padding:18px 10px 40px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.rs canvas{width:min(820px,100%);height:auto;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
+.rd.veil .rs{filter:blur(28px)}
+.toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%);background:var(--nav);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;z-index:40}
+@media print{body{display:none!important}}
+</style></head>
+<body><div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL='https://jvrcmvazuhbxlktnzwer.supabase.co', SB_KEY='sb_publishable_De5UwPKibjXjQ2dFSbaAgw_jPMluQxS', BUCKET='iso-pages';
+// sesi auditor dipisah dari sesi karyawan agar tidak saling menimpa
+const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'kim-audit-auth',persistSession:true,autoRefreshToken:true}});
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=d=>new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2600)};
+const JENIS=[['MM','Manual Mutu'],['PR','Prosedur'],['IK','Instruksi Kerja'],['FM','Formulir'],['LN','Lainnya']];
+const jOf=d=>{if(d.jenis&&JENIS.some(j=>j[0]===d.jenis))return d.jenis;const p=String(d.kode||'').split(/[-_ .]/)[0].toUpperCase();return ['MM','PR','IK','FM'].includes(p)?p:'LN'};
+const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[4])[1];
+const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
+let DOCS=[],S=null,F='',Q='',timer=null;
+
+// ---------- kode akses ----------
+function codeView(msg){
+  clearInterval(timer);S=null;document.querySelector('.rd')?.remove();
+  $('#app').innerHTML=`<div class="lg"><div class="lc"><span class="bdg">AUDITOR</span><h2>Ruang Audit</h2><p>PT Karya Indah Multiguna. Masukkan kode akses 5 angka untuk membaca dokumen mutu.</p>
+  <input class="cd" id="cd" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="one-time-code" placeholder="•••••">
+  <button class="btn" id="go">Masuk</button><div class="err" id="er">${esc(msg||'')}</div>
+  <div class="note"><b>Belum punya kode akses?</b><br>Minta kode akses ke admin KIM. Kode berlaku 24 jam sejak dibuat.</div>
+  <div class="lfr"><a class="lk" href="index.html">&larr; Kembali ke halaman utama</a></div></div></div>`;
+  $('#cd').oninput=e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,5);
+  const go=async()=>{const er=$('#er'),b=$('#go'),code=$('#cd').value;er.textContent='';
+    if(!/^\d{5}$/.test(code)){er.textContent='Kode akses terdiri dari 5 angka.';return}
+    b.disabled=true;
+    try{const {data:{session}}=await sb.auth.getSession();
+      if(!session){const a=await sb.auth.signInAnonymously();if(a.error)throw new Error(/anonymous/i.test(a.error.message)?'Layanan audit belum diaktifkan. Hubungi admin KIM.':a.error.message)}
+      const r=await sb.rpc('audit_redeem',{p_code:code});if(r.error)throw r.error;
+      const d=r.data;
+      if(!d||!d.ok){er.textContent=d&&d.reason==='limit'?'Terlalu banyak percobaan salah. Coba lagi beberapa menit lagi.':'Kode salah atau sudah kedaluwarsa. Minta kode baru ke admin.';b.disabled=false;return}
+      S={exp:new Date(d.expires_at).getTime(),label:d.label||'Auditor'};await start()
+    }catch(e){er.textContent='Gagal: '+(e.message||e);b.disabled=false}};
+  $('#go').onclick=go;$('#cd').addEventListener('keydown',e=>{if(e.key==='Enter')go()});$('#cd').focus()}
+
+// ---------- daftar dokumen ----------
+const left=()=>{const m=Math.max(0,Math.round((S.exp-Date.now())/60000));return m>=60?`${Math.floor(m/60)} jam ${m%60} menit`:`${m} menit`};
+const tick=()=>{if(!S)return;if(Date.now()>=S.exp){toast('Kode akses sudah berakhir');codeView('Kode akses sudah berakhir. Minta kode baru ke admin.')}else if($('#sl'))$('#sl').textContent='Sisa '+left()};
+async function start(){
+  const r=await sb.from('iso_documents').select('*').order('kode');if(r.error)throw r.error;
+  DOCS=sortDocs(r.data||[]);view();clearInterval(timer);timer=setInterval(tick,15000)}
+const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div style="flex:1;min-width:0"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><span class="tag">${esc(jName(jOf(d)))}</span><span class="tag o">${esc(d.dept)}</span></div></div>`;
+function view(){
+  $('#app').innerHTML=`<header class="tb"><div><b>Ruang Audit</b><small>PT KARYA INDAH MULTIGUNA</small></div><div class="tr"><span class="sl" id="sl"></span><button class="btn g bs" id="lo">Keluar</button></div></header>
+  <main class="wrap"><div class="box"><div class="bh"><h3>Dokumen Mutu</h3><span>Hanya baca &middot; berwatermark</span></div><div class="jf" id="jf"></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"></div><div id="ls"></div></div></main>`;
+  const draw=()=>{const base=DOCS.filter(d=>(d.kode+d.judul).toLowerCase().includes(Q.toLowerCase()));
+    $('#jf').innerHTML=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]])].map(x=>`<button class="jb${F===x[0]?' on':''}" data-j="${x[0]}">${x[1]}</button>`).join('');
+    document.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{F=b.dataset.j;draw()});
+    const g={};base.filter(d=>!F||jOf(d)===F).forEach(d=>(g[jOf(d)]??=[]).push(d));
+    $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<div class="grp">${j[0]} &middot; ${j[1]}<i>${g[j[0]].length}</i></div>${g[j[0]].map(item).join('')}`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';
+    document.querySelectorAll('.it').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)))};
+  $('#q').oninput=e=>{Q=e.target.value;draw()};draw();tick();
+  $('#lo').onclick=async()=>{if(confirm('Keluar dari ruang audit?')){await sb.auth.signOut();codeView()}}}
+
+// ---------- pembaca ----------
+function mark(c){const x=c.getContext('2d');x.save();x.globalAlpha=.16;x.fillStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
+  const t=`AUDITOR \u2022 ${S.label} \u2022 ${fmt(Date.now())}`;for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)x.fillText(t,xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
+async function openDoc(d){
+  if(!d)return;const r=document.createElement('div');r.className='rd';
+  r.innerHTML=`<div class="rb"><button class="btn g bs" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div>`;
+  document.body.append(r);$('#cl').onclick=()=>r.remove();
+  const rs=$('#rs'),paths=Array.from({length:d.pages},(_,i)=>`${d.id}/${String(i+1).padStart(3,'0')}.webp`);
+  const s=await sb.storage.from(BUCKET).createSignedUrls(paths,90);
+  if(s.error){r.remove();toast('Akses ditolak. Kode mungkin sudah berakhir.');tick();return}
+  const urls=(s.data||[]).map(x=>x.signedUrl);rs.innerHTML='';
+  for(let i=0;i<d.pages;i++){
+    const c=document.createElement('canvas');rs.append(c);const x=c.getContext('2d');
+    try{const bm=await createImageBitmap(await (await fetch(urls[i])).blob());c.width=bm.width;c.height=bm.height;x.drawImage(bm,0,0)}catch{c.width=820;c.height=200;x.fillText('Gagal memuat halaman',20,100)}
+    mark(c)}}
+
+// ---------- penghalang (pencegah awam, bukan pengaman mutlak) ----------
+addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('dragstart',e=>e.preventDefault());
+addEventListener('copy',e=>{if(!/INPUT/.test(e.target.tagName))e.preventDefault()});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&['s','p','u','c','a'].includes(k)&&!/INPUT/.test(document.activeElement.tagName)||k==='f12'||k==='printscreen'){e.preventDefault();if(k==='printscreen'){navigator.clipboard?.writeText('');toast('Tangkapan layar dilarang')}}});
+const veil=on=>{const r=$('.rd');if(r)r.classList.toggle('veil',on)};
+document.addEventListener('visibilitychange',()=>veil(document.hidden));addEventListener('blur',()=>veil(true));addEventListener('focus',()=>veil(false));
+
+// ---------- mulai ----------
+(async()=>{
+  try{const {data:{session}}=await sb.auth.getSession();
+    if(session){const r=await sb.rpc('audit_status');
+      if(r.data&&r.data.ok){S={exp:new Date(r.data.expires_at).getTime(),label:r.data.label||'Auditor'};await start();return}}}catch(e){}
+  codeView()})();
+</script></body></html>
