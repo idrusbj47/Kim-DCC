@@ -42,8 +42,8 @@ button,input,select{font:inherit;color:inherit}
 .bh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.bh h3{margin:0;font-size:17px}.bh span{font-size:12px;color:var(--mut)}
 .fl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .fl input,.fl select,.f input,.f select{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;outline:none;min-width:0}.fl input{flex:1;min-width:180px}
-.jf{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.jb{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
-.jb i{font-style:normal;font-size:11px;background:var(--soft);color:var(--pri);border-radius:999px;padding:1px 8px}.jb.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}.jb.on i{background:rgba(255,255,255,.25);color:#fff}
+.jf{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}.jf::-webkit-scrollbar{display:none}.jb{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;font-weight:800;font-size:13px;cursor:pointer}
+.jb.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
 .grp{background:var(--soft);border-radius:12px;padding:9px 14px;font-weight:800;font-size:14px;margin:12px 0 8px;display:flex;justify-content:space-between}
 .grp i{font-style:normal;background:var(--nav);color:#fff;border-radius:999px;font-size:12px;padding:1px 10px}
 .it{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;background:var(--card)}
@@ -61,6 +61,10 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 .rd.veil .rs{filter:blur(28px)}
 .lg{position:fixed;inset:0;background:linear-gradient(160deg,var(--nav),#081638);display:grid;place-items:center;z-index:30;padding:20px}
 .lc{background:var(--card);border-radius:24px;padding:30px;width:min(380px,100%)}.lc h2{margin:0 0 4px}.lc p{margin:0 0 16px;color:var(--mut);font-size:13px}.lc select{width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lc input{width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lc .btn{width:100%;margin-top:4px}
+.gb{display:flex;gap:14px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer}.gb:hover{border-color:var(--pri2)}
+.gb b{display:block;font-size:16px}.gb small{display:block;color:var(--mut);font-size:12px;line-height:1.4;margin-top:2px}
+.gi{width:44px;height:44px;border-radius:12px;background:var(--soft);color:var(--pri);display:grid;place-items:center;flex:none}.gi svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cdl{font-size:24px;letter-spacing:5px;font-weight:800}
 .lk{background:none;border:0;color:var(--pri);font-weight:700;font-size:13px;cursor:pointer;padding:0}.lk:hover{text-decoration:underline}.lfr{text-align:center;margin-top:12px}.ok{color:#0a7a4b!important}
 .err{color:#d6336c;font-size:12px;min-height:16px;margin-top:6px}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--nav);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;z-index:40}
@@ -99,7 +103,7 @@ const jOf=d=>{if(d.jenis&&JENIS.some(j=>j[0]===d.jenis))return d.jenis;const p=S
 const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[4])[1];
 const jOpts=sel=>JENIS.map(j=>`<option value="${j[0]}"${j[0]===sel?' selected':''}>${j[0]} - ${j[1]}</option>`).join('');
 const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
-let JF='';
+let JF='',CODES=[];
 let U=null, DOCS=[], LOG=[], V='home', Q='', DF='';
 const DEMO_DOCS=[{id:'d1',kode:'MM-01',judul:'Manual Mutu',dept:'Semua',revisi:'Rev 03',pages:5},{id:'d2',kode:'SOP-GBJ-02',judul:'SOP Penerimaan dan Penyimpanan Barang Jadi',dept:'Gudang Barang Jadi',revisi:'Rev 01',pages:4},{id:'d3',kode:'IK-GBJ-05',judul:'Instruksi Kerja Produk Tidak Sesuai',dept:'Gudang Barang Jadi',revisi:'Rev 02',pages:3}];
 const fmt=d=>new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -120,7 +124,8 @@ async function logAccess(d){
 function loginView(){
   $('#app').innerHTML=`<div class="lg"><div class="lc"><h2>Dokumen ISO</h2><p>PT Karya Indah Multiguna. Masuk untuk membaca dokumen mutu.</p>
   ${demo?'<button class="btn" id="dm">Coba mode demo</button><p style="margin-top:12px">Belum terhubung ke Supabase. Isi SB_URL dan SB_KEY di file ini untuk memakai data asli.</p>':
-  '<input id="em" type="email" placeholder="Email" autocomplete="username"><div class="pwr"><input id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password"><button type="button" class="eye" id="ey" aria-label="Lihat kata sandi"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><button class="btn" id="go">Masuk</button><div class="lfr"><button type="button" class="lk" id="fg">Lupa kata sandi?</button></div><div class="err" id="er"></div>'}</div></div>`;
+  '<input id="em" type="email" placeholder="Email" autocomplete="username"><div class="pwr"><input id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password"><button type="button" class="eye" id="ey" aria-label="Lihat kata sandi"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><button class="btn" id="go">Masuk</button><div class="lfr"><button type="button" class="lk" id="fg">Lupa kata sandi?</button></div><div class="err" id="er"></div>'}<div class="lfr"><button type="button" class="lk" id="gk">&larr; Kembali</button></div></div></div>`;
+  $('#gk').onclick=gateView;
   if(demo)$('#dm').onclick=()=>{U={id:'demo',nama:'Tamu Demo',dept:'Gudang Barang Jadi',role:'admin'};start()};
   else{const go=async()=>{const er=$('#er'),b=$('#go');er.textContent='';b.disabled=true;
     try{const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
@@ -130,6 +135,11 @@ function loginView(){
     $('#fg').onclick=()=>forgotView($('#em').value.trim());
     $('#go').onclick=go;$('#ey').onclick=()=>{const p=$('#pw'),h=p.type==='password';p.type=h?'text':'password';$('#ey').innerHTML=h?'<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.1A9.6 9.6 0 0112 6c6 0 10 6 10 6a17 17 0 01-3.2 3.8M6.6 6.7A17 17 0 002 12s4 7 10 7a9.7 9.7 0 004.3-1"/></svg>':'<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'};['#em','#pw'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}))}
 };
+function gateView(){
+  $('#app').innerHTML=`<div class="lg"><div class="lc" style="width:min(420px,100%)"><h2>Dokumen ISO</h2><p>PT Karya Indah Multiguna. Pilih cara masuk Anda.</p>
+  <button class="gb" id="g1"><span class="gi"><svg viewBox="0 0 24 24"><path d="M4 21V5l8-2v18M12 8h8v13M2 21h20M7 8h2M7 12h2M7 16h2M15 12h2M15 16h2"/></svg></span><span><b>Internal KIM</b><small>Karyawan PT Karya Indah Multiguna. Masuk dengan email dan kata sandi.</small></span></button>
+  <button class="gb" id="g2"><span class="gi"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span><span><b>Auditor</b><small>Tamu audit. Masuk dengan kode akses 5 angka dari admin.</small></span></button></div></div>`;
+  $('#g1').onclick=loginView;$('#g2').onclick=()=>{location.href='audit.html'}}
 async function sendReset(email){
   if(demo){toast('Mode demo: tidak berlaku');return false}
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:new URL('reset.html',location.href).href});
@@ -148,8 +158,8 @@ function forgotView(pre){
     b.disabled=false};
   $('#fs').onclick=send;$('#fe').addEventListener('keydown',e=>{if(e.key==='Enter')send()})}
 async function boot(){
-  if(demo){loginView();return}
-  const {data:{session}}=await sb.auth.getSession();if(!session){loginView();return}
+  if(demo){gateView();return}
+  const {data:{session}}=await sb.auth.getSession();if(!session){gateView();return}
   const p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).single();
   U={id:session.user.id,email:session.user.email,nama:p.data?.nama||session.user.email,dept:p.data?.dept||'-',role:p.data?.role||'user',foto_at:p.data?.foto_at};await loadAv();
   try{await start();if(!p.data)toast('Profil belum dibuat di tabel profiles')}catch(e){loginView();$('#er').textContent='Gagal memuat data: '+(e.message||e)}
@@ -180,7 +190,7 @@ function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))];
   $('#v').innerHTML=`<div class="box"><div class="jf" id="jf"></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"><select id="df"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ls"></div></div>`;
   const draw=()=>{const base=DOCS.filter(d=>(!DF||d.dept===DF)&&(d.kode+d.judul).toLowerCase().includes(Q.toLowerCase()));
-    $('#jf').innerHTML=[['','Semua',base.length],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lainnya':j[0]+' \u00b7 '+j[1],base.filter(d=>jOf(d)===j[0]).length])].map(x=>`<button class="jb${JF===x[0]?' on':''}" data-j="${x[0]}">${x[1]}<i>${x[2]}</i></button>`).join('');
+    $('#jf').innerHTML=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]])].map(x=>`<button class="jb${JF===x[0]?' on':''}" data-j="${x[0]}">${x[1]}</button>`).join('');
     document.querySelectorAll('#jf .jb').forEach(b=>b.onclick=()=>{JF=b.dataset.j;draw()});
     const f=base.filter(d=>!JF||jOf(d)===JF),g={};f.forEach(d=>(g[jOf(d)]??=[]).push(d));
     $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<div class="grp">${j[0]} &middot; ${j[1]}<i>${g[j[0]].length}</i></div>${g[j[0]].map(item).join('')}`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';bindItems()};
@@ -208,7 +218,27 @@ function vAdm(){
   <div><label>Kode</label><input id="k" placeholder="SOP-GBJ-01"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
   <div class="w"><label>Judul</label><input id="j"></div><div><label>Jenis Dokumen</label><select id="jn">${jOpts('LN')}</select></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div>
   <div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>
+  <div class="box" style="margin-top:12px"><div class="bh"><h3>Kode Akses Auditor</h3><span>5 angka &middot; berlaku 24 jam</span></div>
+  <div class="f"><div><label>Kode (5 angka)</label><input id="ck" inputmode="numeric" maxlength="5" placeholder="12345"></div><div><label>Untuk siapa (opsional)</label><input id="cl" placeholder="Nama auditor / lembaga"></div>
+  <div class="w" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn g" id="cr">Acak</button><button class="btn" id="cb">Buat Kode</button></div></div>
+  <div id="acl" style="margin-top:12px"></div></div>
   <div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span>${DOCS.length} dokumen</span></div>${DOCS.map(d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${jOf(d)} &middot; ${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div><input type="file" id="rf" accept="application/pdf" hidden>`;
+  const left=t=>{const m=Math.max(0,Math.round((new Date(t)-Date.now())/60000));return Math.floor(m/60)+' jam '+m%60+' menit lagi'};
+  async function loadCodes(){const box=$('#acl');if(!box)return;
+    if(!demo){const r=await sb.from('iso_audit_codes').select('*').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});
+      if(r.error){box.innerHTML='<div class="empty">Tabel kode akses belum siap. Jalankan audit_setup.sql di Supabase.</div>';return}CODES=r.data}
+    CODES=CODES.filter(c=>new Date(c.expires_at)>Date.now());
+    box.innerHTML=CODES.map(c=>`<div class="row"><div><b class="cdl">${esc(c.code)}</b><br><span>${esc(c.label||'Tanpa keterangan')} &middot; sampai ${fmt(c.expires_at)} (${left(c.expires_at)})</span></div><button class="btn r bs" data-cx="${c.id}">Cabut</button></div>`).join('')||'<div class="empty">Belum ada kode aktif.</div>';
+    document.querySelectorAll('[data-cx]').forEach(b=>b.onclick=async()=>{if(!confirm('Cabut kode ini? Auditor yang sedang masuk langsung keluar.'))return;
+      try{if(demo)CODES=CODES.filter(c=>c.id!==b.dataset.cx);else{const r=await sb.from('iso_audit_codes').delete().eq('id',b.dataset.cx);if(r.error)throw r.error}toast('Kode dicabut');loadCodes()}catch(x){toast('Gagal: '+(x.message||x))}})}
+  $('#ck').oninput=e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,5);
+  $('#cr').onclick=()=>$('#ck').value=String(crypto.getRandomValues(new Uint32Array(1))[0]%100000).padStart(5,'0');
+  $('#cb').onclick=async()=>{const k=$('#ck').value.trim(),l=$('#cl').value.trim();if(!/^\d{5}$/.test(k)){toast('Kode harus 5 angka');return}
+    try{if(demo)CODES.push({id:crypto.randomUUID(),code:k,label:l,expires_at:new Date(Date.now()+864e5).toISOString()});
+      else{await sb.from('iso_audit_codes').delete().eq('code',k).lte('expires_at',new Date().toISOString());
+        const r=await sb.from('iso_audit_codes').insert({code:k,label:l||null});if(r.error)throw new Error(r.error.code==='23505'?'Kode itu masih aktif. Pilih angka lain.':r.error.message)}
+      $('#ck').value=$('#cl').value='';toast('Kode dibuat, berlaku 24 jam');loadCodes()}catch(x){toast('Gagal: '+(x.message||x))}};
+  loadCodes();
   let jTouched=false;$('#jn').onchange=()=>jTouched=true;
   $('#k').oninput=()=>{if(!jTouched)$('#jn').value=jOf({kode:$('#k').value})};
   const busy=m=>$('#pg').textContent=m, done=async m=>{toast(m);if(!demo)await loadData();shell()};
@@ -253,7 +283,7 @@ function vProf(){
   <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--mut)">Lupa kata sandi? Kami kirim tautan reset ke ${demo?'email Anda':'<b>'+esc(U.email||'')+'</b>'}.<div style="margin-top:8px"><button class="btn g bs" id="fr">Kirim Tautan Reset</button></div></div></div>
   <div style="margin-top:14px"><button class="btn r" id="lo">Keluar</button></div>`;
   $('#sp').onchange=e=>{$('#p1').type=$('#p2').type=e.target.checked?'text':'password'};
-  $('#lo').onclick=async()=>{if(confirm('Keluar dari aplikasi?')){if(!demo)await sb.auth.signOut();if(U.av)URL.revokeObjectURL(U.av);U=null;V='home';loginView()}};
+  $('#lo').onclick=async()=>{if(confirm('Keluar dari aplikasi?')){if(!demo)await sb.auth.signOut();if(U.av)URL.revokeObjectURL(U.av);U=null;V='home';gateView()}};
   $('#sn').onclick=async()=>{const n=$('#nm').value.trim();if(!n){toast('Nama tidak boleh kosong');return}
     if(!demo){const r=await sb.from('iso_profiles').update({nama:n}).eq('id',U.id).select();if(r.error||!r.data.length){toast('Gagal menyimpan nama (profil belum dibuat?)');return}}
     U.nama=n;toast('Nama disimpan');shell()};
