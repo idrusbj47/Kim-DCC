@@ -71,7 +71,7 @@ function codeView(msg){
     if(!/^\d{5}$/.test(code)){er.textContent='Kode akses terdiri dari 5 angka.';return}
     b.disabled=true;
     try{const {data:{session}}=await sb.auth.getSession();
-      if(!session){const a=await sb.auth.signInAnonymously();if(a.error)throw new Error(/anonymous/i.test(a.error.message)?'Layanan audit belum diaktifkan. Hubungi admin KIM.':a.error.message)}
+      if(!session){const a=await sb.auth.signInAnonymously();if(a.error)throw new Error(/anonymous/i.test(a.error.message)?'Layanan audit belum diaktifkan. Hubungi admin KIM. ('+a.error.message+')':a.error.message)}
       const r=await sb.rpc('audit_redeem',{p_code:code});if(r.error)throw r.error;
       const d=r.data;
       if(!d||!d.ok){er.textContent=d&&d.reason==='limit'?'Terlalu banyak percobaan salah. Coba lagi beberapa menit lagi.':'Kode salah atau sudah kedaluwarsa. Minta kode baru ke admin.';b.disabled=false;return}
