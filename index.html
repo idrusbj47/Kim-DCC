@@ -1,739 +1,198 @@
 <!DOCTYPE html>
-<html lang="id" class="">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISO Document Control Center - Final Cloud Sync</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            transition: background-color 0.4s ease, color 0.4s ease;
-        }
-
-        /* Efek Kaca Premium iPhone (Glassmorphism) */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.45);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1.5px solid rgba(255, 255, 255, 0.7);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
-            transition: all 0.3s ease;
-        }
-
-        .dark .glass-panel {
-            background: rgba(30, 41, 59, 0.45);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-        }
-
-        /* Efek Sticky Header Berubah Saat Scroll (iOS Style) */
-        header.scrolled {
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
-        }
-        
-        .dark header.scrolled {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Garis Tepi Dipertegas */
-        .sharp-border {
-            border: 1.5px solid rgba(0, 0, 0, 0.15);
-        }
-        .dark .sharp-border {
-            border: 1.5px solid rgba(255, 255, 255, 0.18);
-        }
-
-        .toggle-thumb {
-            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-        .rotate-icon {
-            transition: transform 0.5s ease;
-        }
-        #theme-toggle:hover .rotate-icon {
-            transform: rotate(45deg);
-        }
-
-        .sidebar-transition {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Menghilangkan scrollbar bawaan */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-</head>
-<body class="bg-gradient-to-tr from-slate-100 via-teal-50/20 to-blue-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col md:flex-row">
-
-    <div class="fixed -top-40 -left-40 w-96 h-96 bg-teal-400/20 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="fixed bottom-10 right-10 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden md:hidden"></div>
-
-    <aside id="sidebar-menu" class="fixed inset-y-0 left-0 w-64 glass-panel border-r sharp-border flex flex-col justify-between p-4 z-50 sidebar-transition -translate-x-full md:translate-x-0 h-full rounded-none">
-        <div>
-            <div class="flex items-center justify-between px-2 py-4 mb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-teal-600 dark:bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-teal-500/20">⬡</div>
-                    <div>
-                        <h1 class="font-bold text-slate-900 dark:text-white leading-tight tracking-tight">ISO DCC</h1>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Control Center</p>
-                    </div>
-                </div>
-                <button id="close-sidebar" class="md:hidden w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg border sharp-border bg-white/50 dark:bg-slate-800/50">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <nav class="space-y-1" id="nav-container">
-                <a href="#dashboard" data-page="dashboard" class="nav-item flex items-center gap-3 px-3 py-2.5 bg-teal-600 text-white rounded-xl font-medium text-sm shadow-md shadow-teal-600/10">
-                    <i class="fa-solid fa-house w-5 text-center"></i> Dashboard
-                </a>
-                <a href="#departemen" data-page="departemen" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
-                    <i class="fa-solid fa-building w-5 text-center"></i> Departemen
-                </a>
-               <a href="#prosedur" data-page="prosedur" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
-                    <i class="fa-solid fa-circle-check w-5 text-center"></i> Prosedur
-                </a> 
-                <a href="#instruksi-kerja" data-page="instruksi-kerja" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
-                    <i class="fa-solid fa-file-signature w-5 text-center"></i> Instruksi Kerja
-                </a>
-                <a href="#formulir" data-page="formulir" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
-                    <i class="fa-solid fa-list-check w-5 text-center"></i> Formulir     
-                 </a>
-               <a href="#standar" data-page="standar" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
-                    <i class="fa-solid fa-shield-halved w-5 text-center"></i> Standar          
-                </a>
-                <a href="#eksternal" data-page="eksternal" class="nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition">
-                    <i class="fa-solid fa-earth-americas w-5 text-center"></i> Eksternal
-                </a>
-            </nav>
-        </div>
-
-        <div>
-            <div class="bg-white/40 dark:bg-slate-800/40 border sharp-border rounded-2xl p-4 mb-4">
-                <div class="flex items-center gap-2 mb-1.5 text-teal-700 dark:text-teal-400 font-bold text-xs">
-                    <i class="fa-solid fa-folder-open"></i> Akses Cepat
-                </div>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3 leading-relaxed">Temukan dokumen mutu internal dengan instan.</p>
-                <a href="#prosedur" onclick="switchPage('prosedur')" class="w-full bg-white dark:bg-slate-700 border sharp-border text-slate-700 dark:text-slate-200 text-xs py-2 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-slate-600 transition flex items-center justify-center gap-1">
-                    Lihat Prosedur <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                </a>
-            </div>
-            <p class="text-[10px] text-slate-400 dark:text-slate-500 px-2">© 2026 ISO Document Control.<br>All rights reserved.</p>
-        </div>
-    </aside>
-
-    <div class="flex-1 flex flex-col md:ml-64 w-full relative">
-        
-        <header id="sticky-header" class="sticky top-0 z-30 transition-all duration-300 px-4 md:px-8 py-4 flex flex-col gap-4 sm:flex-row sm:items-center justify-between bg-transparent">
-            <div class="flex items-center justify-start w-full sm:w-auto gap-2 md:gap-0">
-                <button id="hamburger-btn" class="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1 bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl text-slate-700 dark:text-white shadow-sm shrink-0 active:scale-95 transition-transform">
-                    <span class="w-4 h-0.5 bg-current block rounded-full"></span>
-                    <span class="w-4 h-0.5 bg-current block rounded-full"></span>
-                    <span class="w-4 h-0.5 bg-current block rounded-full"></span>
-                </button>
-                
-                <div class="ml-1 sm:ml-0">
-                    <h2 class="text-lg md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight" id="page-title">ISO Document Control Center</h2>
-                    <p class="text-[11px] text-slate-400 dark:text-slate-500 max-w-xl hidden sm:block mt-0.5" id="page-subtitle">Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu perusahaan.</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none sm:w-64 flex gap-2">
-                    <div class="relative w-full">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
-                        <input type="text" id="main-search" placeholder="Cari data..." class="w-full pl-8 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border sharp-border rounded-xl text-xs focus:outline-none focus:border-teal-500 dark:focus:border-teal-400 transition backdrop-blur-sm">
-                    </div>
-                    <button id="refresh-btn" title="Sinkronisasi Ulang Data CSV" class="w-9 h-8 bg-white/60 dark:bg-slate-800/60 border sharp-border rounded-xl flex items-center justify-center text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition shadow-sm shrink-0">
-                        <i id="refresh-icon" class="fa-solid fa-rotate text-xs"></i>
-                    </button>
-                </div>
-
-                <button id="theme-toggle" class="w-14 h-8 bg-slate-200 dark:bg-slate-700 rounded-full p-1 flex items-center relative transition-colors duration-300 focus:outline-none border sharp-border shrink-0">
-                    <div class="toggle-thumb w-6 h-6 bg-white dark:bg-slate-900 rounded-full shadow-md flex items-center justify-center transform translate-x-0 dark:translate-x-6">
-                        <i class="rotate-icon fa-solid fa-sun text-amber-500 text-xs dark:hidden"></i>
-                        <i class="rotate-icon fa-solid fa-moon text-indigo-400 text-xs hidden dark:block"></i>
-                    </div>
-                </button>
-
-                <div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800 shrink-0">
-                    <div class="w-8 h-8 rounded-full overflow-hidden border border-teal-500/50">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar Admin" class="w-full h-full object-cover">
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main class="flex-1 px-4 md:px-8 pb-8 w-full overflow-x-hidden pt-2">
-            
-            <section class="flex overflow-x-auto pb-3 gap-4 mb-8 no-scrollbar snap-x">
-                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-teal-500/5" onclick="switchPage('prosedur')">
-                    <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center border border-teal-500/20 shrink-0"><i class="fa-solid fa-file-invoice"></i></div>
-                    <div>
-                        <div class="flex items-baseline gap-1"><span id="total-pr" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">PR</span></div>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Prosedur</p>
-                    </div>
-                </div>
-                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-blue-500/5" onclick="switchPage('instruksi-kerja')">
-                    <div class="w-9 h-9 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center border border-blue-500/20 shrink-0"><i class="fa-solid fa-clipboard-list"></i></div>
-                    <div>
-                        <div class="flex items-baseline gap-1"><span id="total-ik" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">IK</span></div>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Instruksi Kerja</p>
-                    </div>
-                </div>
-                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-indigo-500/5" onclick="switchPage('formulir')">
-                    <div class="w-9 h-9 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center border border-indigo-500/20 shrink-0"><i class="fa-solid fa-table-list"></i></div>
-                    <div>
-                        <div class="flex items-baseline gap-1"><span id="total-fm" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">FM</span></div>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Formulir</p>
-                    </div>
-                </div>
-                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-purple-500/5" onclick="switchPage('standar')">
-                    <div class="w-9 h-9 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center border border-purple-500/20 shrink-0"><i class="fa-solid fa-shield"></i></div>
-                    <div>
-                        <div class="flex items-baseline gap-1"><span id="total-std" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">STD</span></div>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Standar</p>
-                    </div>
-                </div>
-                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3.5 border sharp-border min-w-[160px] flex-1 snap-start cursor-pointer hover:bg-amber-500/5" onclick="switchPage('eksternal')">
-                    <div class="w-9 h-9 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center border border-amber-500/20 shrink-0"><i class="fa-solid fa-earth-americas"></i></div>
-                    <div>
-                        <div class="flex items-baseline gap-1"><span id="total-ex" class="text-lg font-bold">...</span><span class="text-[8px] font-bold uppercase text-slate-400">EX</span></div>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">Eksternal</p>
-                    </div>
-                </div>
-            </section>
-
-            <div id="main-view-container">
-                
-                <div id="page-dashboard" class="page-content">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
-                            <span class="w-1 h-3.5 bg-teal-600 dark:bg-teal-500 rounded-sm"></span> Eksplorasi Per Departemen
-                        </h3>
-                    </div>
-                    <section id="department-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        <div class="col-span-full text-center py-8 text-sm text-slate-400">
-                            <i class="fa-solid fa-spinner animate-spin mr-2"></i> Sinkronisasi ringkasan berkas...
-                        </div>
-                    </section>
-                </div>
-
-                <div id="page-prosedur" class="page-content hidden">
-                    <div class="glass-panel rounded-3xl border sharp-border overflow-hidden">
-                        <div class="overflow-x-auto w-full no-scrollbar">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-white/20 dark:bg-slate-900/20">
-                                        <th class="py-3.5 px-4 w-12 text-center">No.</th>
-                                        <th class="py-3.5 px-4 min-w-[220px]">Nama Dokumen</th>
-                                        <th class="py-3.5 px-4">No. Dokumen</th>
-                                        <th class="py-3.5 px-4 w-16 text-center">Revisi</th>
-                                        <th class="py-3.5 px-4">Tgl. Berlaku</th>
-                                        <th class="py-3.5 px-4 w-24 text-center">Bagian</th>
-                                        <th class="py-3.5 px-4 w-32 text-center">Akses Berkas</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="procedure-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300">
-                                    <tr>
-                                        <td colspan="7" class="text-center py-10 text-slate-400">
-                                            <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload file berkas spreadsheet...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div class="px-4 py-3 bg-white/30 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                            <div id="table-pagination-info">
-                                Menampilkan <span class="text-slate-700 dark:text-slate-300 font-bold" id="shown-count">0</span> dari <span class="text-slate-700 dark:text-slate-300 font-bold" id="total-count">0</span> dokumen terdaftar
-                            </div>
-                            <div class="flex items-center gap-1.5 text-[10px] text-teal-600 dark:text-teal-400 bg-teal-500/5 px-2 py-0.5 rounded border border-teal-500/10">
-                                <i class="fa-solid fa-database"></i> Live Server Sync
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="page-generic" class="page-content hidden">
-                    <div class="glass-panel rounded-3xl p-8 border sharp-border min-h-[300px] flex flex-col items-center justify-center text-center">
-                        <div class="w-16 h-16 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-2xl flex items-center justify-center text-2xl mb-4 border border-teal-500/20">
-                            <i id="generic-icon" class="fa-solid fa-folder-open"></i>
-                        </div>
-                        <h3 class="text-lg font-bold mb-2" id="generic-heading">Judul Halaman</h3>
-                        <p class="text-xs text-slate-400 dark:text-slate-500 max-w-md mb-6" id="generic-desc">Data ini sedang dikonfigurasi ke server pusat.</p>
-                        <button onclick="switchPage('dashboard')" class="bg-teal-600 hover:bg-teal-700 text-white font-medium text-xs px-4 py-2 rounded-xl transition shadow-md">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Dashboard
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <footer class="mt-12 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
-                <div>Versi 2.1.0 (Absolute Row-Coupling Engine with Dynamic Badge)</div>
-                <div class="flex items-center gap-1.5 font-semibold text-slate-500">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span id="sync-status-text">Menghubungkan ke cloud server...</span>
-                </div>
-            </footer>
-        </main>
-    </div>
-
-    <script>
-        // --- 1. SCRIPT SIDEBAR RESPONSIVE TOGGLE ---
-        const hamburgerBtn = document.getElementById('hamburger-btn');
-        const closeSidebarBtn = document.getElementById('close-sidebar');
-        const sidebarMenu = document.getElementById('sidebar-menu');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-        function openSidebar() {
-            sidebarMenu.classList.remove('-translate-x-full');
-            sidebarOverlay.classList.remove('hidden');
-        }
-        function closeSidebar() {
-            sidebarMenu.classList.add('-translate-x-full');
-            sidebarOverlay.classList.add('hidden');
-        }
-        if(hamburgerBtn) hamburgerBtn.addEventListener('click', openSidebar);
-        if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
-        if(sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
-
-        // --- 2. SCRIPT INTERAKTIF DARK MODE ---
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const htmlElement = document.documentElement;
-
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            htmlElement.classList.add('dark');
-        } else {
-            htmlElement.classList.remove('dark');
-        }
-
-        if(themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                if (htmlElement.classList.contains('dark')) {
-                    htmlElement.classList.remove('dark');
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    htmlElement.classList.add('dark');
-                    localStorage.setItem('theme', 'dark');
-                }
-            });
-        }
-
-        // --- 3. DETECTION SCROLL UNTUK EFEK GLASS ALA IOS PADA HEADER ---
-        window.addEventListener('scroll', () => {
-            const header = document.getElementById('sticky-header');
-            if (window.scrollY > 10) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
-            }
-        });
-
-        // =========================================================================================================
-        //  LINK SPREADSHEET CSV MUTU AKTIF
-        // =========================================================================================================
-        const summaryCsvUrl      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1373809567&single=true&output=csv';
-        
-        const linkCsvProsedur    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1994664049&single=true&output=csv';
-        const linkCsvIK          = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=68974277&single=true&output=csv'; 
-        const linkCsvFormulir    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=618894111&single=true&output=csv'; 
-        const linkCsvStandar     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=2101716872&single=true&output=csv'; 
-        const linkCsvEksternal   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyK9_grROhuyw9RQpZ6C_MPyxxsbpI1diAeMgnbw6bFWDUwkEb3IxlNSJJH-yHH74yVsRUv-LKotvo/pub?gid=1062935321&single=true&output=csv'; 
-        // =========================================================================================================
-
-        const deptMaster = {
-            'PRP': { name: 'Prepress Department', icon: 'fa-print' },
-            'HRD': { name: 'Human Resources Department', icon: 'fa-users-gear' },
-            'MAN': { name: 'Management / Maintenance', icon: 'fa-sitemap' },
-            'MKT': { name: 'Marketing & Sales Department', icon: 'fa-chart-line' },
-            'PPC': { name: 'Production Planning & Control', icon: 'fa-cubes' },
-            'PRO': { name: 'Production Department', icon: 'fa-industry' },
-            'PUR': { name: 'Purchasing / Procurement', icon: 'fa-cart-shopping' },
-            'QAD': { name: 'Quality Administration Department', icon: 'fa-circle-check' },
-            'MRP': { name: 'Management Representative', icon: 'fa-user-tie' },
-            'ISO': { name: 'Sistem Manajemen Mutu', icon: 'fa-shield-halved' }
-        };
-
-        let currentActivePage = 'dashboard';
-        let globalCachedRows = [];
-
-        function parseCSV(text) {
-            return text.split('\n').map(line => {
-                let result = []; let current = ''; let inQuotes = false;
-                for (let i = 0; i < line.length; i++) {
-                    let char = line[i];
-                    if (char === '"') inQuotes = !inQuotes;
-                    else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
-                    else current += char;
-                }
-                result.push(current.trim());
-                return result;
-            });
-        }
-
-        // --- 4. ROUTER SPA CONFIG ---
-        const navItems = document.querySelectorAll('.nav-item');
-        const pageDashboard = document.getElementById('page-dashboard');
-        const pageProsedur = document.getElementById('page-prosedur');
-        const pageGeneric = document.getElementById('page-generic');
-        
-        const mainTitle = document.getElementById('page-title');
-        const mainSubtitle = document.getElementById('page-subtitle');
-        const genericHeading = document.getElementById('generic-heading');
-        const genericDesc = document.getElementById('generic-desc');
-        const genericIcon = document.getElementById('generic-icon');
-        const mainSearchInput = document.getElementById('main-search');
-
-        const pageMeta = {
-            'dashboard': { title: 'ISO Document Control Center', sub: 'Portal otomatisasi data selektika untuk penelusuran, klasifikasi, dan akses dokumen mutu perusahaan.' },
-            'prosedur': { title: 'Prosedur Operasional (PR)', sub: 'SOP utama pengendali alur koordinasi lintas divisi perusahaan.', csv: linkCsvProsedur },
-            'instruksi-kerja': { title: 'Instruksi Kerja (IK)', sub: 'Panduan teknis langkah kerja operasional mendetail unit lapangan.', csv: linkCsvIK },
-            'formulir': { title: 'Formulir & Rekaman (FM)', sub: 'Lembar pencatatan pembuktian implementasi riil sistem di lapangan.', csv: linkCsvFormulir },
-            'standar': { title: 'Spesifikasi Standar (STD)', sub: 'Rujukan parameter mutu acuan regulasi internasional & nasional.', csv: linkCsvStandar },
-            'eksternal': { title: 'Dokumen Eksternal (EX)', sub: 'Berkas regulasi luar instansi pengendali standar mutu perusahaan.', csv: linkCsvEksternal },
-            'departemen': { title: 'Daftar Departemen', sub: 'Struktur klasterisasi unit kerja ISO mutlak penjamin mutu produk.', icon: 'fa-building', heading: 'Eksplorasi Departemen Aktif', desc: 'Menampilkan rangkuman total arsip terkendali dari unit kerja aktif di perusahaan.' }
-        };
-
-        function switchPage(pageId) {
-            currentActivePage = pageId;
-            const meta = pageMeta[pageId] || pageMeta['dashboard'];
-            if(mainTitle) mainTitle.innerText = meta.title;
-            if(mainSubtitle) mainSubtitle.innerText = meta.sub;
-            
-            if(mainSearchInput) mainSearchInput.value = '';
-
-            if (pageId === 'dashboard') {
-                if(pageDashboard) pageDashboard.classList.remove('hidden');
-                if(pageProsedur) pageProsedur.classList.add('hidden');
-                if(pageGeneric) pageGeneric.classList.add('hidden');
-            } else if (meta.csv) {
-                if(pageDashboard) pageDashboard.classList.add('hidden');
-                if(pageProsedur) pageProsedur.classList.remove('hidden');
-                if(pageGeneric) pageGeneric.classList.add('hidden');
-                fetchTableData(meta.csv); 
-            } else {
-                if(pageDashboard) pageDashboard.classList.add('hidden');
-                if(pageProsedur) pageProsedur.classList.add('hidden');
-                if(pageGeneric) pageGeneric.classList.remove('hidden');
-                if(genericHeading) genericHeading.innerText = meta.heading;
-                if(genericDesc) genericDesc.innerText = meta.desc;
-                if(genericIcon) genericIcon.className = `fa-solid ${meta.icon}`;
-            }
-
-            navItems.forEach(item => {
-                if (item.getAttribute('data-page') === pageId) {
-                    item.className = "nav-item flex items-center gap-3 px-3 py-2.5 bg-teal-600 text-white rounded-xl font-medium text-sm shadow-md shadow-teal-600/10";
-                } else {
-                    item.className = "nav-item flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-sm font-medium transition";
-                }
-            });
-            closeSidebar();
-        }
-
-        navItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const targetPage = item.getAttribute('data-page');
-                switchPage(targetPage);
-                window.location.hash = targetPage;
-            });
-        });
-
-        // --- UPDATE TANGGAL & WAKTU SINKRONISASI PADA FOOTER ---
-        function updateTimestampText() {
-            const elStatus = document.getElementById('sync-status-text');
-            if(elStatus) {
-                const sekarang = new Date();
-                const jam = String(sekarang.getHours()).padStart(2, '0');
-                const menit = String(sekarang.getMinutes()).padStart(2, '0');
-                const detik = String(sekarang.getSeconds()).padStart(2, '0');
-                const tanggal = Bird = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-                elStatus.innerText = `Terakhir Sinkronisasi: ${tanggal} Pukul ${jam}:${menit}:${detik}`;
-            }
-        }
-
-        // Pengambilan data berkas dari URL Publikasi CSV
-        async function fetchTableData(csvSourceUrl) {
-            const tableBody = document.getElementById('procedure-table-body');
-            if(!tableBody) return;
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-slate-400"><i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Mendownload dan memetakan data spreadsheet...</td></tr>`;
-            
-            try {
-                const response = await fetch(csvSourceUrl);
-                const csvText = await response.text();
-                const rows = parseCSV(csvText);
-
-                globalCachedRows = rows.slice(1).filter(row => {
-                    return row.length >= 2 && row[0] !== "" && !isNaN(row[0]) && row[1].trim() !== "";
-                });
-
-                renderFilteredTable(globalCachedRows);
-                updateTimestampText();
-
-            } catch (error) {
-                console.error('Gagal memuat data Tabel:', error);
-                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal terhubung langsung dengan server file. Mohon cek kembali URL Publikasi CSV Anda.</td></tr>`;
-                document.getElementById('shown-count').innerText = '0';
-                document.getElementById('total-count').innerText = '0';
-            }
-        }
-
-        // --- LOGIKA UTAMA: JIKA KLIK PDF #N/A MAKA MUNCULKAN NOTIFIKASI ---
-        window.bukaPdfLink = function(url) {
-            const cleanUrl = url ? url.trim() : "";
-            if (!cleanUrl || cleanUrl === "" || cleanUrl.toUpperCase() === "#N/A" || cleanUrl.toUpperCase() === "N/A") {
-                alert("File tidak di temukan / belum di update silahkan hub admin dcc");
-            } else {
-                window.open(cleanUrl, '_blank');
-            }
-        }
-
-        // Render baris dengan Re-indexing numerik (rapi dari angka 1)
-        function renderFilteredTable(filteredRows) {
-            const tableBody = document.getElementById('procedure-table-body');
-            const shownCountEl = document.getElementById('shown-count');
-            const totalCountEl = document.getElementById('total-count');
-            
-            if (!tableBody) return;
-            tableBody.innerHTML = '';
-
-            if(totalCountEl) totalCountEl.innerText = globalCachedRows.length;
-
-            if (filteredRows.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 dark:text-slate-500">Tidak ada data dokumen terdaftar yang cocok dengan kata kunci.</td></tr>`;
-                if(shownCountEl) shownCountEl.innerText = '0';
-                return;
-            }
-
-            if(shownCountEl) shownCountEl.innerText = filteredRows.length;
-
-            filteredRows.forEach((row, index) => {
-                const namaDokumen = row[1] || '-';  
-                const noDokumen = row[2] || '-';    
-                const revisi = row[3] || '0';        
-                const tglBerlaku = row[4] || '-';    
-                const bagian = row[7] || '-';        
-                
-                // Mengambil nilai Kolom M (Indeks ke-12 di array JavaScript)
-                const fileLinkPdf = row[12] ? row[12].trim() : '';
-
-                // DETEKSI LOGIKA TOMBOL DINAMIS
-                let buttonStyle = "";
-                let buttonText = "";
-                let buttonIcon = "";
-
-                if (!fileLinkPdf || fileLinkPdf === "" || fileLinkPdf.toUpperCase() === "#N/A" || fileLinkPdf.toUpperCase() === "N/A") {
-                    // Jika Link Error / Rusak / #N/A
-                    buttonStyle = "bg-slate-400/80 dark:bg-slate-700/80 hover:bg-slate-500 dark:hover:bg-slate-600 border-slate-400 text-slate-100 dark:text-slate-300 shadow-none";
-                    buttonText = "BELUM UPDATE";
-                    buttonIcon = "fa-lock";
-                } else {
-                    // Jika Link Tersedia & Valid
-                    buttonStyle = "bg-rose-600 hover:bg-rose-700 text-white border-rose-700 shadow-rose-600/10";
-                    buttonText = "BACA PDF";
-                    buttonIcon = "fa-file-pdf";
-                }
-
-                const trHtml = `
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
-                        <td class="py-3 px-4 font-semibold text-center text-slate-400 dark:text-slate-500 w-12">${index + 1}</td>
-                        <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${namaDokumen}</td>
-                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono tracking-tight">${noDokumen}</td>
-                        <td class="py-3 px-4 text-center"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">${revisi}</span></td>
-                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400">${tglBerlaku}</td>
-                        <td class="py-3 px-4 text-center"><span class="bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-500/10 text-[10px]">${bagian}</span></td>
-                        <td class="py-3 px-4 text-center">
-                            <button onclick="bukaPdfLink('${fileLinkPdf}')" class="inline-flex items-center justify-center gap-1.5 w-28 py-1.5 rounded-lg border shadow-sm active:scale-95 transition-all text-[10px] font-bold ${buttonStyle}">
-                                <i class="fa-solid ${buttonIcon} text-xs"></i> ${buttonText}
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tableBody.innerHTML += trHtml;
-            });
-        }
-
-        // Listener input pencarian real-time lintas halaman
-        if (mainSearchInput) {
-            mainSearchInput.addEventListener('input', (e) => {
-                const keyword = e.target.value.toLowerCase().trim();
-                
-                if (!pageProsedur.classList.contains('hidden')) {
-                    if (keyword === "") {
-                        renderFilteredTable(globalCachedRows);
-                    } else {
-                        const filtered = globalCachedRows.filter(row => {
-                            const namaDoc = (row[1] || '').toLowerCase();
-                            const noDoc   = (row[2] || '').toLowerCase();
-                            const bagian  = (row[7] || '').toLowerCase();
-                            return namaDoc.includes(keyword) || noDoc.includes(keyword) || bagian.includes(keyword);
-                        });
-                        renderFilteredTable(filtered);
-                    }
-                }
-            });
-        }
-
-        // =========================================================================================================
-        //  STRUKTUR SCRIPT DASHBOARD MASTER MUTU & MANUAL REFRESH BUTTON TRIGGER
-        // =========================================================================================================
-        async function initDashboard() {
-            try {
-                const response = await fetch(summaryCsvUrl);
-                const csvText = await response.text();
-                const rawRows = parseCSV(csvText);
-
-                const departmentsData = {};
-                Object.keys(deptMaster).forEach(code => {
-                    departmentsData[code] = { pr: 0, ik: 0, fm: 0, std: 0, ex: 0 };
-                });
-
-                let totalPR = 0, totalIK = 0, totalFM = 0, totalSTD = 0, totalEX = 0;
-                let currentCategory = ""; 
-
-                rawRows.forEach((row, index) => {
-                    if (row.length < 3) return;
-
-                    const col4 = row[4] ? row[4].trim() : "";
-                    if (col4.toLowerCase() === 'total' && index < 5) {
-                        totalPR  = parseInt(row[5]) || 0;
-                        totalIK  = parseInt(row[6]) || 0;
-                        totalFM  = parseInt(row[7]) || 0;
-                        totalSTD = parseInt(row[8]) || 0;
-                        totalEX  = parseInt(row[9]) || 0;
-                    }
-
-                    const colA = row[0] ? row[0].trim() : "";
-                    const colB = row[1] ? row[1].trim().toUpperCase() : "";
-                    const colC = row[2] ? row[2].trim() : "";
-
-                    if (colA !== "" && !deptMaster[colA.toUpperCase()] && colA.toLowerCase() !== 'total') {
-                        currentCategory = colA.toLowerCase();
-                    }
-
-                    if (colB !== "" && colB !== "TOTAL" && deptMaster[colB] && colC !== "") {
-                        const countValue = parseInt(colC) || 0;
-
-                        if (currentCategory.includes("prosedur")) {
-                            departmentsData[colB].pr = countValue;
-                        } else if (currentCategory.includes("intruksi") || currentCategory.includes("kerja") || currentCategory.includes("ik")) {
-                            departmentsData[colB].ik = countValue;
-                        } else if (currentCategory.includes("formulir") || currentCategory.includes("fm")) {
-                            departmentsData[colB].fm = countValue;
-                        } else if (currentCategory.includes("standar") || currentCategory.includes("std")) {
-                            departmentsData[colB].std = countValue;
-                        } else if (currentCategory.includes("eksternal") || currentCategory.includes("ex")) {
-                            departmentsData[colB].ex = countValue;
-                        }
-                    }
-                });
-
-                const elPr = document.getElementById('total-pr');
-                const elIk = document.getElementById('total-ik');
-                const elFm = document.getElementById('total-fm');
-                const elStd = document.getElementById('total-std');
-                const elEx = document.getElementById('total-ex');
-
-                if(elPr) elPr.innerText = totalPR;
-                if(elIk) elIk.innerText = totalIK;
-                if(elFm) elFm.innerText = totalFM;
-                if(elStd) elStd.innerText = totalSTD;
-                if(elEx) elEx.innerText = totalEX;
-
-                const gridContainer = document.getElementById('department-grid');
-                if(!gridContainer) return;
-                gridContainer.innerHTML = ''; 
-
-                Object.keys(deptMaster).forEach(code => {
-                    const info = deptMaster[code];
-                    const data = departmentsData[code];
-
-                    const cardHtml = `
-                        <div class="glass-panel rounded-2xl p-4 border sharp-border group cursor-pointer hover:-translate-y-1 transition duration-200" onclick="switchPage('departemen')">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="flex gap-3 items-center">
-                                    <div class="w-9 h-9 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-sm border border-teal-500/20 shrink-0">
-                                        <i class="fa-solid ${info.icon}"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-sm text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">${code}</h4>
-                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-1 w-36">${info.name}</p>
-                                    </div>
-                                </div>
-                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 group-hover:text-teal-500 transition pt-1"></i>
-                            </div>
-                            
-                            <div class="grid grid-cols-5 text-center pt-2.5 border-t border-slate-200/50 dark:border-slate-700/50 text-slate-700 dark:text-slate-300">
-                                <div><p class="text-xs font-bold">${data.pr}</p><p class="text-[8px] font-bold text-slate-400 uppercase">PR</p></div>
-                                <div class="border-l border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.ik}</p><p class="text-[8px] font-bold text-slate-400 uppercase">IK</p></div>
-                                <div class="border-l border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.fm}</p><p class="text-[8px] font-bold text-slate-400 uppercase">FM</p></div>
-                                <div class="border-l border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.std}</p><p class="text-[8px] font-bold text-slate-400 uppercase">STD</p></div>
-                                <div class="border-l border-slate-200/50 dark:border-slate-700/50"><p class="text-xs font-bold">${data.ex}</p><p class="text-[8px] font-bold text-slate-400 uppercase">EX</p></div>
-                            </div>
-                        </div>
-                    `;
-                    gridContainer.innerHTML += cardHtml;
-                });
-
-                updateTimestampText();
-            } catch (error) {
-                console.error('Sinkronisasi Dashboard Gagal:', error);
-            }
-        }
-
-        // --- SCRIPT KLIK SINKRONISASI REFRESH MANUAL ---
-        const refreshBtn = document.getElementById('refresh-btn');
-        const refreshIcon = document.getElementById('refresh-icon');
-
-        if(refreshBtn && refreshIcon) {
-            refreshBtn.addEventListener('click', async () => {
-                refreshIcon.classList.add('animate-spin');
-                refreshBtn.disabled = true;
-
-                if (currentActivePage === 'dashboard') {
-                    await initDashboard();
-                } else if (pageMeta[currentActivePage] && pageMeta[currentActivePage].csv) {
-                    await fetchTableData(pageMeta[currentActivePage].csv);
-                }
-
-                setTimeout(() => {
-                    refreshIcon.classList.remove('animate-spin');
-                    refreshBtn.disabled = false;
-                }, 600);
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            initDashboard();
-            const currentHash = window.location.hash.replace('#', '');
-            if (currentHash && pageMeta[currentHash]) {
-                switchPage(currentHash);
-            }
-        });
-    </script>
-</body>
-</html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dokumen ISO | PT Karya Indah Multiguna</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--ink:#0f1f3d;--mut:#64748b;--line:#e2e8f0;--nav:#0b1f4d;--nav2:#13306b;--pri:#0a5bd6;--pri2:#3b8bff;--hero:#0a1a3f;--soft:#eaf1fd}
+:root[data-t=dark]{--bg:#0a1228;--card:#111c3a;--ink:#e8eefc;--mut:#93a3c4;--line:#1f2f57;--soft:#14264d}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button,input,select{font:inherit;color:inherit}
+.side{position:fixed;inset:0 auto 0 0;width:250px;background:linear-gradient(180deg,var(--nav),#081638);color:#fff;display:flex;flex-direction:column;padding:26px 18px;z-index:5}
+.brand{text-align:center;margin-bottom:26px}.brand b{display:block;font-family:Georgia,serif;font-size:40px;letter-spacing:3px;color:#fff}
+.brand small{display:block;font-size:10px;letter-spacing:1.5px;color:#9db8ea}.brand span{display:block;margin-top:14px;font-size:12px;font-weight:700;letter-spacing:2px}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav button{display:flex;align-items:center;gap:14px;border:0;background:none;color:#cbd9f5;padding:13px 16px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;text-align:left}
+.nav button.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;box-shadow:0 6px 16px rgba(10,91,214,.4)}
+.nav svg,.ib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.motto{margin-top:auto;font-size:13px;line-height:1.6;color:#cbd9f5}.motto i{display:block;width:128px;height:2px;background:var(--pri2);margin-top:14px}
+.main{margin-left:250px;padding:28px 32px 40px;min-height:100vh}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}
+.top h1{margin:0;font-size:25px;font-weight:800}.top p{margin:2px 0 0;color:var(--mut);font-size:13px}
+.tr{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mut)}
+.ib,.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.ib{width:38px;height:38px;justify-content:center;color:var(--pri)}.chip{padding:5px 14px 5px 5px;font-weight:700;color:var(--ink)}
+.av{width:30px;height:30px;border-radius:50%;background:var(--pri);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+.wrap{max-width:960px;margin:0 auto}
+.hero{background:var(--hero);border-radius:28px;padding:30px 32px;color:#fff;position:relative;overflow:hidden;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px}
+.hero small{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#7fb2ff}.hero h2{margin:10px 0 8px;font-size:32px;line-height:1.15;font-weight:800}
+.hero p{margin:0 0 18px;font-size:13px;max-width:430px;line-height:1.5;color:#d6e2fb}
+.hero ul{position:absolute;right:30px;bottom:26px;margin:0;padding:0;list-style:none;font-size:12px;line-height:26px}.hero li:before{content:'\2713';margin-right:8px;color:#7fb2ff}
+.btn{border:0;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-weight:800;padding:12px 20px;border-radius:12px;cursor:pointer;font-size:14px;box-shadow:0 6px 16px rgba(10,91,214,.35)}
+.btn.g{background:var(--soft);color:var(--pri);box-shadow:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0}
+.st{border-radius:20px;padding:16px 20px;position:relative;overflow:hidden}.st small{font-size:12px;color:var(--mut)}.st b{display:block;font-size:34px;font-weight:800;margin-top:2px}
+.st:after{content:'';position:absolute;right:-18px;top:-22px;width:80px;height:80px;border-radius:50%;opacity:.5;background:currentColor}
+.s1{background:#e8f0fe;color:#9db8f0}.s2{background:#e3f6f8;color:#9ad8e0}.s3{background:#ece9fd;color:#bcb2f2}
+:root[data-t=dark] .s1{background:#13265a}:root[data-t=dark] .s2{background:#0f3340}:root[data-t=dark] .s3{background:#1f2060}
+.st b,.st small{color:var(--ink)}.st small{color:var(--mut)}
+.box{background:var(--card);border-radius:22px;padding:20px;border-top:3px solid var(--pri);box-shadow:0 8px 24px rgba(15,31,61,.06)}
+.bh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.bh h3{margin:0;font-size:17px}.bh span{font-size:12px;color:var(--mut)}
+.fl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fl input,.fl select,.f input,.f select{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;outline:none;min-width:0}.fl input{flex:1;min-width:180px}
+.grp{background:var(--soft);border-radius:12px;padding:9px 14px;font-weight:800;font-size:14px;margin:12px 0 8px;display:flex;justify-content:space-between}
+.grp i{font-style:normal;background:var(--nav);color:#fff;border-radius:999px;font-size:12px;padding:1px 10px}
+.it{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;background:var(--card)}
+.it:hover{border-color:var(--pri2)}.th{width:48px;height:58px;border-radius:8px;background:var(--soft);color:var(--pri);display:grid;place-items:center;flex:none;font-weight:800;font-size:11px}
+.it b{font-size:14px}.it p{margin:2px 0 4px;font-size:12px;color:var(--mut)}
+.tag{display:inline-block;background:var(--pri);color:#fff;font-size:11px;font-weight:800;padding:2px 10px;border-radius:999px;margin-right:6px}.tag.o{background:#e8f0fe;color:var(--pri)}
+:root[data-t=dark] .tag.o{background:#1c3a7a;color:#bcd4ff}
+.empty{text-align:center;color:var(--mut);padding:30px 10px;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-weight:700}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:10px}.f label{font-size:12px;font-weight:700;color:var(--mut);display:block}.f .w{grid-column:1/-1}.f input,.f select{width:100%;margin-top:4px}
+.rd{position:fixed;inset:0;background:#0a1228;z-index:20;display:flex;flex-direction:column}
+.rb{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--nav);color:#fff}.rb b{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rs{flex:1;overflow:auto;padding:18px 10px 40px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.rs canvas{width:min(820px,100%);height:auto;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
+.rd.veil .rs{filter:blur(28px)}
+.lg{position:fixed;inset:0;background:linear-gradient(160deg,var(--nav),#081638);display:grid;place-items:center;z-index:30;padding:20px}
+.lc{background:var(--card);border-radius:24px;padding:30px;width:min(380px,100%)}.lc h2{margin:0 0 4px}.lc p{margin:0 0 16px;color:var(--mut);font-size:13px}.lc input{width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lc .btn{width:100%;margin-top:4px}
+.err{color:#d6336c;font-size:12px;min-height:16px;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--nav);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;z-index:40}
+@media(max-width:820px){
+.side{inset:auto 0 0 0;width:auto;flex-direction:row;padding:8px 8px calc(8px + env(safe-area-inset-bottom));border-top:1px solid #1d3a7a}
+.brand,.motto{display:none}.nav{flex-direction:row;width:100%;justify-content:space-around}
+.nav button{flex-direction:column;gap:3px;font-size:11px;padding:7px 10px;flex:1;align-items:center;border-radius:10px}
+.main{margin-left:0;padding:calc(18px + env(safe-area-inset-top)) 16px 100px}
+.hero{padding:22px}.hero h2{font-size:25px}.hero ul{display:none}.top h1{font-size:20px}.tr .d{display:none}
+.stats{gap:8px}.st{padding:12px}.st b{font-size:26px}.f{grid-template-columns:1fr}
+}
+@media print{body{display:none!important}}
+</style></head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// ====== ISI DENGAN PROYEK SUPABASE ANDA (kosong = mode demo) ======
+const SB_URL='', SB_KEY='', BUCKET='iso-pages';
+// ==================================================================
+const demo=!SB_URL, sb=demo?null:supabase.createClient(SB_URL,SB_KEY);
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const IC={home:'<path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',doc:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',moon:'<path d="M20 14A8 8 0 0110 4a8 8 0 1010 10z"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24">${IC[n]}</svg>`;
+let U=null, DOCS=[], LOG=[], V='home', Q='', DF='';
+const DEMO_DOCS=[{id:'d1',kode:'MM-01',judul:'Manual Mutu',dept:'Semua',revisi:'Rev 03',pages:5},{id:'d2',kode:'SOP-GBJ-02',judul:'SOP Penerimaan dan Penyimpanan Barang Jadi',dept:'Gudang Barang Jadi',revisi:'Rev 01',pages:4},{id:'d3',kode:'IK-GBJ-05',judul:'Instruksi Kerja Produk Tidak Sesuai',dept:'Gudang Barang Jadi',revisi:'Rev 02',pages:3}];
+const fmt=d=>new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2600)};
+
+// ---------- data ----------
+async function loadData(){
+  if(demo){DOCS=DEMO_DOCS;return}
+  const a=await sb.from('documents').select('*').order('kode');DOCS=a.data||[];
+  const l=await sb.from('access_log').select('*').order('at',{ascending:false}).limit(U.role==='admin'?200:50);LOG=l.data||[];
+}
+async function logAccess(d){
+  const r={user_id:U.id,nama:U.nama,doc_id:d.id,judul:d.judul,at:new Date().toISOString()};
+  if(demo){LOG.unshift(r);return}
+  await sb.from('access_log').insert(r);LOG.unshift(r);
+}
+// ---------- auth ----------
+function loginView(){
+  $('#app').innerHTML=`<div class="lg"><div class="lc"><h2>Dokumen ISO</h2><p>PT Karya Indah Multiguna. Masuk untuk membaca dokumen mutu.</p>
+  ${demo?'<button class="btn" id="dm">Coba mode demo</button><p style="margin-top:12px">Belum terhubung ke Supabase. Isi SB_URL dan SB_KEY di file ini untuk memakai data asli.</p>':
+  '<input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password"><button class="btn" id="go">Masuk</button><div class="err" id="er"></div>'}</div></div>`;
+  if(demo)$('#dm').onclick=()=>{U={id:'demo',nama:'Tamu Demo',dept:'Gudang Barang Jadi',role:'admin'};start()};
+  else $('#go').onclick=async()=>{const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
+    if(error){$('#er').textContent='Email atau kata sandi salah.';return}boot()};
+}
+async function boot(){
+  if(demo){loginView();return}
+  const {data:{session}}=await sb.auth.getSession();if(!session){loginView();return}
+  const p=await sb.from('profiles').select('*').eq('id',session.user.id).single();
+  U={id:session.user.id,nama:p.data?.nama||session.user.email,dept:p.data?.dept||'-',role:p.data?.role||'user'};start();
+}
+async function start(){await loadData();shell()}
+// ---------- shell ----------
+const NAV=[['home','Beranda','home'],['docs','Dokumen','doc'],['log','Riwayat','clock'],['adm','Kelola','cog']];
+function shell(){
+  const nav=NAV.filter(n=>n[0]!=='adm'||U.role==='admin').map(n=>`<button data-v="${n[0]}" class="${V===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span></button>`).join('');
+  const T={home:['Dokumen Mutu ISO','Baca dokumen resmi perusahaan dengan aman'],docs:['Daftar Dokumen','Cari dan buka dokumen sesuai hak akses Anda'],log:['Riwayat Akses','Catatan siapa membuka dokumen apa'],adm:['Kelola Dokumen','Unggah dokumen baru dan atur hak akses']}[V];
+  $('#app').innerHTML=`<aside class="side"><div class="brand"><b>KIM</b><small>PT KARYA INDAH MULTIGUNA</small><span>ISO WORKSPACE</span></div><nav class="nav">${nav}</nav><div class="motto">Dokumen Terkendali<br>Akses Tercatat<br>Mutu Terjaga<i></i></div></aside>
+  <main class="main"><div class="top"><div><h1>${T[0]}</h1><p>${T[1]}</p></div><div class="tr"><span class="d">${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span><button class="ib" id="th" title="Tema">${ic('moon')}</button><button class="chip" id="me" title="Keluar"><span class="av">${esc(U.nama.slice(0,2).toUpperCase())}</span>${esc(U.nama.split(' ')[0])}</button></div></div><div class="wrap" id="v"></div></main>`;
+  document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{V=b.dataset.v;shell()});
+  $('#th').onclick=()=>{const r=document.documentElement;r.dataset.t=r.dataset.t==='dark'?'':'dark'};
+  $('#me').onclick=async()=>{if(confirm('Keluar dari aplikasi?')){if(!demo)await sb.auth.signOut();U=null;loginView()}};
+  ({home:vHome,docs:vDocs,log:vLog,adm:vAdm})[V]();
+}
+const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${esc(d.kode.split('-')[0])}</div><div style="flex:1;min-width:0"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><span class="tag">${esc(d.revisi||'Rev')}</span><span class="tag o">${esc(d.dept)}</span></div></div>`;
+const bindItems=()=>document.querySelectorAll('.it').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)));
+function vHome(){
+  const today=LOG.filter(l=>new Date(l.at).toDateString()===new Date().toDateString()).length;
+  $('#v').innerHTML=`<div class="hero"><small>DOKUMEN ISO | PT KARYA INDAH MULTIGUNA</small><h2>Satu tempat baca.<br>Akses terkendali.</h2><p>Dokumen hanya bisa dibaca di aplikasi, ditandai nama Anda, dan setiap pembukaan tercatat.</p><button class="btn" id="bd">Buka Daftar Dokumen</button><ul><li>Hanya baca</li><li>Berwatermark</li><li>Tercatat</li><li>Sesuai hak akses</li></ul></div>
+  <div class="stats"><div class="st s1"><small>Total Dokumen</small><b>${DOCS.length}</b></div><div class="st s2"><small>Dibuka Hari Ini</small><b>${today}</b></div><div class="st s3"><small>Departemen Anda</small><b style="font-size:16px;margin-top:12px">${esc(U.dept)}</b></div></div>
+  <div class="box"><div class="bh"><h3>Dokumen Terbaru</h3><button class="btn g" id="all">Lihat Semua</button></div>${DOCS.slice(0,4).map(item).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div>`;
+  $('#bd').onclick=$('#all').onclick=()=>{V='docs';shell()};bindItems();
+}
+function vDocs(){
+  const depts=[...new Set(DOCS.map(d=>d.dept))];
+  $('#v').innerHTML=`<div class="box"><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"><select id="df"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ls"></div></div>`;
+  const draw=()=>{const f=DOCS.filter(d=>(!DF||d.dept===DF)&&(d.kode+d.judul).toLowerCase().includes(Q.toLowerCase()));
+    const g={};f.forEach(d=>(g[d.dept]??=[]).push(d));
+    $('#ls').innerHTML=Object.keys(g).map(k=>`<div class="grp">${esc(k)}<i>${g[k].length}</i></div>${g[k].map(item).join('')}`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';bindItems()};
+  $('#q').oninput=e=>{Q=e.target.value;draw()};$('#df').onchange=e=>{DF=e.target.value;draw()};draw();
+}
+function vLog(){
+  const rows=(U.role==='admin'?LOG:LOG.filter(l=>l.user_id===U.id));
+  $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Riwayat Akses</h3><span>${U.role==='admin'?'Semua pengguna':'Akses Anda'}</span></div>${rows.length?`<div style="overflow-x:auto"><table><tr><th>Waktu</th><th>Pengguna</th><th>Dokumen</th></tr>${rows.map(l=>`<tr><td>${fmt(l.at)}</td><td>${esc(l.nama)}</td><td>${esc(l.judul)}</td></tr>`).join('')}</table></div>`:'<div class="empty">Belum ada dokumen yang dibuka.</div>'}</div>`;
+}
+// ---------- admin upload ----------
+function vAdm(){
+  $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Unggah Dokumen PDF</h3><span>Dipecah menjadi gambar per halaman</span></div><div class="f">
+  <div><label>Kode</label><input id="k" placeholder="SOP-GBJ-01"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
+  <div class="w"><label>Judul</label><input id="j"></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div>
+  <div class="w"><button class="btn" id="up">Unggah dan Proses</button> <span id="pg" style="font-size:13px;color:var(--mut);margin-left:8px"></span></div></div></div>`;
+  $('#up').onclick=async()=>{
+    const f=$('#fl').files[0],k=$('#k').value.trim(),j=$('#j').value.trim();if(!f||!k||!j){toast('Lengkapi kode, judul, dan file');return}
+    if(demo){toast('Mode demo: unggah aktif setelah Supabase dihubungkan');return}
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    $('#up').disabled=true;const id=crypto.randomUUID();
+    try{const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+      for(let i=1;i<=pdf.numPages;i++){$('#pg').textContent=`Halaman ${i} dari ${pdf.numPages}`;
+        const p=await pdf.getPage(i),vp=p.getViewport({scale:1.6}),c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+        await p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+        const b=await new Promise(r=>c.toBlob(r,'image/webp',.78));
+        const u=await sb.storage.from(BUCKET).upload(`${id}/${String(i).padStart(3,'0')}.webp`,b,{contentType:'image/webp'});if(u.error)throw u.error}
+      const ins=await sb.from('documents').insert({id,kode:k,judul:j,dept:$('#dp').value.trim()||'Semua',revisi:$('#r').value.trim(),pages:pdf.numPages});if(ins.error)throw ins.error;
+      toast('Dokumen berhasil diunggah');await loadData();V='docs';shell();
+    }catch(e){toast('Gagal: '+(e.message||e));$('#up').disabled=false}};
+}
+// ---------- reader ----------
+function mark(c){const x=c.getContext('2d');x.save();x.globalAlpha=.16;x.fillStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
+  const t=`${U.nama} \u2022 ${fmt(Date.now())}`;for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)x.fillText(t,xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
+async function openDoc(d){
+  if(!d)return;const r=document.createElement('div');r.className='rd';
+  r.innerHTML=`<div class="rb"><button class="btn g" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div>`;
+  document.body.append(r);$('#cl').onclick=()=>{r.remove();shell()};
+  await logAccess(d);const rs=$('#rs');rs.innerHTML='';
+  const paths=Array.from({length:d.pages},(_,i)=>`${d.id}/${String(i+1).padStart(3,'0')}.webp`);
+  let urls=[];if(!demo){const s=await sb.storage.from(BUCKET).createSignedUrls(paths,90);urls=(s.data||[]).map(x=>x.signedUrl)}
+  for(let i=0;i<d.pages;i++){
+    const c=document.createElement('canvas');rs.append(c);const x=c.getContext('2d');
+    if(demo){c.width=820;c.height=1160;x.fillStyle='#fff';x.fillRect(0,0,820,1160);x.fillStyle='#0b1f4d';x.font='700 30px sans-serif';x.fillText(d.kode,60,100);x.font='20px sans-serif';x.fillText(d.judul,60,140);
+      x.fillStyle='#cbd5e1';for(let y=200;y<1050;y+=34)x.fillRect(60,y,700-(y%5)*30,10);x.fillStyle='#64748b';x.font='16px sans-serif';x.fillText(`Contoh halaman ${i+1} dari ${d.pages}`,60,1110)}
+    else{try{const bm=await createImageBitmap(await (await fetch(urls[i])).blob());c.width=bm.width;c.height=bm.height;x.drawImage(bm,0,0)}catch{c.width=820;c.height=200;x.fillText('Gagal memuat halaman',20,100)}}
+    mark(c);
+  }
+}
+// ---------- penghalang (pencegah awam, bukan pengaman mutlak) ----------
+addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('dragstart',e=>e.preventDefault());
+addEventListener('copy',e=>{if(!/INPUT/.test(e.target.tagName))e.preventDefault()});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&['s','p','u','c','a'].includes(k)&&!/INPUT/.test(document.activeElement.tagName)||k==='f12'||k==='printscreen'){e.preventDefault();if(k==='printscreen'){navigator.clipboard?.writeText('');toast('Tangkapan layar dicatat sebagai pelanggaran kebijakan')}}});
+const veil=on=>{const r=$('.rd');if(r)r.classList.toggle('veil',on)};
+document.addEventListener('visibilitychange',()=>veil(document.hidden));addEventListener('blur',()=>veil(true));addEventListener('focus',()=>veil(false));
+boot();
+</script></body></html>
