@@ -1,7 +1,7 @@
 // Service worker Dokumen ISO.
 // Prinsip: hanya "kerangka aplikasi" yang di-cache. Halaman dokumen, data, dan login
 // (semua yang berasal dari Supabase) TIDAK PERNAH disimpan agar dokumen tidak tertinggal di perangkat.
-const VERSION = 'v12';
+const VERSION = 'v13';
 const SHELL_CACHE = 'iso-shell-' + VERSION;
 const LIB_CACHE = 'iso-lib-' + VERSION;
 const SHELL = ['./', './index.html', './audit.html', './manifest.json', './icon-192.png', './icon-512.png'];
