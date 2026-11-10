@@ -213,12 +213,21 @@ body{background:radial-gradient(900px 500px at 85% -10%,#dcebff,transparent 60%)
 .it.r2{padding:9px 6px;gap:10px}.it.r2 .th{width:38px;height:38px}.vb{width:34px;height:34px;padding:0;justify-content:center}.vb span{display:none}
 .th{width:44px;height:44px}.go{width:30px;height:30px}.tg .tag.o:last-child{display:none}
 }
+
+.hint{display:block;margin-top:4px;font-size:12px;color:var(--mut);font-weight:400}
+.ftw{background:var(--card);border-radius:18px;padding:4px 6px 6px;margin-bottom:14px;box-shadow:0 8px 20px rgba(15,31,61,.08);border-top:3px solid var(--pri)}
+.fth{padding:10px 12px 6px;font-weight:800;font-size:13px;color:var(--pri)}.ftn{padding:6px 4px 12px;font-size:13px;color:var(--mut)}
+.fr{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:12px}.fr:last-child{border-bottom:0}.fr:hover{background:var(--soft)}
+.fr .th{width:42px;height:42px;border-radius:12px;font-size:12.5px}.fr b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr p.sn{margin:2px 0 0;font-size:12.5px;color:var(--mut);white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+mark{background:#ffe58a;color:#1a2540;border-radius:3px;padding:0 2px}
 @media print{body{display:none!important}}
 </style></head>
 <body>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 // ====== ISI DENGAN PROYEK SUPABASE ANDA (kosong = mode demo) ======
 const SB_URL='https://jvrcmvazuhbxlktnzwer.supabase.co', SB_KEY='sb_publishable_De5UwPKibjXjQ2dFSbaAgw_jPMluQxS', BUCKET='iso-pages';
@@ -324,7 +333,7 @@ const ART2=`<svg viewBox="0 0 520 230" preserveAspectRatio="xMaxYMax meet"><defs
 const tagsOf=d=>`<span class="tag">${esc(jName(jOf(d)))}</span><span class="tag o">${esc(d.revisi||'Rev')}</span><span class="tag o">${esc(d.dept)}</span>`;
 const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><div class="tg">${tagsOf(d)}</div></div><span class="go">${ic('chevR')}</span></div>`;
 const item2=d=>`<div class="it r2" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${d.tgl_berlaku?' &middot; Berlaku '+D(String(d.tgl_berlaku).slice(0,10)+'T00:00:00'):''}</p></div><button class="vb">${ic('eye')}<span>Lihat</span></button></div>`;
-const bindItems=()=>document.querySelectorAll('.it').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)));
+const bindItems=()=>document.querySelectorAll('.it:not(.fr)').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)));
 function vHome(){
   const today=LOG.filter(l=>new Date(l.at).toDateString()===new Date().toDateString()).length;
   $('#v').innerHTML=`<div class="hero"><div class="hc"><small>DOKUMEN ISO &ndash; PT KARYA INDAH MULTIGUNA</small><h2>Satu tempat baca.<br><em>Akses terkendali.</em></h2><p>Dokumen hanya bisa dibaca di aplikasi, ditandai nama Anda, dan setiap pembukaan tercatat.</p><button class="btn" id="bd">Buka Daftar Dokumen ${ic('chevR')}</button></div><div class="art">${ART1}</div><ul><li>Hanya baca</li><li>Berwatermark</li><li>Tercatat</li><li>Sesuai hak akses</li></ul></div>
@@ -335,7 +344,7 @@ function vHome(){
 function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))],chips=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]])];
   $('#v').innerHTML=`<div class="bar"><div class="jf" id="jf"><i class="ind"></i>${chips.map(x=>`<button class="jb" data-j="${x[0]}">${ic(CI[x[0]])}${x[1]}</button>`).join('')}</div></div>
-  <div class="bar b2"><div class="sbox">${ic('search')}<input id="q" placeholder="Cari kode atau judul dokumen..." value="${esc(Q)}"></div><select id="df" class="dsel"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ls"></div>`;
+  <div class="bar b2"><div class="sbox">${ic('search')}<input id="q" placeholder="Cari kode atau judul dokumen..." value="${esc(Q)}"></div><select id="df" class="dsel"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ft"></div><div id="ls"></div>`;
   const jf=$('#jf'),ind=jf.querySelector('.ind');
   const mv=first=>{const b=jf.querySelector('.jb.on');if(!b)return;if(first)ind.style.transition='none';
     ind.style.width=b.offsetWidth+'px';ind.style.transform=`translateX(${b.offsetLeft}px)`;if(first){ind.offsetWidth;ind.style.transition=''}
@@ -346,13 +355,48 @@ function vDocs(){
     $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<section class="gc${CL.has(j[0])?' cl':''}" data-j="${j[0]}"><div class="gh" data-g="${j[0]}"><span class="gi2">${ic(GI[j[0]])}</span><div class="gt"><b>${j[0]} &ndash; ${j[1]}</b><small>${GD[j[0]]}</small></div><span class="cnt">${g[j[0]].length}</span><span class="cv2">${ic('chev')}</span></div><div class="gw"><div class="gl">${g[j[0]].map(item2).join('')}</div></div></section>`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';
     document.querySelectorAll('.gh').forEach(h=>h.onclick=()=>{const k=h.dataset.g;CL.has(k)?CL.delete(k):CL.add(k);h.parentElement.classList.toggle('cl')});bindItems()};
   jf.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{JF=b.dataset.j;draw()});
-  $('#q').oninput=e=>{Q=e.target.value;draw()};$('#df').onchange=e=>{DF=e.target.value;draw()};
-  draw(true);document.fonts&&document.fonts.ready.then(()=>mv(true));window.onresize=()=>{if($('#jf'))mv(true)};
+  let ST;const rx=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const fullText=async()=>{const k=Q.trim(),box=$('#ft');if(!box)return;if(k.length<3||demo){box.innerHTML='';return}
+    const r=await sb.from('iso_doc_text').select('doc_id,page,content').ilike('content','%'+k.replace(/[%_\\]/g,'\\$&')+'%').limit(60);
+    if(Q.trim()!==k||!$('#ft'))return;if(r.error){box.innerHTML='';return}
+    const re=new RegExp(rx(k),'i'),hl=new RegExp(rx(esc(k)),'ig');
+    const rows=r.data.map(x=>{const d=DOCS.find(y=>String(y.id)===String(x.doc_id));if(!d||(DF&&d.dept!==DF)||(JF&&jOf(d)!==JF))return'';
+      const m=Math.max(0,x.content.search(re)),t=x.content.slice(Math.max(0,m-50),m+k.length+100);
+      return `<div class="fr" data-id="${d.id}" data-p="${x.page||1}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p class="sn">${x.page?'Hal. '+x.page+' &middot; ':''}&hellip;${esc(t).replace(hl,z=>'<mark>'+z+'</mark>')}&hellip;</p></div><span class="go">${ic('chevR')}</span></div>`}).filter(Boolean);
+    box.innerHTML=rows.length?`<div class="ftw"><div class="fth">Ditemukan di isi dokumen</div>${rows.join('')}</div>`:'<div class="ftn">Kata itu tidak ditemukan di isi dokumen yang sudah diindeks.</div>';
+    box.querySelectorAll('.fr').forEach(e=>e.onclick=()=>openDoc(DOCS.find(y=>String(y.id)===e.dataset.id),+e.dataset.p))};
+  $('#q').oninput=e=>{Q=e.target.value;draw();clearTimeout(ST);ST=setTimeout(fullText,350)};$('#df').onchange=e=>{DF=e.target.value;draw()};
+  draw(true);fullText();document.fonts&&document.fonts.ready.then(()=>mv(true));window.onresize=()=>{if($('#jf'))mv(true)};
 }
 function vLog(){
   const rows=(U.role==='admin'?LOG:LOG.filter(l=>l.user_id===U.id));
   $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Riwayat Akses</h3><span>${U.role==='admin'?'Semua pengguna':'Akses Anda'}</span></div>${rows.length?`<div style="overflow-x:auto"><table><tr><th>Waktu</th><th>Pengguna</th><th>Dokumen</th></tr>${rows.map(l=>`<tr><td>${fmt(l.at)}</td><td>${esc(l.nama)}</td><td>${esc(l.judul)}</td></tr>`).join('')}</table></div>`:'<div class="empty">Belum ada dokumen yang dibuka.</div>'}</div>`;
 }
+// ---------- indeks teks (file tidak disimpan, hanya teksnya) ----------
+async function readText(f){
+  const nm=f.name.toLowerCase(),out=[];
+  if(nm.endsWith('.pdf')){
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+    for(let i=1;i<=pdf.numPages;i++){const t=await(await pdf.getPage(i)).getTextContent();out.push({p:i,t:t.items.map(x=>x.str).join(' ')})}
+  }else if(nm.endsWith('.docx')){
+    const z=await JSZip.loadAsync(await f.arrayBuffer()),fx=z.file('word/document.xml');if(!fx)throw new Error('File Word tidak valid');
+    const x=await fx.async('string');let n=0;
+    x.split(/<w:lastRenderedPageBreak\/>|<w:br w:type="page"\/>/).forEach(seg=>{
+      const t=seg.replace(/<\/w:p>/g,' ').replace(/<w:tab\/>/g,' ').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+      if(t.trim())out.push({p:++n,t})});
+  }else throw new Error('Pilih file .pdf atau .docx');
+  return out.map(o=>({p:o.p,t:o.t.replace(/\s+/g,' ').trim()})).filter(o=>o.t)}
+async function indexText(id,f,np){
+  const pg=await readText(f);
+  if(!pg.length)throw new Error('File tidak berisi teks. Gunakan Word atau PDF hasil ekspor Word, bukan hasil scan.');
+  let rows=pg;const last=Math.max(...pg.map(o=>o.p));
+  if(last!==np){
+    if(!confirm(`Jumlah halaman file teks (${last}) berbeda dengan dokumen (${np}), jadi nomor halaman bisa tidak cocok.\n\nOK = simpan tanpa nomor halaman (hasil pencarian membuka halaman 1)\nBatal = lewati indeks teks`))return false;
+    rows=[{p:0,t:pg.map(o=>o.t).join(' ')}]}
+  const d=await sb.from('iso_doc_text').delete().eq('doc_id',id);if(d.error)throw d.error;
+  for(let i=0;i<rows.length;i+=40){const r=await sb.from('iso_doc_text').insert(rows.slice(i,i+40).map(o=>({doc_id:id,page:o.p,content:o.t})));if(r.error)throw r.error}
+  return true}
 // ---------- admin ----------
 const pth=(id,n)=>`${id}/${String(n).padStart(3,'0')}.webp`;
 function modal(h,ok){const m=document.createElement('div');m.className='mdl';m.innerHTML=`<div class="lc">${h}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn g" id="mx">Batal</button><button class="btn" id="mo">Simpan</button></div></div>`;document.body.append(m);
@@ -370,13 +414,13 @@ function vAdm(){
   $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Unggah Dokumen Baru</h3><span id="pg">Dipecah menjadi gambar per halaman</span></div><div class="f">
   <div><label>Kode</label><input id="k" placeholder="SOP-GBJ-01"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
   <div class="w"><label>Judul</label><input id="j"></div><div><label>Jenis Dokumen</label><select id="jn">${jOpts('LN')}</select></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div><div><label>Tanggal Berlaku</label><input id="tb" type="date" onclick="this.showPicker&&this.showPicker()"></div>
-  <div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>
+  <div class="w"><label>File teks untuk pencarian isi (opsional, tidak disimpan)</label><input id="tf" type="file" accept=".pdf,.docx"><small class="hint">Pilih file Word (.docx) atau PDF hasil ekspor Word tanpa tanda tangan. Hanya teksnya yang disimpan, filenya tidak.</small></div><div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>
   <div class="box" style="margin-top:12px"><div class="bh"><h3>Kode Akses Auditor</h3><span>5 angka &middot; berlaku 24 jam</span></div>
   <div class="f"><div><label>Kode (5 angka)</label><input id="ck" inputmode="numeric" maxlength="5" placeholder="12345"></div><div><label>Untuk siapa (opsional)</label><input id="cl" placeholder="Nama auditor / lembaga"></div>
   <div class="w"><label>Akses dokumen</label><select id="cm"><option value="pilihan">Hanya dokumen yang dikirim admin (seperti audit fisik)</option><option value="semua">Semua dokumen</option></select></div>
   <div class="w" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn g" id="cr">Acak</button><button class="btn" id="cb">Buat Kode</button></div></div>
   <div id="acl" style="margin-top:12px"></div></div>
-  <div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span>${DOCS.length} dokumen</span></div>${DOCS.map(d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${jOf(d)} &middot; ${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div><input type="file" id="rf" accept="application/pdf" hidden>`;
+  <div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span>${DOCS.length} dokumen</span></div>${DOCS.map(d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${jOf(d)} &middot; ${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="t" data-id="${d.id}">Indeks Teks</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div><input type="file" id="rf" accept="application/pdf" hidden>`;
   const left=t=>{const m=Math.max(0,Math.round((new Date(t)-Date.now())/60000));return Math.floor(m/60)+' jam '+m%60+' menit lagi'};
   async function loadCodes(){const box=$('#acl');if(!box)return;
     if(!demo){const r=await sb.from('iso_audit_codes').select('*').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});
@@ -410,6 +454,7 @@ function vAdm(){
         const r=await sb.from('iso_audit_codes').insert({code:k,label:l||null,mode:$('#cm').value});if(r.error)throw new Error(r.error.code==='23505'?'Kode itu masih aktif. Pilih angka lain.':r.error.message)}
       $('#ck').value=$('#cl').value='';toast($('#cm').value==='pilihan'?'Kode dibuat. Tekan Atur Akses untuk memilih dokumen yang dikirim.':'Kode dibuat, berlaku 24 jam');loadCodes()}catch(x){toast('Gagal: '+(x.message||x))}};
   loadCodes();
+  if(!demo)sb.from('iso_doc_text').select('doc_id').in('page',[0,1]).then(r=>{const k=new Set((r.data||[]).map(x=>String(x.doc_id)));document.querySelectorAll('[data-a=t]').forEach(b=>{if(k.has(b.dataset.id))b.textContent='Indeks Ulang'})});
   let jTouched=false;$('#jn').onchange=()=>jTouched=true;
   $('#k').oninput=()=>{if(!jTouched)$('#jn').value=jOf({kode:$('#k').value})};
   const busy=m=>$('#pg').textContent=m, done=async m=>{toast(m);if(!demo)await loadData();shell()};
@@ -419,16 +464,21 @@ function vAdm(){
     $('#up').disabled=true;const id=crypto.randomUUID();
     try{const n=await pdfToPages(f,id,busy);
       const ins=await sb.from('iso_documents').insert({id,kode:k,judul:j,dept:$('#dp').value.trim()||'Semua',jenis:$('#jn').value,revisi:$('#r').value.trim(),tgl_berlaku:$('#tb').value||null,pages:n});if(ins.error)throw ins.error;
-      V='docs';await done('Dokumen berhasil diunggah')}catch(e){toast('Gagal: '+(e.message||e));$('#up').disabled=false}};
+      let m='Dokumen berhasil diunggah';const tf=$('#tf').files[0];
+      if(tf)try{busy('Mengindeks teks...');m=(await indexText(id,tf,n))?'Dokumen diunggah dan teks diindeks':'Dokumen diunggah, indeks teks dilewati'}catch(x){m='Dokumen diunggah, tetapi teks gagal diindeks: '+(x.message||x)}
+      V='docs';await done(m)}catch(e){toast('Gagal: '+(e.message||e));$('#up').disabled=false}};
   document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>act(b.dataset.a,DOCS.find(d=>d.id===b.dataset.id)));
   async function act(a,d){
     if(a==='e')modal(`<h2>Ubah Dokumen</h2><p>Mengubah nama dan keterangan, bukan isi file.</p><label>Kode</label><input id="ek" value="${esc(d.kode)}"><label>Judul</label><input id="ej" value="${esc(d.judul)}"><label>Jenis Dokumen</label><select id="ejn">${jOpts(jOf(d))}</select><label>Departemen</label><input id="ed" value="${esc(d.dept)}"><label>Revisi</label><input id="er2" value="${esc(d.revisi||'')}"><label>Tanggal Berlaku</label><input id="etb" type="date" value="${esc(String(d.tgl_berlaku||'').slice(0,10))}" onclick="this.showPicker&&this.showPicker()">`,async()=>{
       const v={kode:$('#ek').value.trim(),judul:$('#ej').value.trim(),dept:$('#ed').value.trim()||'Semua',jenis:$('#ejn').value,revisi:$('#er2').value.trim(),tgl_berlaku:$('#etb').value||null};if(!v.kode||!v.judul)throw new Error('Kode dan judul wajib diisi');
       if(demo)Object.assign(d,v);else{const r=await sb.from('iso_documents').update(v).eq('id',d.id);if(r.error)throw r.error}
       await done('Dokumen diubah')});
+    if(a==='t'){if(demo){toast('Mode demo: aktif setelah Supabase dihubungkan');return}
+      const i=document.createElement('input');i.type='file';i.accept='.pdf,.docx';
+      i.onchange=async()=>{const f=i.files[0];if(!f)return;try{busy('Mengindeks teks...');const ok=await indexText(d.id,f,d.pages);await done(ok?'Teks diindeks':'Indeks teks dilewati')}catch(e){busy('Dipecah menjadi gambar per halaman');toast('Gagal: '+(e.message||e))}};i.click()}
     if(a==='x'){if(!confirm(`Hapus "${d.kode}" beserta semua halamannya? Tindakan ini tidak bisa dibatalkan.`))return;
       try{if(demo)DOCS.splice(DOCS.indexOf(d),1);else{const r=await sb.storage.from(BUCKET).remove(Array.from({length:d.pages},(_,i)=>pth(d.id,i+1)));if(r.error)throw r.error;
-        const x=await sb.from('iso_documents').delete().eq('id',d.id);if(x.error)throw x.error}
+        const x=await sb.from('iso_documents').delete().eq('id',d.id);if(x.error)throw x.error;await sb.from('iso_doc_text').delete().eq('doc_id',d.id)}
         await done('Dokumen dihapus')}catch(e){toast('Gagal: '+(e.message||e))}}
     if(a==='r'){if(demo){toast('Mode demo: ganti file aktif setelah Supabase dihubungkan');return}
       const rf=$('#rf');rf.value='';rf.onchange=async()=>{const f=rf.files[0];if(!f)return;
@@ -436,7 +486,7 @@ function vAdm(){
         try{const n=await pdfToPages(f,d.id,busy);
           if(n<d.pages)await sb.storage.from(BUCKET).remove(Array.from({length:d.pages-n},(_,i)=>pth(d.id,n+i+1)));
           const u=await sb.from('iso_documents').update({pages:n,...(rv.trim()?{revisi:rv.trim()}:{})}).eq('id',d.id);if(u.error)throw u.error;
-          await done('File dokumen diganti')}catch(e){toast('Gagal: '+(e.message||e))}};rf.click()}
+          await sb.from('iso_doc_text').delete().eq('doc_id',d.id);await done('File dokumen diganti. Indeks teks perlu dibuat ulang')}catch(e){toast('Gagal: '+(e.message||e))}};rf.click()}
   }
 }
 // ---------- profil ----------
@@ -475,7 +525,7 @@ function vProf(){
 // ---------- reader ----------
 function mark(c){const x=c.getContext('2d');x.save();x.globalAlpha=.07;x.fillStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
   const t=`${U.nama} \u2022 ${fmt(Date.now())}`;for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)x.fillText(t,xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
-async function openDoc(d){
+async function openDoc(d,pg){
   if(!d)return;const r=document.createElement('div');r.className='rd';
   r.innerHTML=`<div class="rb"><button class="btn g" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div>`;
   document.body.append(r);$('#cl').onclick=()=>{r.remove();shell()};
@@ -487,7 +537,7 @@ async function openDoc(d){
     if(demo){c.width=820;c.height=1160;x.fillStyle='#fff';x.fillRect(0,0,820,1160);x.fillStyle='#0b1f4d';x.font='700 30px sans-serif';x.fillText(d.kode,60,100);x.font='20px sans-serif';x.fillText(d.judul,60,140);
       x.fillStyle='#cbd5e1';for(let y=200;y<1050;y+=34)x.fillRect(60,y,700-(y%5)*30,10);x.fillStyle='#64748b';x.font='16px sans-serif';x.fillText(`Contoh halaman ${i+1} dari ${d.pages}`,60,1110)}
     else{try{const bm=await createImageBitmap(await (await fetch(urls[i])).blob());c.width=bm.width;c.height=bm.height;x.drawImage(bm,0,0)}catch{c.width=820;c.height=200;x.fillText('Gagal memuat halaman',20,100)}}
-    mark(c);
+    mark(c);if(pg>1&&i===pg-1)c.scrollIntoView({block:'start'});
   }
 }
 // ---------- penghalang (pencegah awam, bukan pengaman mutlak) ----------
