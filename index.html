@@ -221,6 +221,30 @@ body{background:radial-gradient(900px 500px at 85% -10%,#dcebff,transparent 60%)
 .fr .th{width:42px;height:42px;border-radius:12px;font-size:12.5px}.fr b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fr p.sn{margin:2px 0 0;font-size:12.5px;color:var(--mut);white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 mark{background:#ffe58a;color:#1a2540;border-radius:3px;padding:0 2px}
+
+.btn.g.idx{color:#0a7a4b;font-weight:800}:root[data-t=dark] .btn.g.idx{color:#4ade80}
+.clr{border:0;background:var(--soft);color:var(--mut);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none;padding:0}.clr[hidden]{display:none}
+.sbox .clr svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.4}
+.pgov,.okov{position:fixed;inset:0;display:grid;place-items:center;background:rgba(10,18,40,.4);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.pgov{z-index:55}.okov{z-index:60;animation:okfade .2s}.okov.out{opacity:0;transition:opacity .32s}
+.pgc,.okc{background:var(--card);border-radius:24px;box-shadow:0 20px 50px rgba(5,15,45,.3);text-align:center}
+.pgc{padding:26px 30px;width:min(88vw,340px)}.pgc b{display:block;font-size:15px}
+.pgn{font-size:40px;font-weight:800;color:var(--pri);margin:8px 0 12px;font-variant-numeric:tabular-nums;line-height:1.1}
+.pgb{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}.pgb i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--pri),var(--pri2));transition:width .3s ease}
+.pgb.ind{margin-top:14px}.pgb.ind i{width:40%;animation:pgslide 1.1s ease-in-out infinite}
+.pgc small{display:block;margin-top:12px;color:var(--mut);font-size:12.5px}
+.okc{padding:28px 34px 24px;min-width:220px;max-width:min(86vw,340px);animation:okpop .45s cubic-bezier(.2,1.3,.4,1)}
+.okc svg{width:84px;height:84px;display:block;margin:0 auto 12px;overflow:visible}
+.okc circle,.okc path{transform-box:fill-box;transform-origin:center}
+.okr{fill:#22c55e;transform:scale(0);animation:okfill .4s .05s cubic-bezier(.2,1.2,.4,1) forwards}
+.okg{fill:none;stroke:#22c55e;stroke-width:2;opacity:0;animation:okring .7s .3s ease-out}
+.okk{fill:none;stroke:#fff;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:okdraw .38s .35s ease-out forwards}
+.okc p{margin:0;font-weight:700;font-size:15px;line-height:1.4}
+@keyframes okfill{to{transform:scale(1)}}@keyframes okdraw{to{stroke-dashoffset:0}}
+@keyframes okring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.8);opacity:0}}
+@keyframes okpop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}@keyframes okfade{from{opacity:0}to{opacity:1}}
+@keyframes pgslide{0%{margin-left:-40%}100%{margin-left:100%}}
+@media(prefers-reduced-motion:reduce){.okr,.okk,.okg,.okc{animation-duration:.01s;animation-delay:0s}}
 @media print{body{display:none!important}}
 </style></head>
 <body>
@@ -236,10 +260,10 @@ const demo=!SB_URL, sb=demo?null:(window.supabase?supabase.createClient(SB_URL,S
 if(!demo&&!sb)document.addEventListener('DOMContentLoaded',()=>alert('Pustaka Supabase gagal dimuat. Periksa koneksi internet.'));
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const IC={home:'<path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',doc:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',moon:'<path d="M20 14A8 8 0 0110 4a8 8 0 1010 10z"/>'};
-Object.assign(IC,{menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',cal:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',chev:'<path d="M6 9l6 6 6-6"/>',chevR:'<path d="M9 6l6 6-6 6"/>',grid:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',sliders:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',check:'<path d="M5 12l5 5 9-10"/>',users:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 3-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 2 4 5"/>',wrench:'<path d="M14 6a4 4 0 005 5l-9 9a2 2 0 01-3-3l9-9a4 4 0 00-2-2z"/>',helmet:'<path d="M4 17h16M5 17a7 7 0 0114 0M12 7v4"/>',dots:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',chart:'<path d="M5 20V10M12 20V4M19 20v-7"/>'});
+Object.assign(IC,{menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',cal:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',chev:'<path d="M6 9l6 6 6-6"/>',chevR:'<path d="M9 6l6 6-6 6"/>',grid:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',sliders:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',check:'<path d="M5 12l5 5 9-10"/>',users:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 3-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 2 4 5"/>',wrench:'<path d="M14 6a4 4 0 005 5l-9 9a2 2 0 01-3-3l9-9a4 4 0 00-2-2z"/>',helmet:'<path d="M4 17h16M5 17a7 7 0 0114 0M12 7v4"/>',dots:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',chart:'<path d="M5 20V10M12 20V4M19 20v-7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>'});
 const ic=n=>`<svg viewBox="0 0 24 24">${IC[n]}</svg>`;
 const JENIS=[['MM','Manual Mutu'],['PR','Prosedur'],['IK','Instruksi Kerja'],['FM','Formulir'],['LN','Lainnya']];
-const jOf=d=>{if(d.jenis&&JENIS.some(j=>j[0]===d.jenis))return d.jenis;const p=String(d.kode||'').split(/[-_ .]/)[0].toUpperCase();return ['MM','PR','IK','FM'].includes(p)?p:'LN'};
+const jOf=d=>{if(d.jenis&&JENIS.some(j=>j[0]===d.jenis))return d.jenis;const a=String(d.kode||'').toUpperCase().split(/[-_ .]/),p=a[0]==='KIM'?a[1]:a[0];return ['MM','PR','IK','FM'].includes(p)?p:'LN'};
 const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[4])[1];
 const jOpts=sel=>JENIS.map(j=>`<option value="${j[0]}"${j[0]===sel?' selected':''}>${j[0]} - ${j[1]}</option>`).join('');
 const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
@@ -247,8 +271,20 @@ let JF='',CODES=[],GR=[];
 let U=null, DOCS=[], LOG=[], V='home', Q='', DF='';
 const DEMO_DOCS=[{id:'d1',kode:'MM-01',judul:'Manual Mutu',dept:'Semua',revisi:'Rev 03',pages:5},{id:'d2',kode:'SOP-GBJ-02',judul:'SOP Penerimaan dan Penyimpanan Barang Jadi',dept:'Gudang Barang Jadi',revisi:'Rev 01',pages:4},{id:'d3',kode:'IK-GBJ-05',judul:'Instruksi Kerja Produk Tidak Sesuai',dept:'Gudang Barang Jadi',revisi:'Rev 02',pages:3}];
 const fmt=d=>new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2600)};
+const toast=m=>{pgHide();const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2600)};
 
+let AC;const unlock=()=>{try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){}};
+['pointerdown','touchstart','keydown'].forEach(ev=>addEventListener(ev,unlock,{passive:true}));
+function ting(){try{unlock();if(!AC)return;const t=AC.currentTime;[[1318.5,.2,1.2],[1975.5,.12,.9],[2637,.05,.55]].forEach(([f,g,d],i)=>{const o=AC.createOscillator(),v=AC.createGain(),st=t+i*.005;o.type='sine';o.frequency.value=f;v.gain.setValueAtTime(0,st);v.gain.linearRampToValueAtTime(g,st+.012);v.gain.exponentialRampToValueAtTime(.0001,st+d);o.connect(v);v.connect(AC.destination);o.start(st);o.stop(st+d)})}catch(e){}}
+function succ(msg){const o=document.createElement('div');o.className='okov';
+  o.innerHTML=`<div class="okc"><svg viewBox="0 0 52 52"><circle class="okg" cx="26" cy="26" r="24"/><circle class="okr" cx="26" cy="26" r="24"/><path class="okk" d="M14 27l8 8 16-17"/></svg><p>${esc(msg)}</p></div>`;
+  document.body.append(o);ting();setTimeout(()=>o.classList.add('out'),1750);setTimeout(()=>o.remove(),2100)}
+function pgHide(){const o=document.getElementById('pgov');if(o)o.remove()}
+function pgShow(t){pgHide();const o=document.createElement('div');o.className='pgov';o.id='pgov';
+  o.innerHTML=`<div class="pgc"><b>${esc(t||'Memproses')}</b><div class="pgn" id="pgn">0%</div><div class="pgb ind" id="pgb"><i id="pgi"></i></div><small id="pgs">Mohon tunggu, jangan tutup halaman ini</small></div>`;document.body.append(o)}
+function pgSet(m,f){if(!document.getElementById('pgov'))pgShow();const n=$('#pgn'),b=$('#pgb'),i=$('#pgi');
+  if(f==null){b.classList.add('ind');n.style.display='none'}else{b.classList.remove('ind');n.style.display='';const p=Math.max(0,Math.min(1,f));i.style.width=(p*100)+'%';n.textContent=Math.round(p*100)+'%'}
+  if(m)$('#pgs').textContent=m}
 // ---------- data ----------
 async function loadData(){
   if(demo){DOCS=sortDocs(DEMO_DOCS);return}
@@ -293,7 +329,7 @@ function forgotView(pre){
   const send=async()=>{const m=$('#fm'),b=$('#fs'),e=$('#fe').value.trim();m.className='err';m.textContent='';
     if(!/^\S+@\S+\.\S+$/.test(e)){m.textContent='Masukkan alamat email yang valid.';return}
     b.disabled=true;
-    try{await sendReset(e);m.className='err ok';m.textContent='Jika email terdaftar, tautan reset sudah dikirim. Cek kotak masuk dan folder spam.'}
+    try{if(await sendReset(e))succ('Tautan reset terkirim');m.className='err ok';m.textContent='Jika email terdaftar, tautan reset sudah dikirim. Cek kotak masuk dan folder spam.'}
     catch(x){m.textContent='Gagal: '+(x.message||x)}
     b.disabled=false};
   $('#fs').onclick=send;$('#fe').addEventListener('keydown',e=>{if(e.key==='Enter')send()})}
@@ -344,7 +380,7 @@ function vHome(){
 function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))],chips=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]])];
   $('#v').innerHTML=`<div class="bar"><div class="jf" id="jf"><i class="ind"></i>${chips.map(x=>`<button class="jb" data-j="${x[0]}">${ic(CI[x[0]])}${x[1]}</button>`).join('')}</div></div>
-  <div class="bar b2"><div class="sbox">${ic('search')}<input id="q" placeholder="Cari kode atau judul dokumen..." value="${esc(Q)}"></div><select id="df" class="dsel"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ft"></div><div id="ls"></div>`;
+  <div class="bar b2"><div class="sbox">${ic('search')}<input id="q" placeholder="Cari kode atau judul dokumen..." value="${esc(Q)}"><button type="button" class="clr" id="qx" aria-label="Hapus pencarian">${ic('x')}</button></div><select id="df" class="dsel"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ft"></div><div id="ls"></div>`;
   const jf=$('#jf'),ind=jf.querySelector('.ind');
   const mv=first=>{const b=jf.querySelector('.jb.on');if(!b)return;if(first)ind.style.transition='none';
     ind.style.width=b.offsetWidth+'px';ind.style.transform=`translateX(${b.offsetLeft}px)`;if(first){ind.offsetWidth;ind.style.transition=''}
@@ -355,7 +391,7 @@ function vDocs(){
     $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<section class="gc${CL.has(j[0])?' cl':''}" data-j="${j[0]}"><div class="gh" data-g="${j[0]}"><span class="gi2">${ic(GI[j[0]])}</span><div class="gt"><b>${j[0]} &ndash; ${j[1]}</b><small>${GD[j[0]]}</small></div><span class="cnt">${g[j[0]].length}</span><span class="cv2">${ic('chev')}</span></div><div class="gw"><div class="gl">${g[j[0]].map(item2).join('')}</div></div></section>`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';
     document.querySelectorAll('.gh').forEach(h=>h.onclick=()=>{const k=h.dataset.g;CL.has(k)?CL.delete(k):CL.add(k);h.parentElement.classList.toggle('cl')});bindItems()};
   jf.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{JF=b.dataset.j;draw()});
-  let ST;const rx=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const qx=$('#qx'),sync=()=>qx.hidden=!$('#q').value;sync();qx.onclick=()=>{Q='';$('#q').value='';sync();draw();fullText();$('#q').focus()};let ST;const rx=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const fullText=async()=>{const k=Q.trim(),box=$('#ft');if(!box)return;if(k.length<3||demo){box.innerHTML='';return}
     const r=await sb.from('iso_doc_text').select('doc_id,page,content').ilike('content','%'+k.replace(/[%_\\]/g,'\\$&')+'%').limit(60);
     if(Q.trim()!==k||!$('#ft'))return;if(r.error){box.innerHTML='';return}
@@ -365,7 +401,7 @@ function vDocs(){
       return `<div class="fr" data-id="${d.id}" data-p="${x.page||1}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p class="sn">${x.page?'Hal. '+x.page+' &middot; ':''}&hellip;${esc(t).replace(hl,z=>'<mark>'+z+'</mark>')}&hellip;</p></div><span class="go">${ic('chevR')}</span></div>`}).filter(Boolean);
     box.innerHTML=rows.length?`<div class="ftw"><div class="fth">Ditemukan di isi dokumen</div>${rows.join('')}</div>`:'<div class="ftn">Kata itu tidak ditemukan di isi dokumen yang sudah diindeks.</div>';
     box.querySelectorAll('.fr').forEach(e=>e.onclick=()=>openDoc(DOCS.find(y=>String(y.id)===e.dataset.id),+e.dataset.p))};
-  $('#q').oninput=e=>{Q=e.target.value;draw();clearTimeout(ST);ST=setTimeout(fullText,350)};$('#df').onchange=e=>{DF=e.target.value;draw()};
+  $('#q').oninput=e=>{Q=e.target.value;sync();draw();clearTimeout(ST);ST=setTimeout(fullText,350)};$('#df').onchange=e=>{DF=e.target.value;draw()};
   draw(true);fullText();document.fonts&&document.fonts.ready.then(()=>mv(true));window.onresize=()=>{if($('#jf'))mv(true)};
 }
 function vLog(){
@@ -404,15 +440,15 @@ function modal(h,ok){const m=document.createElement('div');m.className='mdl';m.i
 async function pdfToPages(f,id,prog){
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
-  for(let i=1;i<=pdf.numPages;i++){prog(`Halaman ${i} dari ${pdf.numPages}`);
+  for(let i=1;i<=pdf.numPages;i++){prog(`Halaman ${i} dari ${pdf.numPages}`,(i-1)/pdf.numPages);
     const p=await pdf.getPage(i),vp=p.getViewport({scale:1.6}),c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
     await p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
     const b=await new Promise(r=>c.toBlob(r,'image/webp',.78));
-    const u=await sb.storage.from(BUCKET).upload(pth(id,i),b,{contentType:'image/webp',upsert:true});if(u.error)throw u.error}
+    const u=await sb.storage.from(BUCKET).upload(pth(id,i),b,{contentType:'image/webp',upsert:true});if(u.error)throw u.error;prog(`Halaman ${i} dari ${pdf.numPages}`,i/pdf.numPages)}
   return pdf.numPages}
 function vAdm(){
   $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Unggah Dokumen Baru</h3><span id="pg">Dipecah menjadi gambar per halaman</span></div><div class="f">
-  <div><label>Kode</label><input id="k" placeholder="SOP-GBJ-01"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
+  <div><label>Kode</label><input id="k" value="KIM-" placeholder="KIM-PR-HRD-001"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
   <div class="w"><label>Judul</label><input id="j"></div><div><label>Jenis Dokumen</label><select id="jn">${jOpts('LN')}</select></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div><div><label>Tanggal Berlaku</label><input id="tb" type="date" onclick="this.showPicker&&this.showPicker()"></div>
   <div class="w"><label>File teks untuk pencarian isi (opsional, tidak disimpan)</label><input id="tf" type="file" accept=".pdf,.docx"><small class="hint">Pilih file Word (.docx) atau PDF hasil ekspor Word tanpa tanda tangan. Hanya teksnya yang disimpan, filenya tidak.</small></div><div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>
   <div class="box" style="margin-top:12px"><div class="bh"><h3>Kode Akses Auditor</h3><span>5 angka &middot; berlaku 24 jam</span></div>
@@ -432,7 +468,7 @@ function vAdm(){
       return `<div class="row"><div style="min-width:0;flex:1"><b class="cdl">${esc(c.code)}</b><br><span>${esc(c.label||'Tanpa keterangan')} &middot; sampai ${fmt(c.expires_at)} (${left(c.expires_at)})</span><br><span class="tag${pm?'':' o'}" style="margin-top:6px">${pm?`Dokumen pilihan &middot; ${n} dikirim`:'Semua dokumen'}</span></div><div style="display:flex;gap:6px"><button class="btn g bs" data-ca="${c.id}">Atur Akses</button><button class="btn r bs" data-cx="${c.id}">Cabut</button></div></div>`}).join('')||'<div class="empty">Belum ada kode aktif.</div>';
     document.querySelectorAll('[data-ca]').forEach(b=>b.onclick=()=>akses(CODES.find(c=>c.id===b.dataset.ca)));
     document.querySelectorAll('[data-cx]').forEach(b=>b.onclick=async()=>{if(!confirm('Cabut kode ini? Auditor yang sedang masuk langsung keluar.'))return;
-      try{if(demo)CODES=CODES.filter(c=>c.id!==b.dataset.cx);else{const r=await sb.from('iso_audit_codes').delete().eq('id',b.dataset.cx);if(r.error)throw r.error}toast('Kode dicabut');loadCodes()}catch(x){toast('Gagal: '+(x.message||x))}})}
+      try{if(demo)CODES=CODES.filter(c=>c.id!==b.dataset.cx);else{const r=await sb.from('iso_audit_codes').delete().eq('id',b.dataset.cx);if(r.error)throw r.error}succ('Kode dicabut');loadCodes()}catch(x){toast('Gagal: '+(x.message||x))}})}
   function akses(c){if(!c)return;const cur=new Set(GR.filter(x=>x.code_id===c.id).map(x=>String(x.doc_id)));
     modal(`<h2>Atur Akses ${esc(c.code)}</h2><p>${esc(c.label||'Tanpa keterangan')}. Centang dokumen yang dikirim ke dasbor auditor. Perubahan langsung terlihat oleh auditor.</p>
     <label>Mode akses</label><select id="am"><option value="pilihan">Hanya dokumen yang dikirim admin</option><option value="semua">Semua dokumen</option></select>
@@ -443,7 +479,7 @@ function vAdm(){
         const add=sel.filter(d=>!cur.has(String(d))),rem=[...cur].filter(d=>!sel.includes(d));
         if(rem.length){const r=await sb.from('iso_audit_grants').delete().eq('code_id',c.id).in('doc_id',rem);if(r.error)throw r.error}
         if(add.length){const r=await sb.from('iso_audit_grants').insert(add.map(d=>({code_id:c.id,doc_id:d})));if(r.error)throw r.error}}
-      toast('Akses auditor diperbarui');await loadCodes()});
+      succ('Akses auditor diperbarui');await loadCodes()});
     $('#am').value=c.mode||'semua';const sync=()=>$('#ap').style.display=$('#am').value==='pilihan'?'':'none';$('#am').onchange=sync;sync();
     $('#as').oninput=e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('#adl .ck').forEach(l=>l.style.display=l.dataset.t.includes(q)?'':'none')}}
   $('#ck').oninput=e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,5);
@@ -452,16 +488,16 @@ function vAdm(){
     try{if(demo)CODES.push({id:crypto.randomUUID(),code:k,label:l,mode:$('#cm').value,expires_at:new Date(Date.now()+864e5).toISOString()});
       else{await sb.from('iso_audit_codes').delete().eq('code',k).lte('expires_at',new Date().toISOString());
         const r=await sb.from('iso_audit_codes').insert({code:k,label:l||null,mode:$('#cm').value});if(r.error)throw new Error(r.error.code==='23505'?'Kode itu masih aktif. Pilih angka lain.':r.error.message)}
-      $('#ck').value=$('#cl').value='';toast($('#cm').value==='pilihan'?'Kode dibuat. Tekan Atur Akses untuk memilih dokumen yang dikirim.':'Kode dibuat, berlaku 24 jam');loadCodes()}catch(x){toast('Gagal: '+(x.message||x))}};
+      $('#ck').value=$('#cl').value='';succ($('#cm').value==='pilihan'?'Kode dibuat. Tekan Atur Akses untuk memilih dokumen yang dikirim.':'Kode dibuat, berlaku 24 jam');loadCodes()}catch(x){toast('Gagal: '+(x.message||x))}};
   loadCodes();
-  if(!demo)sb.from('iso_doc_text').select('doc_id').in('page',[0,1]).then(r=>{const k=new Set((r.data||[]).map(x=>String(x.doc_id)));document.querySelectorAll('[data-a=t]').forEach(b=>{if(k.has(b.dataset.id))b.textContent='Indeks Ulang'})});
+  if(!demo)sb.from('iso_doc_text').select('doc_id').in('page',[0,1]).then(r=>{const k=new Set((r.data||[]).map(x=>String(x.doc_id)));document.querySelectorAll('[data-a=t]').forEach(b=>{if(k.has(b.dataset.id)){b.textContent='Indeks Ulang';b.classList.add('idx')}})});
   let jTouched=false;$('#jn').onchange=()=>jTouched=true;
   $('#k').oninput=()=>{if(!jTouched)$('#jn').value=jOf({kode:$('#k').value})};
-  const busy=m=>$('#pg').textContent=m, done=async m=>{toast(m);if(!demo)await loadData();shell()};
+  const busy=(m,f)=>pgSet(m,f), done=async m=>{pgHide();(/gagal|dilewati/i.test(m)?toast:succ)(m);if(!demo)await loadData();shell()};
   $('#up').onclick=async()=>{
     const f=$('#fl').files[0],k=$('#k').value.trim(),j=$('#j').value.trim();if(!f||!k||!j){toast('Lengkapi kode, judul, dan file');return}
     if(demo){toast('Mode demo: unggah aktif setelah Supabase dihubungkan');return}
-    $('#up').disabled=true;const id=crypto.randomUUID();
+    $('#up').disabled=true;const id=crypto.randomUUID();pgShow('Mengunggah dokumen');
     try{const n=await pdfToPages(f,id,busy);
       const ins=await sb.from('iso_documents').insert({id,kode:k,judul:j,dept:$('#dp').value.trim()||'Semua',jenis:$('#jn').value,revisi:$('#r').value.trim(),tgl_berlaku:$('#tb').value||null,pages:n});if(ins.error)throw ins.error;
       let m='Dokumen berhasil diunggah';const tf=$('#tf').files[0];
@@ -475,7 +511,7 @@ function vAdm(){
       await done('Dokumen diubah')});
     if(a==='t'){if(demo){toast('Mode demo: aktif setelah Supabase dihubungkan');return}
       const i=document.createElement('input');i.type='file';i.accept='.pdf,.docx';
-      i.onchange=async()=>{const f=i.files[0];if(!f)return;try{busy('Mengindeks teks...');const ok=await indexText(d.id,f,d.pages);await done(ok?'Teks diindeks':'Indeks teks dilewati')}catch(e){busy('Dipecah menjadi gambar per halaman');toast('Gagal: '+(e.message||e))}};i.click()}
+      i.onchange=async()=>{const f=i.files[0];if(!f)return;try{pgShow('Mengindeks teks');busy('Membaca file...');const ok=await indexText(d.id,f,d.pages);await done(ok?'Teks diindeks':'Indeks teks dilewati')}catch(e){toast('Gagal: '+(e.message||e))}};i.click()}
     if(a==='x'){if(!confirm(`Hapus "${d.kode}" beserta semua halamannya? Tindakan ini tidak bisa dibatalkan.`))return;
       try{if(demo)DOCS.splice(DOCS.indexOf(d),1);else{const r=await sb.storage.from(BUCKET).remove(Array.from({length:d.pages},(_,i)=>pth(d.id,i+1)));if(r.error)throw r.error;
         const x=await sb.from('iso_documents').delete().eq('id',d.id);if(x.error)throw x.error;await sb.from('iso_doc_text').delete().eq('doc_id',d.id)}
@@ -483,7 +519,7 @@ function vAdm(){
     if(a==='r'){if(demo){toast('Mode demo: ganti file aktif setelah Supabase dihubungkan');return}
       const rf=$('#rf');rf.value='';rf.onchange=async()=>{const f=rf.files[0];if(!f)return;
         const rv=prompt('Nomor revisi baru (kosongkan jika tidak berubah):',d.revisi||'');if(rv===null)return;
-        try{const n=await pdfToPages(f,d.id,busy);
+        try{pgShow('Mengganti file dokumen');const n=await pdfToPages(f,d.id,busy);
           if(n<d.pages)await sb.storage.from(BUCKET).remove(Array.from({length:d.pages-n},(_,i)=>pth(d.id,n+i+1)));
           const u=await sb.from('iso_documents').update({pages:n,...(rv.trim()?{revisi:rv.trim()}:{})}).eq('id',d.id);if(u.error)throw u.error;
           await sb.from('iso_doc_text').delete().eq('doc_id',d.id);await done('File dokumen diganti. Indeks teks perlu dibuat ulang')}catch(e){toast('Gagal: '+(e.message||e))}};rf.click()}
@@ -507,20 +543,20 @@ function vProf(){
   $('#lo').onclick=async()=>{if(confirm('Keluar dari aplikasi?')){if(!demo)await sb.auth.signOut();if(U.av)URL.revokeObjectURL(U.av);U=null;V='home';gateView()}};
   $('#sn').onclick=async()=>{const n=$('#nm').value.trim();if(!n){toast('Nama tidak boleh kosong');return}
     if(!demo){const r=await sb.from('iso_profiles').update({nama:n}).eq('id',U.id).select();if(r.error||!r.data.length){toast('Gagal menyimpan nama (profil belum dibuat?)');return}}
-    U.nama=n;toast('Nama disimpan');shell()};
+    U.nama=n;succ('Nama disimpan');shell()};
   $('#sg').onclick=async()=>{const a=$('#p1').value;if(a.length<8){toast('Kata sandi minimal 8 karakter');return}if(a!==$('#p2').value){toast('Ulangi kata sandi dengan sama persis');return}
     if(demo){toast('Mode demo: tidak berlaku');return}const {error}=await sb.auth.updateUser({password:a});if(error){toast('Gagal: '+error.message);return}
-    $('#p1').value=$('#p2').value='';toast('Kata sandi diganti')};
+    $('#p1').value=$('#p2').value='';succ('Kata sandi diganti')};
   $('#fr').onclick=async()=>{const b=$('#fr');b.disabled=true;
-    try{if(await sendReset(U.email))toast('Tautan reset dikirim ke '+U.email)}catch(x){toast('Gagal: '+(x.message||x))}b.disabled=false};
+    try{if(await sendReset(U.email))succ('Tautan reset terkirim')}catch(x){toast('Gagal: '+(x.message||x))}b.disabled=false};
   $('#pf').onclick=()=>$('#pi').click();
   $('#pi').onchange=async e=>{const f=e.target.files[0];if(!f)return;
     try{const b=await squash(f);
       if(!demo){const u=await sb.storage.from('iso-avatars').upload(U.id+'.jpg',b,{upsert:true,contentType:'image/jpeg',cacheControl:'60'});if(u.error)throw u.error;
         const t=new Date().toISOString(),r=await sb.from('iso_profiles').update({foto_at:t}).eq('id',U.id);if(r.error)throw r.error;U.foto_at=t}
-      if(U.av)URL.revokeObjectURL(U.av);U.av=URL.createObjectURL(b);toast(`Foto disimpan (${Math.round(b.size/1024)} KB)`);shell()}catch(x){toast('Gagal: '+(x.message||x))}};
+      if(U.av)URL.revokeObjectURL(U.av);U.av=URL.createObjectURL(b);succ(`Foto disimpan (${Math.round(b.size/1024)} KB)`);shell()}catch(x){toast('Gagal: '+(x.message||x))}};
   $('#pd').onclick=async()=>{try{if(!demo){await sb.storage.from('iso-avatars').remove([U.id+'.jpg']);await sb.from('iso_profiles').update({foto_at:null}).eq('id',U.id)}
-    if(U.av)URL.revokeObjectURL(U.av);U.av=null;U.foto_at=null;toast('Foto dihapus');shell()}catch(x){toast('Gagal: '+(x.message||x))}};
+    if(U.av)URL.revokeObjectURL(U.av);U.av=null;U.foto_at=null;succ('Foto dihapus');shell()}catch(x){toast('Gagal: '+(x.message||x))}};
 }
 // ---------- reader ----------
 function mark(c){const x=c.getContext('2d');x.save();x.globalAlpha=.07;x.fillStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
