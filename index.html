@@ -155,6 +155,8 @@ body{background:radial-gradient(900px 500px at 85% -10%,#dcebff,transparent 60%)
 .jf{width:100%}.sbox,.sl{height:52px}.sl{width:52px}
 .th,.it.r2 .th{width:56px;height:56px}.gh{padding:10px;gap:12px}.gi2{width:48px;height:48px}.vb{padding:9px 14px}
 }
+.dsel{background:var(--card);border:0;border-radius:999px;padding:0 24px;height:64px;min-width:230px;box-shadow:0 4px 14px rgba(15,31,61,.07);font:inherit;font-weight:600;color:var(--ink);outline:none;cursor:pointer}
+@media(max-width:820px){.dsel{height:52px;width:100%}}
 @media print{body{display:none!important}}
 </style></head>
 <body>
@@ -260,7 +262,7 @@ const ART1=`<svg viewBox="0 0 430 290" preserveAspectRatio="xMaxYMax meet"><defs
 const ART2=`<svg viewBox="0 0 520 230" preserveAspectRatio="xMaxYMax meet"><defs><linearGradient id="bb" x1="0" x2="1"><stop offset="0" stop-color="#1f6bf0"/><stop offset="1" stop-color="#0a2f8a"/></linearGradient><linearGradient id="sa" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe8d8"/><stop offset="1" stop-color="#17b57f"/></linearGradient></defs><g fill="#2f9e57"><ellipse cx="104" cy="130" rx="12" ry="46"/><ellipse cx="104" cy="130" rx="12" ry="44" transform="rotate(-38 104 180)" fill="#47b86a"/><ellipse cx="104" cy="130" rx="12" ry="44" transform="rotate(36 104 180)" fill="#3aa860"/><ellipse cx="104" cy="140" rx="11" ry="38" transform="rotate(-66 104 180)"/><ellipse cx="104" cy="140" rx="11" ry="38" transform="rotate(64 104 180)" fill="#47b86a"/></g><path d="M70 230l8-52h52l8 52z" fill="#eef3fa"/><rect x="190" y="70" width="42" height="160" rx="6" fill="#3d86f2"/><rect x="236" y="48" width="42" height="182" rx="6" fill="#5a9cff"/><rect x="282" y="28" width="50" height="202" rx="6" fill="#2f78e8"/><g fill="#0a2f8a"><circle cx="211" cy="206" r="7"/><circle cx="257" cy="206" r="7"/><circle cx="307" cy="206" r="7"/></g><rect x="338" y="8" width="140" height="222" rx="8" fill="url(#bb)"/>${SH(372,40,1.05)}<text x="408" y="200" text-anchor="middle" font-family="Georgia,serif" font-size="34" font-weight="700" fill="#fff">ISO</text></svg>`;
 const tagsOf=d=>`<span class="tag">${esc(jName(jOf(d)))}</span><span class="tag o">${esc(d.revisi||'Rev')}</span><span class="tag o">${esc(d.dept)}</span>`;
 const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><div>${tagsOf(d)}</div></div><span class="go">${ic('chevR')}</span></div>`;
-const item2=d=>`<div class="it r2" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p><span>${d.pages} halaman &middot; ${esc(d.revisi||'')} &middot; ${esc(d.dept)}</span>${d.created_at?`<em>${ic('cal')}${D(d.created_at)}</em>`:''}</p></div><button class="vb">${ic('eye')}Lihat</button></div>`;
+const item2=d=>`<div class="it r2" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p><span>${d.pages} halaman &middot; ${esc(d.revisi||'')} &middot; ${esc(d.dept)}</span>${d.tgl_berlaku?`<em>${ic('cal')}Berlaku ${D(String(d.tgl_berlaku).slice(0,10)+'T00:00:00')}</em>`:''}</p></div><button class="vb">${ic('eye')}Lihat</button></div>`;
 const bindItems=()=>document.querySelectorAll('.it').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)));
 function vHome(){
   const today=LOG.filter(l=>new Date(l.at).toDateString()===new Date().toDateString()).length;
@@ -271,16 +273,15 @@ function vHome(){
 }
 function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))];
-  $('#v').innerHTML=`<div class="hero2"><div class="hi2">${ic('doc')}</div><div class="h2t"><h2>Dokumen ISO</h2><h3>Akses cepat, terstruktur dan mudah</h3><p>Temukan dokumen yang Anda butuhkan sesuai dengan kategori dan departemen.</p></div><div class="art">${ART2}</div></div>
-  <div class="bar"><div class="jf" id="jf"></div><div class="sbox">${ic('search')}<input id="q" placeholder="Cari kode atau judul dokumen..." value="${esc(Q)}"></div><button class="ib sl" id="fb" title="Filter departemen">${ic('sliders')}</button></div>
-  <div class="dfw${DF?' show':''}" id="dfw"><select id="df"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ls"></div>`;
+  $('#v').innerHTML=`<div class="bar"><div class="jf" id="jf"></div></div>
+  <div class="bar"><div class="sbox">${ic('search')}<input id="q" placeholder="Cari kode atau judul dokumen..." value="${esc(Q)}"></div><select id="df" class="dsel"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div id="ls"></div>`;
   const draw=()=>{const base=DOCS.filter(d=>(!DF||d.dept===DF)&&(d.kode+d.judul).toLowerCase().includes(Q.toLowerCase()));
     $('#jf').innerHTML=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]])].map(x=>`<button class="jb${JF===x[0]?' on':''}" data-j="${x[0]}">${ic(CI[x[0]])}${x[1]}</button>`).join('');
     document.querySelectorAll('#jf .jb').forEach(b=>b.onclick=()=>{JF=b.dataset.j;draw()});
     const f=base.filter(d=>!JF||jOf(d)===JF),g={};f.forEach(d=>(g[jOf(d)]??=[]).push(d));
     $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<section class="gc${CL.has(j[0])?' cl':''}"><div class="gh" data-g="${j[0]}"><span class="gi2">${ic(GI[j[0]])}</span><div class="gt"><b>${j[0]} &ndash; ${j[1]}</b><small>${GD[j[0]]}</small></div><span class="cnt">${g[j[0]].length}</span><span class="cv2">${ic('chev')}</span></div><div class="gl">${g[j[0]].map(item2).join('')}</div></section>`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';
     document.querySelectorAll('.gh').forEach(h=>h.onclick=()=>{const k=h.dataset.g;CL.has(k)?CL.delete(k):CL.add(k);h.parentElement.classList.toggle('cl')});bindItems()};
-  $('#q').oninput=e=>{Q=e.target.value;draw()};$('#df').onchange=e=>{DF=e.target.value;draw()};$('#fb').onclick=()=>$('#dfw').classList.toggle('show');draw();
+  $('#q').oninput=e=>{Q=e.target.value;draw()};$('#df').onchange=e=>{DF=e.target.value;draw()};draw();
 }
 function vLog(){
   const rows=(U.role==='admin'?LOG:LOG.filter(l=>l.user_id===U.id));
@@ -302,7 +303,7 @@ async function pdfToPages(f,id,prog){
 function vAdm(){
   $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Unggah Dokumen Baru</h3><span id="pg">Dipecah menjadi gambar per halaman</span></div><div class="f">
   <div><label>Kode</label><input id="k" placeholder="SOP-GBJ-01"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
-  <div class="w"><label>Judul</label><input id="j"></div><div><label>Jenis Dokumen</label><select id="jn">${jOpts('LN')}</select></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div>
+  <div class="w"><label>Judul</label><input id="j"></div><div><label>Jenis Dokumen</label><select id="jn">${jOpts('LN')}</select></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div><div><label>Tanggal Berlaku</label><input id="tb" type="date" onclick="this.showPicker&&this.showPicker()"></div>
   <div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>
   <div class="box" style="margin-top:12px"><div class="bh"><h3>Kode Akses Auditor</h3><span>5 angka &middot; berlaku 24 jam</span></div>
   <div class="f"><div><label>Kode (5 angka)</label><input id="ck" inputmode="numeric" maxlength="5" placeholder="12345"></div><div><label>Untuk siapa (opsional)</label><input id="cl" placeholder="Nama auditor / lembaga"></div>
@@ -351,12 +352,12 @@ function vAdm(){
     if(demo){toast('Mode demo: unggah aktif setelah Supabase dihubungkan');return}
     $('#up').disabled=true;const id=crypto.randomUUID();
     try{const n=await pdfToPages(f,id,busy);
-      const ins=await sb.from('iso_documents').insert({id,kode:k,judul:j,dept:$('#dp').value.trim()||'Semua',jenis:$('#jn').value,revisi:$('#r').value.trim(),pages:n});if(ins.error)throw ins.error;
+      const ins=await sb.from('iso_documents').insert({id,kode:k,judul:j,dept:$('#dp').value.trim()||'Semua',jenis:$('#jn').value,revisi:$('#r').value.trim(),tgl_berlaku:$('#tb').value||null,pages:n});if(ins.error)throw ins.error;
       V='docs';await done('Dokumen berhasil diunggah')}catch(e){toast('Gagal: '+(e.message||e));$('#up').disabled=false}};
   document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>act(b.dataset.a,DOCS.find(d=>d.id===b.dataset.id)));
   async function act(a,d){
-    if(a==='e')modal(`<h2>Ubah Dokumen</h2><p>Mengubah nama dan keterangan, bukan isi file.</p><label>Kode</label><input id="ek" value="${esc(d.kode)}"><label>Judul</label><input id="ej" value="${esc(d.judul)}"><label>Jenis Dokumen</label><select id="ejn">${jOpts(jOf(d))}</select><label>Departemen</label><input id="ed" value="${esc(d.dept)}"><label>Revisi</label><input id="er2" value="${esc(d.revisi||'')}">`,async()=>{
-      const v={kode:$('#ek').value.trim(),judul:$('#ej').value.trim(),dept:$('#ed').value.trim()||'Semua',jenis:$('#ejn').value,revisi:$('#er2').value.trim()};if(!v.kode||!v.judul)throw new Error('Kode dan judul wajib diisi');
+    if(a==='e')modal(`<h2>Ubah Dokumen</h2><p>Mengubah nama dan keterangan, bukan isi file.</p><label>Kode</label><input id="ek" value="${esc(d.kode)}"><label>Judul</label><input id="ej" value="${esc(d.judul)}"><label>Jenis Dokumen</label><select id="ejn">${jOpts(jOf(d))}</select><label>Departemen</label><input id="ed" value="${esc(d.dept)}"><label>Revisi</label><input id="er2" value="${esc(d.revisi||'')}"><label>Tanggal Berlaku</label><input id="etb" type="date" value="${esc(String(d.tgl_berlaku||'').slice(0,10))}" onclick="this.showPicker&&this.showPicker()">`,async()=>{
+      const v={kode:$('#ek').value.trim(),judul:$('#ej').value.trim(),dept:$('#ed').value.trim()||'Semua',jenis:$('#ejn').value,revisi:$('#er2').value.trim(),tgl_berlaku:$('#etb').value||null};if(!v.kode||!v.judul)throw new Error('Kode dan judul wajib diisi');
       if(demo)Object.assign(d,v);else{const r=await sb.from('iso_documents').update(v).eq('id',d.id);if(r.error)throw r.error}
       await done('Dokumen diubah')});
     if(a==='x'){if(!confirm(`Hapus "${d.kode}" beserta semua halamannya? Tindakan ini tidak bisa dibatalkan.`))return;
