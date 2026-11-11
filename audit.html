@@ -37,9 +37,12 @@ button,input{font:inherit;color:inherit}
 .empty{text-align:center;color:var(--mut);padding:30px 10px;font-size:14px}
 .rd{position:fixed;inset:0;background:#0a1228;z-index:20;display:flex;flex-direction:column}
 .rb{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 18px 12px;background:var(--nav);color:#fff}.rb b{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rs{flex:1;overflow:auto;padding:18px 10px 40px;display:flex;flex-direction:column;align-items:center;gap:14px}
-.rs canvas{width:min(820px,100%);height:auto;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
+.rs{flex:1;overflow:auto;padding:18px 10px 40px;display:flex;flex-direction:column;align-items:stretch;gap:14px}
+.rs canvas{display:block;flex:none;margin:0 auto;height:auto;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
 .rd.veil .rs{filter:blur(28px)}
+.zc{display:flex;align-items:center;gap:6px}.zb{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:10px;min-width:34px;height:34px;font-weight:800;font-size:15px;cursor:pointer;padding:0 10px}.zb.on{background:#ff3b3b}.zl{font-size:12px;min-width:46px;text-align:center}
+.lz{position:absolute;left:0;z-index:3;touch-action:none;pointer-events:none}.lz.on{pointer-events:auto;cursor:none}
+@media(max-width:820px){.pgs{display:none}}
 .toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%);background:var(--nav);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;z-index:40}
 @media print{body{display:none!important}}
 </style></head>
@@ -101,19 +104,68 @@ function view(){
   DRAW=draw;$('#q').oninput=e=>{Q=e.target.value;draw()};$('#rf').onclick=()=>refresh(false);draw();$('#sl').textContent='Sisa '+left();
   $('#lo').onclick=async()=>{if(confirm('Keluar dari ruang audit?')){await sb.auth.signOut();codeView()}}}
 
+// ---------- pengaturan watermark (diatur admin di index.html > Kelola) ----------
+let WM={opacity:.07,thickness:0};
+async function loadWM(){try{const r=await sb.from('iso_settings').select('value').eq('key','watermark').maybeSingle();if(r.data&&r.data.value)WM={...WM,...r.data.value}}catch{}}
 // ---------- pembaca ----------
-function mark(c){const x=c.getContext('2d');x.save();x.globalAlpha=.07;x.fillStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
-  const t=`AUDITOR \u2022 ${S.label} \u2022 ${fmt(Date.now())}`;for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)x.fillText(t,xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
+function mark(c){const x=c.getContext('2d'),o=WM;x.save();x.globalAlpha=o.opacity;x.fillStyle=x.strokeStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
+  x.lineJoin='round';x.lineWidth=o.thickness*c.width/2500;
+  const t=`AUDITOR \u2022 ${S.label} \u2022 ${fmt(Date.now())}`,put=(a,b)=>{x.fillText(t,a,b);if(o.thickness>0)x.strokeText(t,a,b)};
+  for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)put(xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
 async function openDoc(d){
   if(!d)return;const r=document.createElement('div');r.className='rd';
-  r.innerHTML=`<div class="rb"><button class="btn g bs" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div>`;
-  document.body.append(r);$('#cl').onclick=()=>r.remove();
-  const rs=$('#rs'),paths=Array.from({length:d.pages},(_,i)=>`${d.id}/${String(i+1).padStart(3,'0')}.webp`);
+  r.innerHTML=`<div class="rb"><button class="btn g bs" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span class="zc"><button class="zb" id="zo" title="Perkecil (A)">&minus;</button><span class="zl" id="zp">100%</span><button class="zb" id="zi" title="Perbesar (Z)">+</button><button class="zb" id="lz" title="Laser / pointer (L)">Laser</button></span><span class="pgs" style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div><canvas class="lz" id="lzc"></canvas>`;
+  document.body.append(r);
+  const rs=$('#rs'),zp=$('#zp'),lzc=$('#lzc'),ac=new AbortController(),sg={signal:ac.signal};
+  let Z=1,TZ=1,fx=0,fy=0,raf=0,raf2=0,cs=[],lzOn=false,drawing=false,mx=-1,my=-1;
+  const MINZ=.5,MAXZ=4,LT=5000;
+  const close=()=>{ac.abort();cancelAnimationFrame(raf);cancelAnimationFrame(raf2);r.remove()};
+  $('#cl').onclick=close;
+  // ----- zoom halus (Z / A, Ctrl + scroll, tombol + / -) -----
+  const base=()=>Math.max(200,Math.min(820,rs.clientWidth-20));
+  const apply=nz=>{const sh=rs.scrollHeight,sw=rs.scrollWidth,sx=rs.scrollLeft+fx,sy=rs.scrollTop+fy,w=base()*nz+'px';
+    rs.querySelectorAll('canvas').forEach(c=>c.style.width=w);Z=nz;
+    rs.scrollLeft=sx*(rs.scrollWidth/sw)-fx;rs.scrollTop=sy*(rs.scrollHeight/sh)-fy;zp.textContent=Math.round(nz*100)+'%'};
+  const tk=()=>{raf=0;const df=TZ-Z;if(Math.abs(df)<.002){apply(TZ);return}apply(Z+df*.2);raf=requestAnimationFrame(tk)};
+  const zoomTo=(t,x,y)=>{TZ=Math.max(MINZ,Math.min(MAXZ,t));fx=x;fy=y;if(!raf)raf=requestAnimationFrame(tk)};
+  const zc=()=>[rs.clientWidth/2,rs.clientHeight/2];
+  $('#zi').onclick=()=>zoomTo(TZ*1.25,...zc());$('#zo').onclick=()=>zoomTo(TZ/1.25,...zc());
+  r.addEventListener('wheel',e=>{
+    if(e.ctrlKey||e.metaKey){e.preventDefault();const b=rs.getBoundingClientRect(),k=Math.abs(e.deltaY)<50?.01:.0022;zoomTo(TZ*Math.exp(-e.deltaY*k),e.clientX-b.left,e.clientY-b.top)}
+    else if(e.target===lzc){e.preventDefault();rs.scrollBy(e.deltaX,e.deltaY)}},{passive:false,signal:ac.signal});
+  // ----- laser / pointer: coretan hilang dalam 5 detik -----
+  const fitLz=()=>{const t=$('.rb').offsetHeight,w=r.clientWidth,h=r.clientHeight-t,s=devicePixelRatio||1;
+    lzc.style.top=t+'px';lzc.style.width=w+'px';lzc.style.height=h+'px';lzc.width=w*s;lzc.height=h*s;kick()};
+  const loop=()=>{raf2=0;const x=lzc.getContext('2d'),s=devicePixelRatio||1,now=performance.now();
+    x.setTransform(s,0,0,s,0,0);x.clearRect(0,0,lzc.width,lzc.height);x.lineCap=x.lineJoin='round';
+    cs=cs.map(st=>st.filter(p=>now-p.t<LT)).filter(st=>st.length);
+    x.shadowColor='#ff2a2a';x.shadowBlur=10;x.strokeStyle=x.fillStyle='#ff2a2a';x.lineWidth=4;
+    for(const st of cs){
+      if(st.length===1){x.globalAlpha=Math.max(0,1-(now-st[0].t)/LT);x.beginPath();x.arc(st[0].x,st[0].y,2.5,0,7);x.fill()}
+      for(let i=1;i<st.length;i++){x.globalAlpha=Math.max(0,1-(now-st[i].t)/LT);x.beginPath();x.moveTo(st[i-1].x,st[i-1].y);x.lineTo(st[i].x,st[i].y);x.stroke()}}
+    if(lzOn&&mx>=0){x.globalAlpha=1;x.shadowBlur=16;x.beginPath();x.arc(mx,my,drawing?7:6,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#fff';x.beginPath();x.arc(mx,my,2.2,0,7);x.fill()}
+    if(cs.length)kick()};
+  const kick=()=>{if(!raf2)raf2=requestAnimationFrame(loop)};
+  const pt=e=>{const b=lzc.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top,t:performance.now()}};
+  const toggleLz=()=>{lzOn=!lzOn;drawing=false;if(!lzOn)mx=-1;lzc.classList.toggle('on',lzOn);$('#lz').classList.toggle('on',lzOn);kick()};
+  $('#lz').onclick=toggleLz;
+  lzc.addEventListener('pointerdown',e=>{drawing=true;lzc.setPointerCapture(e.pointerId);const p=pt(e);mx=p.x;my=p.y;cs.push([p]);kick()},sg);
+  lzc.addEventListener('pointermove',e=>{const p=pt(e);mx=p.x;my=p.y;if(drawing)cs[cs.length-1].push(p);kick()},sg);
+  ['pointerup','pointercancel'].forEach(n=>lzc.addEventListener(n,()=>{drawing=false;kick()},sg));
+  lzc.addEventListener('pointerleave',()=>{mx=-1;kick()},sg);
+  addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();
+    if(k==='z'||k==='a'){e.preventDefault();const f=e.repeat?1.05:1.25;zoomTo(k==='z'?TZ*f:TZ/f,...zc())}
+    else if(k==='l')toggleLz()},sg);
+  addEventListener('resize',()=>{[fx,fy]=zc();apply(Z);fitLz()},sg);
+  fitLz();
+  // ----- halaman -----
+  await loadWM();
+  const paths=Array.from({length:d.pages},(_,i)=>`${d.id}/${String(i+1).padStart(3,'0')}.webp`);
   const s=await sb.storage.from(BUCKET).createSignedUrls(paths,90);
-  if(s.error){r.remove();toast('Akses ditolak. Kode mungkin sudah berakhir.');tick();return}
+  if(s.error){close();toast('Akses ditolak. Kode mungkin sudah berakhir.');tick();return}
   const urls=(s.data||[]).map(x=>x.signedUrl);rs.innerHTML='';
   for(let i=0;i<d.pages;i++){
-    const c=document.createElement('canvas');rs.append(c);const x=c.getContext('2d');
+    const c=document.createElement('canvas');c.style.width=base()*Z+'px';rs.append(c);const x=c.getContext('2d');
     try{const bm=await createImageBitmap(await (await fetch(urls[i])).blob());c.width=bm.width;c.height=bm.height;x.drawImage(bm,0,0)}catch{c.width=820;c.height=200;x.fillText('Gagal memuat halaman',20,100)}
     mark(c)}}
 
