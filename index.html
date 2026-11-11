@@ -253,6 +253,12 @@ mark{background:#ffe58a;color:#1a2540;border-radius:3px;padding:0 2px}
 @keyframes pgslide{0%{margin-left:-40%}100%{margin-left:100%}}
 @media(prefers-reduced-motion:reduce){.okr,.okk,.okg,.okc{animation-duration:.01s;animation-delay:0s}}
 @media print{body{display:none!important}}
+/* ===== kode dan judul dokumen dipisah: kode 1 baris, judul 1 baris kecil ===== */
+.it .im,.fr .im{min-width:0;flex:1}
+.it b.kd,.fr b.kd{display:block;font-size:14.5px;font-weight:800;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .jd,.fr .jd{display:block;font-size:12.5px;font-weight:600;line-height:1.35;margin-top:1px;color:var(--ink);opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it.r2 p,.it .im>p{margin-top:3px}
+@media(max-width:820px){.it b.kd,.fr b.kd{font-size:14px}.it .jd,.fr .jd{font-size:12px}.it.r2 .im>p{font-size:11.5px}}
 </style></head>
 <body>
 <div id="app"></div>
@@ -373,15 +379,17 @@ function shell(){
   ({home:vHome,docs:vDocs,log:vLog,adm:vAdm,prof:vProf})[V]();
 }
 const D=d=>new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
-const GI={MM:'doc',PR:'users',IK:'helmet',FM:'doc',LN:'dots'},CI={'':'grid',MM:'doc',PR:'cog',IK:'wrench',FM:'doc',LN:'dots'};
+Object.assign(IC,{book:'<path d="M5 4.5A1.5 1.5 0 016.5 3H19v15H6.5A1.5 1.5 0 005 19.5z"/><path d="M5 19.5A1.5 1.5 0 006.5 21H19v-3M9 8h6M9 11.5h4"/>',flow:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',form:'<path d="M6 3h12v18H6z"/><path d="M9 7.5l1.3 1.3 2.4-2.6M9 13h6M9 17h6"/>',folder:'<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>'});
+// ikon sama untuk baris filter dan judul grup: MM buku, PR alur, IK kunci, FM formulir, LN map
+const CI={'':'grid',MM:'book',PR:'flow',IK:'wrench',FM:'form',LN:'folder'},GI=CI;
 const GD={MM:'Manual mutu dan kebijakan perusahaan',PR:'Dokumen prosedur kerja dan tata cara pelaksanaan',IK:'Petunjuk teknis pelaksanaan pekerjaan',FM:'Formulir dan catatan pendukung kegiatan',LN:'Dokumen pendukung lainnya'};
 let CL=new Set(),NP=null;
 const SH=(x,y,s)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M50 0l50 18v42c0 32-22 52-50 62C22 112 0 92 0 60V18z" fill="url(#sa)"/><path d="M28 58l16 16 30-34" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></g>`;
 const ART1=`<svg viewBox="0 0 430 290" preserveAspectRatio="xMaxYMax meet"><defs><linearGradient id="ba" x1="0" x2="1"><stop offset="0" stop-color="#1f56b5"/><stop offset="1" stop-color="#0a2358"/></linearGradient><linearGradient id="sa" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6cc4ff"/><stop offset="1" stop-color="#1665e8"/></linearGradient></defs><rect x="30" y="80" width="90" height="210" rx="8" fill="url(#ba)" opacity=".7"/><rect x="110" y="40" width="140" height="250" rx="8" fill="url(#ba)"/><rect x="130" y="66" width="70" height="112" rx="4" fill="#e8f0fc" opacity=".94"/><text x="165" y="112" text-anchor="middle" font-family="Georgia,serif" font-size="30" font-weight="700" fill="#0b1f4d">ISO</text><text x="165" y="146" text-anchor="middle" font-size="22" font-weight="700" fill="#0b1f4d">9001</text><circle cx="140" cy="236" r="10" fill="#071a42"/><rect x="240" y="20" width="160" height="270" rx="8" fill="url(#ba)" opacity=".9"/>${SH(270,70,1.3)}</svg>`;
 const ART2=`<svg viewBox="0 0 520 230" preserveAspectRatio="xMaxYMax meet"><defs><linearGradient id="bb" x1="0" x2="1"><stop offset="0" stop-color="#1f6bf0"/><stop offset="1" stop-color="#0a2f8a"/></linearGradient><linearGradient id="sa" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe8d8"/><stop offset="1" stop-color="#17b57f"/></linearGradient></defs><g fill="#2f9e57"><ellipse cx="104" cy="130" rx="12" ry="46"/><ellipse cx="104" cy="130" rx="12" ry="44" transform="rotate(-38 104 180)" fill="#47b86a"/><ellipse cx="104" cy="130" rx="12" ry="44" transform="rotate(36 104 180)" fill="#3aa860"/><ellipse cx="104" cy="140" rx="11" ry="38" transform="rotate(-66 104 180)"/><ellipse cx="104" cy="140" rx="11" ry="38" transform="rotate(64 104 180)" fill="#47b86a"/></g><path d="M70 230l8-52h52l8 52z" fill="#eef3fa"/><rect x="190" y="70" width="42" height="160" rx="6" fill="#3d86f2"/><rect x="236" y="48" width="42" height="182" rx="6" fill="#5a9cff"/><rect x="282" y="28" width="50" height="202" rx="6" fill="#2f78e8"/><g fill="#0a2f8a"><circle cx="211" cy="206" r="7"/><circle cx="257" cy="206" r="7"/><circle cx="307" cy="206" r="7"/></g><rect x="338" y="8" width="140" height="222" rx="8" fill="url(#bb)"/>${SH(372,40,1.05)}<text x="408" y="200" text-anchor="middle" font-family="Georgia,serif" font-size="34" font-weight="700" fill="#fff">ISO</text></svg>`;
 const tagsOf=d=>`<span class="tag">${esc(jName(jOf(d)))}</span><span class="tag o">${esc(d.revisi||'Rev')}</span><span class="tag o">${esc(d.dept)}</span>`;
-const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><div class="tg">${tagsOf(d)}</div></div><span class="go">${ic('chevR')}</span></div>`;
-const item2=d=>`<div class="it r2" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${d.tgl_berlaku?' &middot; Berlaku '+D(String(d.tgl_berlaku).slice(0,10)+'T00:00:00'):''}</p></div><button class="vb">${ic('eye')}<span>Lihat</span></button></div>`;
+const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b class="kd">${esc(d.kode)}</b><span class="jd">${esc(d.judul)}</span><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><div class="tg">${tagsOf(d)}</div></div><span class="go">${ic('chevR')}</span></div>`;
+const item2=d=>`<div class="it r2" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b class="kd">${esc(d.kode)}</b><span class="jd">${esc(d.judul)}</span><p>${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${d.tgl_berlaku?' &middot; Berlaku '+D(String(d.tgl_berlaku).slice(0,10)+'T00:00:00'):''}</p></div><button class="vb">${ic('eye')}<span>Lihat</span></button></div>`;
 const bindItems=()=>document.querySelectorAll('.it:not(.fr)').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)));
 function deptList(){const m={};DOCS.forEach(d=>{const k=d.dept||'Semua';m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0],'id'))}
 function vHome(){
@@ -414,7 +422,7 @@ function vDocs(){
     const re=new RegExp(rx(k),'i'),hl=new RegExp(rx(esc(k)),'ig');
     const rows=r.data.map(x=>{const d=DOCS.find(y=>String(y.id)===String(x.doc_id));if(!d||(DF&&d.dept!==DF)||(JF&&jOf(d)!==JF))return'';
       const m=Math.max(0,x.content.search(re)),t=x.content.slice(Math.max(0,m-50),m+k.length+100);
-      return `<div class="fr" data-id="${d.id}" data-p="${x.page||1}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p class="sn">${x.page?'Hal. '+x.page+' &middot; ':''}&hellip;${esc(t).replace(hl,z=>'<mark>'+z+'</mark>')}&hellip;</p></div><span class="go">${ic('chevR')}</span></div>`}).filter(Boolean);
+      return `<div class="fr" data-id="${d.id}" data-p="${x.page||1}"><div class="th">${jOf(d)}</div><div class="im"><b class="kd">${esc(d.kode)}</b><span class="jd">${esc(d.judul)}</span><p class="sn">${x.page?'Hal. '+x.page+' &middot; ':''}&hellip;${esc(t).replace(hl,z=>'<mark>'+z+'</mark>')}&hellip;</p></div><span class="go">${ic('chevR')}</span></div>`}).filter(Boolean);
     box.innerHTML=rows.length?`<div class="ftw"><div class="fth">Ditemukan di isi dokumen</div>${rows.join('')}</div>`:'<div class="ftn">Kata itu tidak ditemukan di isi dokumen yang sudah diindeks.</div>';
     box.querySelectorAll('.fr').forEach(e=>e.onclick=()=>openDoc(DOCS.find(y=>String(y.id)===e.dataset.id),+e.dataset.p))};
   $('#q').oninput=e=>{Q=e.target.value;sync();draw();clearTimeout(ST);ST=setTimeout(fullText,350)};$('#df').onchange=e=>{DF=e.target.value;draw()};
