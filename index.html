@@ -269,7 +269,8 @@ mark{background:#ffe58a;color:#1a2540;border-radius:3px;padding:0 2px}
 .pd{position:absolute;top:3px;right:3px;width:9px;height:9px;border-radius:50%;background:#2f8cff;--pc:47,140,255;pointer-events:none;animation:pdp 2.2s ease-out infinite}
 @keyframes pdp{0%{box-shadow:0 0 0 0 rgba(var(--pc),.6)}70%{box-shadow:0 0 0 10px rgba(var(--pc),0)}100%{box-shadow:0 0 0 0 rgba(var(--pc),0)}}
 .jb.on .pd{background:#fff;--pc:255,255,255}
-.dw{position:relative;display:inline-flex;flex:none}.dw .dsel{width:100%}
+.dw{position:relative;display:inline-flex;flex:none}.dw .dsel{width:100%;padding-left:36px}
+.dw .pd{top:50%;right:auto;left:16px;margin-top:-4.5px}
 @media(max-width:820px){.dw{flex:1 1 100%;display:flex}}
 @media(prefers-reduced-motion:reduce){.pd{animation:none}}
 </style></head>
@@ -416,8 +417,8 @@ function vHome(){
 }
 function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))],chips=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]])];
-  $('#v').innerHTML=`<div class="bar"><div class="jf" id="jf"><i class="ind"></i>${chips.map(x=>`<button class="jb" data-j="${x[0]}">${ic(CI[x[0]])}${x[1]}${x[0]===''&&PD.j&&!JF?'<i class="pd"></i>':''}</button>`).join('')}</div></div>
-  <div class="bar b2"><div class="sbox">${ic('search')}<input id="q" placeholder="Cari kode atau judul dokumen..." value="${esc(Q)}"><button type="button" class="clr" id="qx" aria-label="Hapus pencarian">${ic('x')}</button></div><span class="dw"><select id="df" class="dsel"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select>${PD.d&&!DF?'<i class="pd"></i>':''}</span></div><div id="ft"></div><div id="ls"></div>`;
+  $('#v').innerHTML=`<div class="bar"><div class="jf" id="jf"><i class="ind"></i>${chips.map(x=>`<button class="jb" data-j="${x[0]}">${ic(CI[x[0]])}${x[1]}</button>`).join('')}</div></div>
+  <div class="bar b2"><div class="sbox">${ic('search')}<input id="q" placeholder="Cari kode atau judul dokumen..." value="${esc(Q)}"><button type="button" class="clr" id="qx" aria-label="Hapus pencarian">${ic('x')}</button></div><span class="dw"><select id="df" class="dsel"><option value="">Semua departemen</option>${depts.map(x=>`<option ${x===DF?'selected':''}>${esc(x)}</option>`).join('')}</select><i class="pd"></i></span></div><div id="ft"></div><div id="ls"></div>`;
   const jf=$('#jf'),ind=jf.querySelector('.ind');
   const mv=first=>{const b=jf.querySelector('.jb.on');if(!b)return;if(first)ind.style.transition='none';
     ind.style.width=b.offsetWidth+'px';ind.style.transform=`translateX(${b.offsetLeft}px)`;if(first){ind.offsetWidth;ind.style.transition=''}
@@ -427,7 +428,7 @@ function vDocs(){
     const f=base.filter(d=>!JF||jOf(d)===JF),g={};f.forEach(d=>(g[jOf(d)]??=[]).push(d));
     $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<section class="gc${CL.has(j[0])&&!flt?' cl':''}" data-j="${j[0]}"><div class="gh" data-g="${j[0]}"><span class="gi2">${ic(GI[j[0]])}</span><div class="gt"><b>${j[0]} &ndash; ${j[1]}</b><small>${GD[j[0]]}</small></div><span class="cnt">${g[j[0]].length}</span><span class="cv2">${ic('chev')}</span></div><div class="gw"><div class="gl">${g[j[0]].map(item2).join('')}</div></div></section>`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';
     document.querySelectorAll('.gh').forEach(h=>h.onclick=()=>{const k=h.dataset.g,c=h.parentElement.classList.toggle('cl');c?CL.add(k):CL.delete(k)});bindItems()};
-  jf.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{JF=b.dataset.j;PD.j=false;jf.querySelectorAll('.pd').forEach(e=>e.remove());draw()});
+  jf.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{JF=b.dataset.j;draw()});
   const qx=$('#qx'),sync=()=>qx.hidden=!$('#q').value;sync();qx.onclick=()=>{Q='';$('#q').value='';sync();draw();fullText();$('#q').focus()};let ST;const rx=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const fullText=async()=>{const k=Q.trim(),box=$('#ft');if(!box)return;if(k.length<3||demo){box.innerHTML='';return}
     const r=await sb.from('iso_doc_text').select('doc_id,page,content').ilike('content','%'+k.replace(/[%_\\]/g,'\\$&')+'%').limit(60);
@@ -438,7 +439,7 @@ function vDocs(){
       return `<div class="fr" data-id="${d.id}" data-p="${x.page||1}"><div class="th">${jOf(d)}</div><div class="im"><b class="kd">${esc(d.kode)}</b><span class="jd">${esc(d.judul)}</span><p class="sn">${x.page?'Hal. '+x.page+' &middot; ':''}&hellip;${esc(t).replace(hl,z=>'<mark>'+z+'</mark>')}&hellip;</p></div><span class="go">${ic('chevR')}</span></div>`}).filter(Boolean);
     box.innerHTML=rows.length?`<div class="ftw"><div class="fth">Ditemukan di isi dokumen</div>${rows.join('')}</div>`:'<div class="ftn">Kata itu tidak ditemukan di isi dokumen yang sudah diindeks.</div>';
     box.querySelectorAll('.fr').forEach(e=>e.onclick=()=>openDoc(DOCS.find(y=>String(y.id)===e.dataset.id),+e.dataset.p))};
-  $('#q').oninput=e=>{Q=e.target.value;sync();draw();clearTimeout(ST);ST=setTimeout(fullText,350)};$('#df').onchange=e=>{DF=e.target.value;PD.d=false;document.querySelectorAll('.dw .pd').forEach(x=>x.remove());draw()};
+  $('#q').oninput=e=>{Q=e.target.value;sync();draw();clearTimeout(ST);ST=setTimeout(fullText,350)};$('#df').onchange=e=>{DF=e.target.value;draw()};
   draw(true);fullText();document.fonts&&document.fonts.ready.then(()=>mv(true));window.onresize=()=>{if($('#jf'))mv(true)};
 }
 function vLog(){
