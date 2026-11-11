@@ -56,9 +56,16 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 .f{display:grid;grid-template-columns:1fr 1fr;gap:10px}.f label{font-size:12px;font-weight:700;color:var(--mut);display:block}.f .w{grid-column:1/-1}.f input,.f select{width:100%;margin-top:4px}
 .rd{position:fixed;inset:0;background:#0a1228;z-index:20;display:flex;flex-direction:column}
 .rb{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--nav);color:#fff}.rb b{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rs{flex:1;overflow:auto;padding:18px 10px 40px;display:flex;flex-direction:column;align-items:center;gap:14px}
-.rs canvas{width:min(820px,100%);height:auto;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
+.rs{flex:1;overflow:auto;padding:18px 10px 40px;display:flex;flex-direction:column;align-items:stretch;gap:14px}
+.rs canvas{display:block;flex:none;margin:0 auto;height:auto;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
 .rd.veil .rs{filter:blur(28px)}
+.zc{display:flex;align-items:center;gap:6px}.zb{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:10px;min-width:34px;height:34px;font-weight:800;font-size:15px;cursor:pointer;padding:0 10px}.zb.on{background:#ff3b3b}.zl{font-size:12px;min-width:46px;text-align:center}
+.lz{position:absolute;left:0;z-index:3;touch-action:none;pointer-events:none}.lz.on{pointer-events:auto;cursor:none}
+.dg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.dc{display:flex;flex-direction:column;gap:2px;text-align:left;border:1px solid var(--line);border-left:4px solid var(--pri);background:var(--card);border-radius:14px;padding:12px 14px;cursor:pointer}
+.dc:hover{border-color:var(--pri2)}.dc b{font-size:16px;font-weight:800}.dc span{font-size:12px;color:var(--mut)}
+.wmx label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-top:8px}.wmx input[type=range]{width:100%;margin:6px 0;accent-color:var(--pri)}
+@media(max-width:820px){.pgs{display:none}}
 .lg{position:fixed;inset:0;background:linear-gradient(160deg,var(--nav),#081638);display:grid;place-items:center;z-index:30;padding:20px}
 .lc{background:var(--card);border-radius:24px;padding:30px;width:min(380px,100%)}.lc h2{margin:0 0 4px}.lc p{margin:0 0 16px;color:var(--mut);font-size:13px}.lc select{width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lc input{width:100%;margin-bottom:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lc .btn{width:100%;margin-top:4px}
 .gb{display:flex;gap:14px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer}.gb:hover{border-color:var(--pri2)}
@@ -285,10 +292,16 @@ function pgShow(t){pgHide();const o=document.createElement('div');o.className='p
 function pgSet(m,f){if(!document.getElementById('pgov'))pgShow();const n=$('#pgn'),b=$('#pgb'),i=$('#pgi');
   if(f==null){b.classList.add('ind');n.style.display='none'}else{b.classList.remove('ind');n.style.display='';const p=Math.max(0,Math.min(1,f));i.style.width=(p*100)+'%';n.textContent=Math.round(p*100)+'%'}
   if(m)$('#pgs').textContent=m}
+// ---------- pengaturan watermark ----------
+let WM={opacity:.07,thickness:0};
+try{const c=JSON.parse(localStorage.getItem('iso_wm')||'null');if(c)WM={...WM,...c}}catch{}
+async function loadWM(){if(demo)return;
+  try{const r=await sb.from('iso_settings').select('value').eq('key','watermark').maybeSingle();
+    if(r.data&&r.data.value){WM={...WM,...r.data.value};localStorage.setItem('iso_wm',JSON.stringify(WM))}}catch{}}
 // ---------- data ----------
 async function loadData(){
   if(demo){DOCS=sortDocs(DEMO_DOCS);return}
-  const a=await sb.from('iso_documents').select('*').order('kode');DOCS=sortDocs(a.data||[]);
+  const a=await sb.from('iso_documents').select('*').order('kode');DOCS=sortDocs(a.data||[]);await loadWM();
   const l=await sb.from('iso_access_log').select('*').order('at',{ascending:false}).limit(U.role==='admin'?200:50);LOG=l.data||[];
 }
 async function logAccess(d){
@@ -370,12 +383,15 @@ const tagsOf=d=>`<span class="tag">${esc(jName(jOf(d)))}</span><span class="tag 
 const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><div class="tg">${tagsOf(d)}</div></div><span class="go">${ic('chevR')}</span></div>`;
 const item2=d=>`<div class="it r2" data-id="${d.id}"><div class="th">${jOf(d)}</div><div class="im"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${d.tgl_berlaku?' &middot; Berlaku '+D(String(d.tgl_berlaku).slice(0,10)+'T00:00:00'):''}</p></div><button class="vb">${ic('eye')}<span>Lihat</span></button></div>`;
 const bindItems=()=>document.querySelectorAll('.it:not(.fr)').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)));
+function deptList(){const m={};DOCS.forEach(d=>{const k=d.dept||'Semua';m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0],'id'))}
 function vHome(){
   const today=LOG.filter(l=>new Date(l.at).toDateString()===new Date().toDateString()).length;
   $('#v').innerHTML=`<div class="hero"><div class="hc"><small>DOKUMEN ISO &ndash; PT KARYA INDAH MULTIGUNA</small><h2>Satu tempat baca.<br><em>Akses terkendali.</em></h2><p>Dokumen hanya bisa dibaca di aplikasi, ditandai nama Anda, dan setiap pembukaan tercatat.</p><button class="btn" id="bd">Buka Daftar Dokumen ${ic('chevR')}</button></div><div class="art">${ART1}</div><ul><li>Hanya baca</li><li>Berwatermark</li><li>Tercatat</li><li>Sesuai hak akses</li></ul></div>
   <div class="stats"><div class="st s1"><i class="ci">${ic('doc')}</i><div><small>Total Dokumen</small><b>${DOCS.length}</b></div></div><div class="st s2"><i class="ci">${ic('check')}</i><div><small>Dibuka Hari Ini</small><b>${today}</b></div></div><div class="st s3"><i class="ci">${ic('chart')}</i><div><small>Departemen Anda</small><b class="dp">${esc(U.dept)}</b></div></div></div>
+  ${DOCS.length?`<div class="box" style="margin-bottom:12px"><div class="bh"><h3>Departemen</h3><span>Tekan untuk melihat dokumennya</span></div><div class="dg">${deptList().map(([k,n])=>`<button class="dc" data-d="${esc(k)}"><b>${esc(k)}</b><span>${n} dokumen</span></button>`).join('')}</div></div>`:''}
   <div class="box"><div class="bh"><h3>Dokumen Terbaru</h3><button class="btn g" id="all">Lihat Semua ${ic('chevR')}</button></div>${DOCS.slice(0,4).map(item).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div>`;
   $('#bd').onclick=$('#all').onclick=()=>{V='docs';shell()};bindItems();
+  document.querySelectorAll('.dc').forEach(b=>b.onclick=()=>{DF=b.dataset.d;Q='';JF='';V='docs';shell()});
 }
 function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))],chips=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]])];
@@ -451,6 +467,11 @@ function vAdm(){
   <div><label>Kode</label><input id="k" value="KIM-" placeholder="KIM-PR-HRD-001"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
   <div class="w"><label>Judul</label><input id="j"></div><div><label>Jenis Dokumen</label><select id="jn">${jOpts('LN')}</select></div><div><label>Departemen</label><input id="dp" value="Semua"></div><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div><div><label>Tanggal Berlaku</label><input id="tb" type="date" onclick="this.showPicker&&this.showPicker()"></div>
   <div class="w"><label>File teks untuk pencarian isi (opsional, tidak disimpan)</label><input id="tf" type="file" accept=".pdf,.docx"><small class="hint">Pilih file Word (.docx) atau PDF hasil ekspor Word tanpa tanda tangan. Hanya teksnya yang disimpan, filenya tidak.</small></div><div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>
+  <div class="box" style="margin-top:12px"><div class="bh"><h3>Watermark Dokumen</h3><span>Berlaku untuk semua pembaca</span></div>
+  <div class="wmx"><label>Kepekatan: <b id="wo"></b> (semakin kecil, semakin transparan)</label><input type="range" id="ro" min="2" max="40" step="1">
+  <label>Ketebalan huruf: <b id="wt"></b></label><input type="range" id="rt" min="0" max="10" step="1"></div>
+  <canvas id="wp" style="width:100%;border:1px solid var(--line);border-radius:10px;margin:10px 0;background:#fff"></canvas>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="ws">Simpan Pengaturan</button><button class="btn g" id="wr">Kembalikan Standar</button></div></div>
   <div class="box" style="margin-top:12px"><div class="bh"><h3>Kode Akses Auditor</h3><span>5 angka &middot; berlaku 24 jam</span></div>
   <div class="f"><div><label>Kode (5 angka)</label><input id="ck" inputmode="numeric" maxlength="5" placeholder="12345"></div><div><label>Untuk siapa (opsional)</label><input id="cl" placeholder="Nama auditor / lembaga"></div>
   <div class="w"><label>Akses dokumen</label><select id="cm"><option value="pilihan">Hanya dokumen yang dikirim admin (seperti audit fisik)</option><option value="semua">Semua dokumen</option></select></div>
@@ -490,6 +511,17 @@ function vAdm(){
         const r=await sb.from('iso_audit_codes').insert({code:k,label:l||null,mode:$('#cm').value});if(r.error)throw new Error(r.error.code==='23505'?'Kode itu masih aktif. Pilih angka lain.':r.error.message)}
       $('#ck').value=$('#cl').value='';succ($('#cm').value==='pilihan'?'Kode dibuat. Tekan Atur Akses untuk memilih dokumen yang dikirim.':'Kode dibuat, berlaku 24 jam');loadCodes()}catch(x){toast('Gagal: '+(x.message||x))}};
   loadCodes();
+  const pv=()=>{const o=$('#ro').value,t=$('#rt').value;$('#wo').textContent=o+'%';$('#wt').textContent=t;
+    const c=$('#wp');c.width=820;c.height=260;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,820,260);
+    x.fillStyle='#0b1f4d';x.font='700 26px sans-serif';x.fillText('SOP-GBJ-02',40,60);x.font='18px sans-serif';x.fillText('Contoh isi dokumen untuk melihat watermark',40,92);
+    x.fillStyle='#94a3b8';for(let y=120;y<240;y+=28)x.fillRect(40,y,700-(y%5)*20,9);
+    mark(c,{opacity:o/100,thickness:+t},U.nama,Date.now())};
+  $('#ro').value=Math.round(WM.opacity*100);$('#rt').value=WM.thickness;pv();$('#ro').oninput=$('#rt').oninput=pv;
+  $('#wr').onclick=()=>{$('#ro').value=7;$('#rt').value=0;pv()};
+  $('#ws').onclick=async()=>{const v={opacity:$('#ro').value/100,thickness:+$('#rt').value};
+    try{if(!demo){const r=await sb.from('iso_settings').upsert({key:'watermark',value:v,updated_at:new Date().toISOString()});
+      if(r.error)throw new Error(/relation|does not exist|schema cache/i.test(r.error.message)?'Tabel iso_settings belum dibuat. Jalankan iso_settings.sql di Supabase.':r.error.message)}
+      WM=v;localStorage.setItem('iso_wm',JSON.stringify(v));succ('Pengaturan watermark disimpan')}catch(x){toast('Gagal: '+(x.message||x))}};
   if(!demo)sb.from('iso_doc_text').select('doc_id').in('page',[0,1]).then(r=>{const k=new Set((r.data||[]).map(x=>String(x.doc_id)));document.querySelectorAll('[data-a=t]').forEach(b=>{if(k.has(b.dataset.id)){b.textContent='Indeks Ulang';b.classList.add('idx')}})});
   let jTouched=false;$('#jn').onchange=()=>jTouched=true;
   $('#k').oninput=()=>{if(!jTouched)$('#jn').value=jOf({kode:$('#k').value})};
@@ -559,17 +591,62 @@ function vProf(){
     if(U.av)URL.revokeObjectURL(U.av);U.av=null;U.foto_at=null;succ('Foto dihapus');shell()}catch(x){toast('Gagal: '+(x.message||x))}};
 }
 // ---------- reader ----------
-function mark(c){const x=c.getContext('2d');x.save();x.globalAlpha=.07;x.fillStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
-  const t=`${U.nama} \u2022 ${fmt(Date.now())}`;for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)x.fillText(t,xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
+function mark(c,o=WM,name,when){const x=c.getContext('2d');x.save();x.globalAlpha=o.opacity;x.fillStyle=x.strokeStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
+  x.lineJoin='round';x.lineWidth=o.thickness*c.width/2500;
+  const t=`${name??U.nama} \u2022 ${fmt(when??Date.now())}`,put=(a,b)=>{x.fillText(t,a,b);if(o.thickness>0)x.strokeText(t,a,b)};
+  for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)put(xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
 async function openDoc(d,pg){
   if(!d)return;const r=document.createElement('div');r.className='rd';
-  r.innerHTML=`<div class="rb"><button class="btn g" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div>`;
-  document.body.append(r);$('#cl').onclick=()=>{r.remove();shell()};
-  await logAccess(d);const rs=$('#rs');rs.innerHTML='';
+  r.innerHTML=`<div class="rb"><button class="btn g" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span class="zc"><button class="zb" id="zo" title="Perkecil (A)">&minus;</button><span class="zl" id="zp">100%</span><button class="zb" id="zi" title="Perbesar (Z)">+</button><button class="zb" id="lz" title="Laser / pointer (L)">Laser</button></span><span class="pgs" style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div><canvas class="lz" id="lzc"></canvas>`;
+  document.body.append(r);
+  const rs=$('#rs'),zp=$('#zp'),lzc=$('#lzc'),ac=new AbortController(),sg={signal:ac.signal};
+  let Z=1,TZ=1,fx=0,fy=0,raf=0,raf2=0,cs=[],lzOn=false,drawing=false,mx=-1,my=-1;
+  const MINZ=.5,MAXZ=4,LT=5000;
+  const close=()=>{ac.abort();cancelAnimationFrame(raf);cancelAnimationFrame(raf2);r.remove();shell()};
+  $('#cl').onclick=close;
+  // ----- zoom halus (tombol Z / A, Ctrl + scroll, tombol + / -) -----
+  const base=()=>Math.max(200,Math.min(820,rs.clientWidth-20));
+  const apply=nz=>{const sh=rs.scrollHeight,sw=rs.scrollWidth,sx=rs.scrollLeft+fx,sy=rs.scrollTop+fy,w=base()*nz+'px';
+    rs.querySelectorAll('canvas').forEach(c=>c.style.width=w);Z=nz;
+    rs.scrollLeft=sx*(rs.scrollWidth/sw)-fx;rs.scrollTop=sy*(rs.scrollHeight/sh)-fy;zp.textContent=Math.round(nz*100)+'%'};
+  const tick=()=>{raf=0;const df=TZ-Z;if(Math.abs(df)<.002){apply(TZ);return}apply(Z+df*.2);raf=requestAnimationFrame(tick)};
+  const zoomTo=(t,x,y)=>{TZ=Math.max(MINZ,Math.min(MAXZ,t));fx=x;fy=y;if(!raf)raf=requestAnimationFrame(tick)};
+  const zc=()=>[rs.clientWidth/2,rs.clientHeight/2];
+  $('#zi').onclick=()=>zoomTo(TZ*1.25,...zc());$('#zo').onclick=()=>zoomTo(TZ/1.25,...zc());
+  r.addEventListener('wheel',e=>{
+    if(e.ctrlKey||e.metaKey){e.preventDefault();const b=rs.getBoundingClientRect(),k=Math.abs(e.deltaY)<50?.01:.0022;zoomTo(TZ*Math.exp(-e.deltaY*k),e.clientX-b.left,e.clientY-b.top)}
+    else if(e.target===lzc){e.preventDefault();rs.scrollBy(e.deltaX,e.deltaY)}},{passive:false,signal:ac.signal});
+  // ----- laser / pointer: coretan hilang dalam 5 detik -----
+  const fitLz=()=>{const t=$('.rb').offsetHeight,w=r.clientWidth,h=r.clientHeight-t,s=devicePixelRatio||1;
+    lzc.style.top=t+'px';lzc.style.width=w+'px';lzc.style.height=h+'px';lzc.width=w*s;lzc.height=h*s;kick()};
+  const loop=()=>{raf2=0;const x=lzc.getContext('2d'),s=devicePixelRatio||1,now=performance.now();
+    x.setTransform(s,0,0,s,0,0);x.clearRect(0,0,lzc.width,lzc.height);x.lineCap=x.lineJoin='round';
+    cs=cs.map(st=>st.filter(p=>now-p.t<LT)).filter(st=>st.length);
+    x.shadowColor='#ff2a2a';x.shadowBlur=10;x.strokeStyle=x.fillStyle='#ff2a2a';x.lineWidth=4;
+    for(const st of cs){
+      if(st.length===1){x.globalAlpha=Math.max(0,1-(now-st[0].t)/LT);x.beginPath();x.arc(st[0].x,st[0].y,2.5,0,7);x.fill()}
+      for(let i=1;i<st.length;i++){x.globalAlpha=Math.max(0,1-(now-st[i].t)/LT);x.beginPath();x.moveTo(st[i-1].x,st[i-1].y);x.lineTo(st[i].x,st[i].y);x.stroke()}}
+    if(lzOn&&mx>=0){x.globalAlpha=1;x.shadowBlur=16;x.beginPath();x.arc(mx,my,drawing?7:6,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#fff';x.beginPath();x.arc(mx,my,2.2,0,7);x.fill()}
+    if(cs.length)kick()};
+  const kick=()=>{if(!raf2)raf2=requestAnimationFrame(loop)};
+  const pt=e=>{const b=lzc.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top,t:performance.now()}};
+  const toggleLz=()=>{lzOn=!lzOn;drawing=false;if(!lzOn)mx=-1;lzc.classList.toggle('on',lzOn);$('#lz').classList.toggle('on',lzOn);kick()};
+  $('#lz').onclick=toggleLz;
+  lzc.addEventListener('pointerdown',e=>{drawing=true;lzc.setPointerCapture(e.pointerId);const p=pt(e);mx=p.x;my=p.y;cs.push([p]);kick()},sg);
+  lzc.addEventListener('pointermove',e=>{const p=pt(e);mx=p.x;my=p.y;if(drawing)cs[cs.length-1].push(p);kick()},sg);
+  ['pointerup','pointercancel'].forEach(n=>lzc.addEventListener(n,()=>{drawing=false;kick()},sg));
+  lzc.addEventListener('pointerleave',()=>{mx=-1;kick()},sg);
+  addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();
+    if(k==='z'||k==='a'){e.preventDefault();const f=e.repeat?1.05:1.25;zoomTo(k==='z'?TZ*f:TZ/f,...zc())}
+    else if(k==='l')toggleLz()},sg);
+  addEventListener('resize',()=>{[fx,fy]=zc();apply(Z);fitLz()},sg);
+  fitLz();
+  // ----- halaman -----
+  await logAccess(d);await loadWM();rs.innerHTML='';
   const paths=Array.from({length:d.pages},(_,i)=>`${d.id}/${String(i+1).padStart(3,'0')}.webp`);
   let urls=[];if(!demo){const s=await sb.storage.from(BUCKET).createSignedUrls(paths,90);urls=(s.data||[]).map(x=>x.signedUrl)}
   for(let i=0;i<d.pages;i++){
-    const c=document.createElement('canvas');rs.append(c);const x=c.getContext('2d');
+    const c=document.createElement('canvas');c.style.width=base()*Z+'px';rs.append(c);const x=c.getContext('2d');
     if(demo){c.width=820;c.height=1160;x.fillStyle='#fff';x.fillRect(0,0,820,1160);x.fillStyle='#0b1f4d';x.font='700 30px sans-serif';x.fillText(d.kode,60,100);x.font='20px sans-serif';x.fillText(d.judul,60,140);
       x.fillStyle='#cbd5e1';for(let y=200;y<1050;y+=34)x.fillRect(60,y,700-(y%5)*30,10);x.fillStyle='#64748b';x.font='16px sans-serif';x.fillText(`Contoh halaman ${i+1} dari ${d.pages}`,60,1110)}
     else{try{const bm=await createImageBitmap(await (await fetch(urls[i])).blob());c.width=bm.width;c.height=bm.height;x.drawImage(bm,0,0)}catch{c.width=820;c.height=200;x.fillText('Gagal memuat halaman',20,100)}}
