@@ -255,7 +255,7 @@ mark{background:#ffe58a;color:#1a2540;border-radius:3px;padding:0 2px}
 @keyframes pgslide{0%{margin-left:-40%}100%{margin-left:100%}}
 .dl{flex:none;display:flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 13px;font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap}
 .dl:hover{background:rgba(255,255,255,.28)}.dl svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.dl i{font-style:normal}
-@media(max-width:560px){.dl i{display:none}.dl{padding:6px 10px}}
+@media(max-width:560px){.dl{width:32px;height:32px;padding:0;justify-content:center}.dl span{display:none}.dl svg{width:16px;height:16px}.gh{gap:10px}.gt b{font-size:15px;line-height:1.25}}
 @media(prefers-reduced-motion:reduce){.okr,.okk,.okg,.okc{animation-duration:.01s;animation-delay:0s}}
 @media print{body{display:none!important}}
 /* ===== kode dan judul dokumen dipisah: kode 1 baris, judul 1 baris kecil ===== */
@@ -378,10 +378,32 @@ async function boot(){
   U={id:session.user.id,email:session.user.email,nama:p.data?.nama||session.user.email,dept:p.data?.dept||'-',role:p.data?.role||'user',foto_at:p.data?.foto_at};await loadAv();
   try{await start();if(!p.data)toast('Profil belum dibuat di tabel profiles')}catch(e){loginView();$('#er').textContent='Gagal memuat data: '+(e.message||e)}
 }
-async function start(){await loadData();shell()}
+// ---------- tombol kembali HP: mundur 1 tahap, di beranda tanya keluar ----------
+let HON=false,HV=null;
+const hpush=st=>{try{history.pushState(st,'')}catch(_){}};
+function initHist(){if(!HON){HON=true;try{history.replaceState({g:1},'')}catch(_){}hpush({v:V})}HV=V}
+function exitAsk(){
+  if(document.getElementById('exd'))return;
+  const m=document.createElement('div');m.className='mdl';m.id='exd';
+  m.innerHTML='<div class="lc" style="text-align:center"><h2>Keluar aplikasi?</h2><p>Anda yakin ingin keluar dari Dokumen ISO?</p><div style="display:flex;gap:10px;justify-content:center"><button class="btn g" id="exn">Tidak</button><button class="btn" id="exy">Ya, keluar</button></div></div>';
+  document.body.append(m);
+  $('#exn').onclick=()=>m.remove();
+  $('#exy').onclick=()=>{HON=false;m.remove();history.go(-2);
+    setTimeout(()=>{try{window.close()}catch(_){}toast('Tutup aplikasi atau tab ini secara manual');initHist()},600)}}
+addEventListener('popstate',e=>{
+  if(!HON||!U)return;
+  const st=e.state||{},ex=document.getElementById('exd');
+  if(st.g){hpush({v:'home'});if(V!=='home'){V=HV='home';shell()}exitAsk();return}
+  const md=document.querySelector('.mdl:not(#exd)'),rd=document.querySelector('.rd');
+  if(md||rd){if(md)md.remove();if(rd&&rd._close)rd._close();hpush({v:V});return}
+  if(ex)ex.remove();
+  if(st.v&&st.v!==V){V=HV=st.v;shell()}
+});
+async function start(){await loadData();initHist();shell()}
 // ---------- shell ----------
 const NAV=[['home','Beranda','home'],['docs','Dokumen','doc'],['log','Riwayat','clock'],['adm','Kelola','cog']];
 function shell(){
+  if(HON&&HV!==V)hpush({v:V});HV=V;
   const nav=NAV.filter(n=>n[0]!=='adm'||U.role==='admin').map(n=>`<button data-v="${n[0]}" class="${V===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span>${n[0]==='adm'?'<i class="cv">'+ic('chev')+'</i>':''}</button>`).join('');
   const T={home:['Dokumen Mutu ISO','Baca dokumen resmi perusahaan dengan aman'],docs:['Daftar Dokumen','Cari dan buka dokumen sesuai hak akses Anda'],log:['Riwayat Akses','Catatan siapa membuka dokumen apa'],adm:['Kelola Dokumen','Unggah, ubah, ganti, atau hapus dokumen'],prof:['Profil Saya','Atur nama, foto, dan kata sandi']}[V];
   $('#app').innerHTML=`<aside class="side"><div class="brand"><svg class="sw" viewBox="0 0 100 30"><defs><linearGradient id="lg1" x1="0" x2="1"><stop offset="0" stop-color="#2ee6d0"/><stop offset="1" stop-color="#3b8bff"/></linearGradient></defs><path d="M4 27C24 6 62 0 97 13 64 8 30 13 4 27z" fill="url(#lg1)"/></svg><b>KIM</b><small>PT KARYA INDAH MULTIGUNA</small><span><i></i>ISO WORKSPACE<i></i></span></div><nav class="nav"><i class="nind"></i>${nav}</nav><div class="safe"><div class="si">${ic('shield')}</div><div><b>Dokumen Terkendali</b><small>Akses Terbatas<br>Hanya Untuk Petugas</small></div></div></aside>
@@ -608,7 +630,7 @@ function vProf(){
   <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--mut)">Lupa kata sandi? Kami kirim tautan reset ke ${demo?'email Anda':'<b>'+esc(U.email||'')+'</b>'}.<div style="margin-top:8px"><button class="btn g bs" id="fr">Kirim Tautan Reset</button></div></div></div>
   <div style="margin-top:14px"><button class="btn r" id="lo">Keluar</button></div>`;
   $('#sp').onchange=e=>{$('#p1').type=$('#p2').type=e.target.checked?'text':'password'};
-  $('#lo').onclick=async()=>{if(confirm('Keluar dari aplikasi?')){if(!demo)await sb.auth.signOut();if(U.av)URL.revokeObjectURL(U.av);U=null;V='home';gateView()}};
+  $('#lo').onclick=async()=>{if(confirm('Keluar dari aplikasi?')){if(!demo)await sb.auth.signOut();if(U.av)URL.revokeObjectURL(U.av);U=null;V='home';HON=false;gateView()}};
   $('#sn').onclick=async()=>{const n=$('#nm').value.trim();if(!n){toast('Nama tidak boleh kosong');return}
     if(!demo){const r=await sb.from('iso_profiles').update({nama:n}).eq('id',U.id).select();if(r.error||!r.data.length){toast('Gagal menyimpan nama (profil belum dibuat?)');return}}
     U.nama=n;succ('Nama disimpan');shell()};
@@ -639,7 +661,7 @@ async function openDoc(d,pg){
   let Z=1,TZ=1,fx=0,fy=0,raf=0,raf2=0,cs=[],lzOn=false,drawing=false,mx=-1,my=-1;
   const MINZ=.5,MAXZ=4,LT=5000;
   const close=()=>{ac.abort();cancelAnimationFrame(raf);cancelAnimationFrame(raf2);r.remove();shell()};
-  $('#cl').onclick=close;
+  $('#cl').onclick=close;r._close=close;
   // ----- zoom halus (tombol Z / A, Ctrl + scroll, tombol + / -) -----
   const base=()=>Math.max(200,Math.min(820,rs.clientWidth-20));
   const apply=nz=>{const sh=rs.scrollHeight,sw=rs.scrollWidth,sx=rs.scrollLeft+fx,sy=rs.scrollTop+fy,w=base()*nz+'px';
