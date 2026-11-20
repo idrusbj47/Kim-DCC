@@ -457,7 +457,7 @@ function vDocs(){
     if(jf.scrollWidth>jf.clientWidth)jf.scrollTo({left:b.offsetLeft-(jf.clientWidth-b.offsetWidth)/2,behavior:first?'auto':'smooth'})};
   const drawBf=()=>{const bs=!DF?[]:[...new Set(DOCS.filter(d=>d.dept===DF).map(bgOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));if(!bs.includes(BF))BF='';
     $('#bw').style.display=bs.length?'':'none';$('#bf').innerHTML='<option value="">Semua bagian</option>'+bs.map(x=>`<option ${x===BF?'selected':''}>${esc(x)}</option>`).join('')};
-  const draw=first=>{const flt=Q.trim()||JF||DF||BF;const base=DOCS.filter(d=>(!DF||d.dept===DF)&&(!BF||bgOf(d)===BF)&&(d.kode+d.judul+bgOf(d)).toLowerCase().includes(Q.toLowerCase()));
+  const draw=first=>{const flt=Q.trim()||JF||DF||BF;const base=DOCS.filter(d=>(!DF||d.dept===DF)&&(!BF||!bgOf(d)||bgOf(d)===BF)&&(d.kode+d.judul+bgOf(d)).toLowerCase().includes(Q.toLowerCase()));
     jf.querySelectorAll('.jb').forEach(b=>b.classList.toggle('on',b.dataset.j===JF));mv(first===true);
     const f=base.filter(d=>!JF||jOf(d)===JF),g={};f.forEach(d=>(g[jOf(d)]??=[]).push(d));
     $('#ls').innerHTML=JENIS.filter(j=>g[j[0]]).map(j=>`<section class="gc${CL.has(j[0])&&!flt?' cl':''}" data-j="${j[0]}"><div class="gh" data-g="${j[0]}"><span class="gi2">${ic(GI[j[0]])}</span><div class="gt"><b>${j[0]} &ndash; ${j[1]}</b><small>${GD[j[0]]}</small></div>${(()=>{const dd=daftarOf(j[0]);return dd?`<button type="button" class="dl" data-dl="${esc(dd.id)}" title="${esc(dd.kode)}">${ic('doc')}<span><i>Lihat </i>Daftar</span></button>`:''})()}<span class="cnt">${g[j[0]].length}</span><span class="cv2">${ic('chev')}</span></div><div class="gw"><div class="gl">${g[j[0]].map(item2).join('')}</div></div></section>`).join('')||'<div class="empty">Dokumen tidak ditemukan.</div>';
@@ -471,7 +471,7 @@ function vDocs(){
     if(Q.trim()!==k||!$('#ft'))return;
     if(r.error){box.innerHTML='<div class="ftn">Pencarian isi dokumen gagal: '+esc(r.error.message||'tidak diketahui')+'. Periksa tabel iso_doc_text dan izin (policy) bacanya di Supabase.</div>';return}
     const cp=t=>t.toLowerCase().replace(/\s+/g,''),hl=new RegExp(toks.map(rx).map(esc).join('|'),'ig');
-    const rows=r.data.filter(x=>{const c=x.content.toLowerCase();return toks.every(t=>c.includes(t))||cp(x.content).includes(cp(k))}).map(x=>{const d=DOCS.find(y=>String(y.id)===String(x.doc_id));if(!d||(DF&&d.dept!==DF)||(BF&&bgOf(d)!==BF)||(JF&&jOf(d)!==JF))return'';
+    const rows=r.data.filter(x=>{const c=x.content.toLowerCase();return toks.every(t=>c.includes(t))||cp(x.content).includes(cp(k))}).map(x=>{const d=DOCS.find(y=>String(y.id)===String(x.doc_id));if(!d||(DF&&d.dept!==DF)||(BF&&bgOf(d)&&bgOf(d)!==BF)||(JF&&jOf(d)!==JF))return'';
       const lc=x.content.toLowerCase(),m=Math.max(0,lc.indexOf(key)),t=x.content.slice(Math.max(0,m-50),m+key.length+100);
       return `<div class="fr" data-id="${d.id}" data-p="${x.page||1}"><div class="th">${jOf(d)}</div><div class="im"><b class="kd">${esc(d.kode)}</b><span class="jd">${esc(d.judul)}</span><p class="sn">${x.page?'Hal. '+x.page+' &middot; ':''}&hellip;${esc(t).replace(hl,z=>'<mark>'+z+'</mark>')}&hellip;</p></div><span class="go">${ic('chevR')}</span></div>`}).filter(Boolean);
     box.innerHTML=rows.length?`<div class="ftw"><div class="fth">Ditemukan di isi dokumen</div>${rows.join('')}</div>`:'<div class="ftn">Kata itu tidak ditemukan di isi dokumen yang sudah diindeks.</div>';
