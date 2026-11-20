@@ -300,7 +300,7 @@ const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[JENIS.length-1])[1];
 const jOpts=sel=>JENIS.map(j=>`<option value="${j[0]}"${j[0]===sel?' selected':''}>${j[0]} - ${j[1]}</option>`).join('');
 const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
 let JF='',CODES=[],GR=[];
-let U=null, DOCS=[], LOG=[], V='home', Q='', DF='', BF='';
+let U=null, DOCS=[], LOG=[], V='home', Q='', DF='', BF='', AQ='';
 const bgOf=d=>String(d.bagian||'').trim();
 const deptOpts=()=>[...new Set(DOCS.map(d=>d.dept).filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('');
 const bagOpts=()=>[...new Set(DOCS.map(bgOf).filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('');
@@ -455,7 +455,7 @@ function vDocs(){
   const mv=first=>{const b=jf.querySelector('.jb.on');if(!b)return;if(first)ind.style.transition='none';
     ind.style.width=b.offsetWidth+'px';ind.style.transform=`translateX(${b.offsetLeft}px)`;if(first){ind.offsetWidth;ind.style.transition=''}
     if(jf.scrollWidth>jf.clientWidth)jf.scrollTo({left:b.offsetLeft-(jf.clientWidth-b.offsetWidth)/2,behavior:first?'auto':'smooth'})};
-  const drawBf=()=>{const bs=[...new Set(DOCS.filter(d=>!DF||d.dept===DF).map(bgOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));if(!bs.includes(BF))BF='';
+  const drawBf=()=>{const bs=!DF?[]:[...new Set(DOCS.filter(d=>d.dept===DF).map(bgOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));if(!bs.includes(BF))BF='';
     $('#bw').style.display=bs.length?'':'none';$('#bf').innerHTML='<option value="">Semua bagian</option>'+bs.map(x=>`<option ${x===BF?'selected':''}>${esc(x)}</option>`).join('')};
   const draw=first=>{const flt=Q.trim()||JF||DF||BF;const base=DOCS.filter(d=>(!DF||d.dept===DF)&&(!BF||bgOf(d)===BF)&&(d.kode+d.judul+bgOf(d)).toLowerCase().includes(Q.toLowerCase()));
     jf.querySelectorAll('.jb').forEach(b=>b.classList.toggle('on',b.dataset.j===JF));mv(first===true);
@@ -535,7 +535,7 @@ function vAdm(){
   <div class="w"><label>Akses dokumen</label><select id="cm"><option value="pilihan">Hanya dokumen yang dikirim admin (seperti audit fisik)</option><option value="semua">Semua dokumen</option></select></div>
   <div class="w" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn g" id="cr">Acak</button><button class="btn" id="cb">Buat Kode</button></div></div>
   <div id="acl" style="margin-top:12px"></div></div>
-  <div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span>${DOCS.length} dokumen</span></div>${DOCS.map(d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${jOf(d)} &middot; ${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${bgOf(d)?' &rsaquo; '+esc(bgOf(d)):''}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="t" data-id="${d.id}">Indeks Teks</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div><input type="file" id="rf" accept="application/pdf" hidden>`;
+  <div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span id="dc">${DOCS.length} dokumen</span></div><div class="sbox" style="height:42px;min-width:0;margin-bottom:12px;padding:0 14px;box-shadow:none;border:1px solid var(--line)">${ic('search')}<input id="aq" placeholder="Cari kode, judul, departemen, bagian..." value="${esc(AQ)}"><button type="button" class="clr" id="aqx" aria-label="Hapus pencarian" hidden>${ic('x')}</button></div><div id="dl"></div></div><input type="file" id="rf" accept="application/pdf" hidden>`;
   const left=t=>{const m=Math.max(0,Math.round((new Date(t)-Date.now())/60000));return Math.floor(m/60)+' jam '+m%60+' menit lagi'};
   async function loadCodes(){const box=$('#acl');if(!box)return;
     if(!demo){const r=await sb.from('iso_audit_codes').select('*').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});
@@ -588,7 +588,7 @@ function vAdm(){
   if(!demo)sb.from('iso_doc_text').select('doc_id').in('page',[0,1]).then(r=>{const k=new Set((r.data||[]).map(x=>String(x.doc_id)));document.querySelectorAll('[data-a=t]').forEach(b=>{if(k.has(b.dataset.id)){b.textContent='Indeks Ulang';b.classList.add('idx')}})});
   let jTouched=false;$('#jn').onchange=()=>jTouched=true;
   $('#k').oninput=()=>{if(!jTouched)$('#jn').value=jOf({kode:$('#k').value})};
-  const busy=(m,f)=>pgSet(m,f), done=async m=>{pgHide();(/gagal|dilewati/i.test(m)?toast:succ)(m);if(!demo)await loadData();shell()};
+  const busy=(m,f)=>pgSet(m,f), done=async m=>{pgHide();(/gagal|dilewati/i.test(m)?toast:succ)(m);const y=scrollY;if(!demo)await loadData();shell();scrollTo(0,y)};
   $('#up').onclick=async()=>{
     const f=$('#fl').files[0],k=$('#k').value.trim(),j=$('#j').value.trim();if(!f||!k||!j){toast('Lengkapi kode, judul, dan file');return}
     if(demo){toast('Mode demo: unggah aktif setelah Supabase dihubungkan');return}
@@ -598,7 +598,12 @@ function vAdm(){
       let m='Dokumen berhasil diunggah';const tf=$('#tf').files[0];
       if(tf)try{busy('Mengindeks teks...');m=(await indexText(id,tf,n))?'Dokumen diunggah dan teks diindeks':'Dokumen diunggah, indeks teks dilewati'}catch(x){m='Dokumen diunggah, tetapi teks gagal diindeks: '+(x.message||x)}
       V='docs';await done(m)}catch(e){toast('Gagal: '+(e.message||e));$('#up').disabled=false}};
-  document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>act(b.dataset.a,DOCS.find(d=>d.id===b.dataset.id)));
+  const rowOf=d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${jOf(d)} &middot; ${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${bgOf(d)?' &rsaquo; '+esc(bgOf(d)):''}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="t" data-id="${d.id}">Indeks Teks</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`;
+  const drawDocs=()=>{const k=AQ.trim().toLowerCase(),f=DOCS.filter(d=>!k||(d.kode+' '+d.judul+' '+d.dept+' '+bgOf(d)+' '+jOf(d)).toLowerCase().includes(k));
+    $('#dl').innerHTML=f.map(rowOf).join('')||`<div class="empty">${DOCS.length?'Dokumen tidak ditemukan.':'Belum ada dokumen.'}</div>`;
+    $('#dc').textContent=(k?f.length+' dari ':'')+DOCS.length+' dokumen';$('#aqx').hidden=!AQ;
+    document.querySelectorAll('#dl [data-a]').forEach(b=>b.onclick=()=>act(b.dataset.a,DOCS.find(d=>d.id===b.dataset.id)))};
+  $('#aq').oninput=e=>{AQ=e.target.value;drawDocs()};$('#aqx').onclick=()=>{AQ='';$('#aq').value='';drawDocs();$('#aq').focus()};drawDocs();
   async function act(a,d){
     if(a==='e')modal(`<h2>Ubah Dokumen</h2><p>Mengubah nama dan keterangan, bukan isi file.</p><label>Kode</label><input id="ek" value="${esc(d.kode)}"><label>Judul</label><input id="ej" value="${esc(d.judul)}"><label>Jenis Dokumen</label><select id="ejn">${jOpts(jOf(d))}</select><label>Departemen</label><input id="ed" value="${esc(d.dept)}" list="dl-dept"><label>Bagian (opsional)</label><input id="eb" value="${esc(bgOf(d))}" list="dl-bag" placeholder="Mis. Mounting, Design, Sample"><datalist id="dl-dept">${deptOpts()}</datalist><datalist id="dl-bag">${bagOpts()}</datalist><label>Revisi</label><input id="er2" value="${esc(d.revisi||'')}"><label>Tanggal Berlaku</label><input id="etb" type="date" value="${esc(String(d.tgl_berlaku||'').slice(0,10))}" onclick="this.showPicker&&this.showPicker()">`,async()=>{
       const v={kode:$('#ek').value.trim(),judul:$('#ej').value.trim(),dept:$('#ed').value.trim()||'Semua',bagian:$('#eb').value.trim()||null,jenis:$('#ejn').value,revisi:$('#er2').value.trim(),tgl_berlaku:$('#etb').value||null};if(!v.kode||!v.judul)throw new Error('Kode dan judul wajib diisi');
