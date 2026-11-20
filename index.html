@@ -300,7 +300,7 @@ const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[JENIS.length-1])[1];
 const jOpts=sel=>JENIS.map(j=>`<option value="${j[0]}"${j[0]===sel?' selected':''}>${j[0]} - ${j[1]}</option>`).join('');
 const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
 let JF='',CODES=[],GR=[];
-let U=null, DOCS=[], LOG=[], V='home', Q='', DF='', BF='', AQ='';
+let IDX=new Set(), U=null, DOCS=[], LOG=[], V='home', Q='', DF='', BF='', AQ='';
 const bgOf=d=>String(d.bagian||'').trim();
 const deptOpts=()=>[...new Set(DOCS.map(d=>d.dept).filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('');
 const bagOpts=()=>[...new Set(DOCS.map(bgOf).filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('');
@@ -466,11 +466,13 @@ function vDocs(){
   jf.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{JF=b.dataset.j;draw()});
   const qx=$('#qx'),sync=()=>qx.hidden=!$('#q').value;sync();qx.onclick=()=>{Q='';$('#q').value='';sync();draw();fullText();$('#q').focus()};let ST;const rx=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const fullText=async()=>{const k=Q.trim(),box=$('#ft');if(!box)return;if(k.length<3||demo){box.innerHTML='';return}
-    const r=await sb.from('iso_doc_text').select('doc_id,page,content').ilike('content','%'+k.replace(/[%_\\]/g,'\\$&')+'%').limit(60);
-    if(Q.trim()!==k||!$('#ft'))return;if(r.error){box.innerHTML='';return}
-    const re=new RegExp(rx(k),'i'),hl=new RegExp(rx(esc(k)),'ig');
-    const rows=r.data.map(x=>{const d=DOCS.find(y=>String(y.id)===String(x.doc_id));if(!d||(DF&&d.dept!==DF)||(BF&&bgOf(d)!==BF)||(JF&&jOf(d)!==JF))return'';
-      const m=Math.max(0,x.content.search(re)),t=x.content.slice(Math.max(0,m-50),m+k.length+100);
+    const toks=k.toLowerCase().split(/\s+/).filter(Boolean),key=toks.slice().sort((x,y)=>y.length-x.length)[0];
+    const r=await sb.from('iso_doc_text').select('doc_id,page,content').ilike('content','%'+key.replace(/[%_\\]/g,'\\$&')+'%').limit(300);
+    if(Q.trim()!==k||!$('#ft'))return;
+    if(r.error){box.innerHTML='<div class="ftn">Pencarian isi dokumen gagal: '+esc(r.error.message||'tidak diketahui')+'. Periksa tabel iso_doc_text dan izin (policy) bacanya di Supabase.</div>';return}
+    const cp=t=>t.toLowerCase().replace(/\s+/g,''),hl=new RegExp(toks.map(rx).map(esc).join('|'),'ig');
+    const rows=r.data.filter(x=>{const c=x.content.toLowerCase();return toks.every(t=>c.includes(t))||cp(x.content).includes(cp(k))}).map(x=>{const d=DOCS.find(y=>String(y.id)===String(x.doc_id));if(!d||(DF&&d.dept!==DF)||(BF&&bgOf(d)!==BF)||(JF&&jOf(d)!==JF))return'';
+      const lc=x.content.toLowerCase(),m=Math.max(0,lc.indexOf(key)),t=x.content.slice(Math.max(0,m-50),m+key.length+100);
       return `<div class="fr" data-id="${d.id}" data-p="${x.page||1}"><div class="th">${jOf(d)}</div><div class="im"><b class="kd">${esc(d.kode)}</b><span class="jd">${esc(d.judul)}</span><p class="sn">${x.page?'Hal. '+x.page+' &middot; ':''}&hellip;${esc(t).replace(hl,z=>'<mark>'+z+'</mark>')}&hellip;</p></div><span class="go">${ic('chevR')}</span></div>`}).filter(Boolean);
     box.innerHTML=rows.length?`<div class="ftw"><div class="fth">Ditemukan di isi dokumen</div>${rows.join('')}</div>`:'<div class="ftn">Kata itu tidak ditemukan di isi dokumen yang sudah diindeks.</div>';
     box.querySelectorAll('.fr').forEach(e=>e.onclick=()=>openDoc(DOCS.find(y=>String(y.id)===e.dataset.id),+e.dataset.p))};
@@ -598,20 +600,21 @@ function vAdm(){
       let m='Dokumen berhasil diunggah';const tf=$('#tf').files[0];
       if(tf)try{busy('Mengindeks teks...');m=(await indexText(id,tf,n))?'Dokumen diunggah dan teks diindeks':'Dokumen diunggah, indeks teks dilewati'}catch(x){m='Dokumen diunggah, tetapi teks gagal diindeks: '+(x.message||x)}
       V='docs';await done(m)}catch(e){toast('Gagal: '+(e.message||e));$('#up').disabled=false}};
-  const rowOf=d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${jOf(d)} &middot; ${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${bgOf(d)?' &rsaquo; '+esc(bgOf(d)):''}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="t" data-id="${d.id}">Indeks Teks</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`;
+  const rowOf=d=>`<div class="row"><div style="min-width:0;flex:1"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><br><span>${jOf(d)} &middot; ${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${bgOf(d)?' &rsaquo; '+esc(bgOf(d)):''} &middot; ${demo?'':IDX.has(String(d.id))?'<b class="ok">teks terindeks</b>':'<b style="color:#c2255c">teks belum diindeks</b>'}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-a="e" data-id="${d.id}">Ubah</button><button class="btn g bs" data-a="t" data-id="${d.id}">Indeks Teks</button><button class="btn g bs" data-a="r" data-id="${d.id}">Ganti File</button><button class="btn r bs" data-a="x" data-id="${d.id}">Hapus</button></div></div>`;
   const drawDocs=()=>{const k=AQ.trim().toLowerCase(),f=DOCS.filter(d=>!k||(d.kode+' '+d.judul+' '+d.dept+' '+bgOf(d)+' '+jOf(d)).toLowerCase().includes(k));
     $('#dl').innerHTML=f.map(rowOf).join('')||`<div class="empty">${DOCS.length?'Dokumen tidak ditemukan.':'Belum ada dokumen.'}</div>`;
     $('#dc').textContent=(k?f.length+' dari ':'')+DOCS.length+' dokumen';$('#aqx').hidden=!AQ;
     document.querySelectorAll('#dl [data-a]').forEach(b=>b.onclick=()=>act(b.dataset.a,DOCS.find(d=>d.id===b.dataset.id)))};
   $('#aq').oninput=e=>{AQ=e.target.value;drawDocs()};$('#aqx').onclick=()=>{AQ='';$('#aq').value='';drawDocs();$('#aq').focus()};drawDocs();
+  if(!demo)sb.from('iso_doc_text').select('doc_id').limit(5000).then(r=>{if(r.error||!$('#dl'))return;IDX=new Set((r.data||[]).map(x=>String(x.doc_id)));drawDocs()});
   async function act(a,d){
     if(a==='e')modal(`<h2>Ubah Dokumen</h2><p>Mengubah nama dan keterangan, bukan isi file.</p><label>Kode</label><input id="ek" value="${esc(d.kode)}"><label>Judul</label><input id="ej" value="${esc(d.judul)}"><label>Jenis Dokumen</label><select id="ejn">${jOpts(jOf(d))}</select><label>Departemen</label><input id="ed" value="${esc(d.dept)}" list="dl-dept"><label>Bagian (opsional)</label><input id="eb" value="${esc(bgOf(d))}" list="dl-bag" placeholder="Mis. Mounting, Design, Sample"><datalist id="dl-dept">${deptOpts()}</datalist><datalist id="dl-bag">${bagOpts()}</datalist><label>Revisi</label><input id="er2" value="${esc(d.revisi||'')}"><label>Tanggal Berlaku</label><input id="etb" type="date" value="${esc(String(d.tgl_berlaku||'').slice(0,10))}" onclick="this.showPicker&&this.showPicker()">`,async()=>{
       const v={kode:$('#ek').value.trim(),judul:$('#ej').value.trim(),dept:$('#ed').value.trim()||'Semua',bagian:$('#eb').value.trim()||null,jenis:$('#ejn').value,revisi:$('#er2').value.trim(),tgl_berlaku:$('#etb').value||null};if(!v.kode||!v.judul)throw new Error('Kode dan judul wajib diisi');
       if(demo)Object.assign(d,v);else{const r=await sb.from('iso_documents').update(v).eq('id',d.id);if(r.error)throw r.error}
       await done('Dokumen diubah')});
     if(a==='t'){if(demo){toast('Mode demo: aktif setelah Supabase dihubungkan');return}
-      const i=document.createElement('input');i.type='file';i.accept='.pdf,.docx';
-      i.onchange=async()=>{const f=i.files[0];if(!f)return;try{pgShow('Mengindeks teks');busy('Membaca file...');const ok=await indexText(d.id,f,d.pages);await done(ok?'Teks diindeks':'Indeks teks dilewati')}catch(e){toast('Gagal: '+(e.message||e))}};i.click()}
+      document.querySelectorAll('input.tfx').forEach(x=>x.remove());const i=document.createElement('input');i.type='file';i.accept='.pdf,.docx';i.className='tfx';i.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';document.body.append(i);
+      i.onchange=async()=>{const f=i.files[0];i.remove();if(!f)return;try{pgShow('Mengindeks teks');busy('Membaca file...');const ok=await indexText(d.id,f,d.pages);await done(ok?'Teks diindeks':'Indeks teks dilewati')}catch(e){toast('Gagal: '+(e.message||e))}};i.click()}
     if(a==='x'){if(!confirm(`Hapus "${d.kode}" beserta semua halamannya? Tindakan ini tidak bisa dibatalkan.`))return;
       try{if(demo)DOCS.splice(DOCS.indexOf(d),1);else{const r=await sb.storage.from(BUCKET).remove(Array.from({length:d.pages},(_,i)=>pth(d.id,i+1)));if(r.error)throw r.error;
         const x=await sb.from('iso_documents').delete().eq('id',d.id);if(x.error)throw x.error;await sb.from('iso_doc_text').delete().eq('doc_id',d.id)}
