@@ -355,8 +355,9 @@ function loginView(){
 function gateView(){
   $('#app').innerHTML=`<div class="lg"><div class="lc" style="width:min(420px,100%)"><h2>Dokumen ISO</h2><p>PT Karya Indah Multiguna. Pilih cara masuk Anda.</p>
   <button class="gb" id="g1"><span class="gi"><svg viewBox="0 0 24 24"><path d="M4 21V5l8-2v18M12 8h8v13M2 21h20M7 8h2M7 12h2M7 16h2M15 12h2M15 16h2"/></svg></span><span><b>Internal KIM</b><small>Karyawan PT Karya Indah Multiguna. Masuk dengan email dan kata sandi.</small></span></button>
-  <button class="gb" id="g2"><span class="gi"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span><span><b>Auditor</b><small>Tamu audit. Masuk dengan kode akses 5 angka dari admin.</small></span></button></div></div>`;
-  $('#g1').onclick=loginView;$('#g2').onclick=()=>{location.href='audit.html'}}
+  <button class="gb" id="g2"><span class="gi"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span><span><b>Auditor</b><small>Tamu audit. Masuk dengan kode akses 5 angka dari admin.</small></span></button>
+  <button class="gb" id="g3"><span class="gi"><svg viewBox="0 0 24 24"><path d="M9 4h6l1 2h3v14H5V6h3z"/><path d="M8.5 13l2.5 2.5 4.5-5"/></svg></span><span><b>Audit Internal</b><small>Jadwal audit, dokumen yang diaudit, dan temuan. Masuk dengan kode akses atau email.</small></span></button></div></div>`;
+  $('#g1').onclick=loginView;$('#g2').onclick=()=>{location.href='audit.html'};$('#g3').onclick=()=>{location.href='internal-audit.html'}}
 async function sendReset(email){
   if(demo){toast('Mode demo: tidak berlaku');return false}
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:new URL('reset.html',location.href).href});
@@ -404,14 +405,14 @@ addEventListener('popstate',e=>{
 });
 async function start(){await loadData();initHist();shell()}
 // ---------- shell ----------
-const NAV=[['home','Beranda','home'],['docs','Dokumen','doc'],['log','Riwayat','clock'],['adm','Kelola','cog']];
+const NAV=[['home','Beranda','home'],['docs','Dokumen','doc'],['ia','Audit','check'],['log','Riwayat','clock'],['adm','Kelola','cog']];
 function shell(){
   if(HON&&HV!==V)hpush({v:V});HV=V;
   const nav=NAV.filter(n=>n[0]!=='adm'||U.role==='admin').map(n=>`<button data-v="${n[0]}" class="${V===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span>${n[0]==='adm'?'<i class="cv">'+ic('chev')+'</i>':''}</button>`).join('');
   const T={home:['Dokumen Mutu ISO','Baca dokumen resmi perusahaan dengan aman'],docs:['Daftar Dokumen','Cari dan buka dokumen sesuai hak akses Anda'],log:['Riwayat Akses','Catatan siapa membuka dokumen apa'],adm:['Kelola Dokumen','Unggah, ubah, ganti, atau hapus dokumen'],prof:['Profil Saya','Atur nama, foto, dan kata sandi']}[V];
   $('#app').innerHTML=`<aside class="side"><div class="brand"><svg class="sw" viewBox="0 0 100 30"><defs><linearGradient id="lg1" x1="0" x2="1"><stop offset="0" stop-color="#2ee6d0"/><stop offset="1" stop-color="#3b8bff"/></linearGradient></defs><path d="M4 27C24 6 62 0 97 13 64 8 30 13 4 27z" fill="url(#lg1)"/></svg><b>KIM</b><small>PT KARYA INDAH MULTIGUNA</small><span><i></i>ISO WORKSPACE<i></i></span></div><nav class="nav"><i class="nind"></i>${nav}</nav><div class="safe"><div class="si">${ic('shield')}</div><div><b>Dokumen Terkendali</b><small>Akses Terbatas<br>Hanya Untuk Petugas</small></div></div></aside>
   <main class="main"><div class="top"><div class="tl"><button class="ib" id="mb" title="Menu">${ic('menu')}</button><i class="vd"></i><div><h1>${T[0]}</h1><p>${T[1]}</p></div></div><div class="tr"><button class="ib" id="th" title="Tema">${ic('moon')}</button><span class="dchip d">${ic('cal')}${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span><i class="vd d"></i><button class="chip" id="me" title="Profil"><span class="av"${U.av?` style="background:url(${U.av}) center/cover"`:''}>${U.av?'':esc(U.nama.slice(0,2).toUpperCase())}</span><span class="nm">${esc(U.nama.split(' ')[0])}</span>${ic('chev')}</button></div></div><div class="wrap" id="v"></div></main>`;
-  document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{V=b.dataset.v;shell()});
+  document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='ia'){location.href='internal-audit.html';return}V=b.dataset.v;shell()});
   {const nv=$('.nav'),on=nv.querySelector('.on'),ind=nv.querySelector('.nind');
    if(!on){ind.style.display='none';NP=null}else{
     const to=r=>{ind.style.width=r.w+'px';ind.style.height=r.h+'px';ind.style.transform=`translate(${r.x}px,${r.y}px)`};
