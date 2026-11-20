@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1f4d">
+<title>Audit Internal | PT Karya Indah Multiguna</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--ink:#0f1f3d;--mut:#64748b;--line:#e2e8f0;--nav:#0b1f4d;--pri:#0a5bd6;--pri2:#3b8bff;--soft:#eaf1fd}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button,input{font:inherit;color:inherit}
+.btn{border:0;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-weight:800;padding:12px 20px;border-radius:12px;cursor:pointer;font-size:14px;box-shadow:0 6px 16px rgba(10,91,214,.35)}
+.btn.g{background:var(--soft);color:var(--pri);box-shadow:none}.btn.bs{padding:8px 14px;font-size:12px}.btn:disabled{opacity:.6}
+.lg{position:fixed;inset:0;background:linear-gradient(160deg,var(--nav),#081638);display:grid;place-items:center;z-index:30;padding:20px;overflow:auto}
+.lc{background:var(--card);border-radius:24px;padding:30px;width:min(400px,100%)}.lc h2{margin:8px 0 4px}.lc p{margin:0 0 16px;color:var(--mut);font-size:13px;line-height:1.5}
+.lc .btn{width:100%;margin-top:4px}
+.bdg{display:inline-block;background:var(--soft);color:var(--pri);font-size:11px;font-weight:800;letter-spacing:2px;padding:4px 12px;border-radius:999px}
+.cd{width:100%;text-align:center;font-size:28px;font-weight:800;letter-spacing:12px;padding:14px 10px 14px 22px;background:var(--bg);border:1px solid var(--line);border-radius:14px;outline:none;margin-bottom:10px}.cd:focus{border-color:var(--pri)}
+.err{color:#d6336c;font-size:12px;min-height:16px;margin:6px 0 10px}
+.note{background:#fff7e0;border:1px solid #f3dfa2;color:#7a5b00;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5}
+.lfr{text-align:center;margin-top:14px}.lk{color:var(--pri);font-weight:700;font-size:13px;text-decoration:none}
+.tb{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--nav);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 18px 12px;position:sticky;top:0;z-index:5}
+.tb b{display:block;font-size:16px}.tb small{display:block;font-size:11px;color:#9db8ea;letter-spacing:.5px}
+.tr{display:flex;align-items:center;gap:10px}.sl{font-size:12px;color:#cbd9f5;font-weight:700}
+.wrap{max-width:900px;margin:0 auto;padding:18px 16px calc(40px + env(safe-area-inset-bottom))}
+.box{background:var(--card);border-radius:22px;padding:20px;border-top:3px solid var(--pri);box-shadow:0 8px 24px rgba(15,31,61,.06)}
+.bh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.bh h3{margin:0;font-size:17px}.bh span{font-size:12px;color:var(--mut)}
+.jf{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}.jf::-webkit-scrollbar{display:none}
+.jb{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-weight:800;font-size:13px;cursor:pointer}.jb.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
+.fl input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;outline:none;margin-bottom:6px}
+.grp{background:var(--soft);border-radius:12px;padding:9px 14px;font-weight:800;font-size:14px;margin:12px 0 8px;display:flex;justify-content:space-between}
+.grp i{font-style:normal;background:var(--nav);color:#fff;border-radius:999px;font-size:12px;padding:1px 10px}
+.it{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;background:var(--card)}
+.th{width:48px;height:58px;border-radius:8px;background:var(--soft);color:var(--pri);display:grid;place-items:center;flex:none;font-weight:800;font-size:12px}
+.it b{font-size:14px}.it p{margin:2px 0 6px;font-size:12px;color:var(--mut)}
+.tag{display:inline-block;background:var(--pri);color:#fff;font-size:11px;font-weight:800;padding:2px 10px;border-radius:999px;margin-right:6px}.tag.o{background:#e8f0fe;color:var(--pri)}
+.empty{text-align:center;color:var(--mut);padding:30px 10px;font-size:14px}
+.rd{position:fixed;inset:0;background:#0a1228;z-index:20;display:flex;flex-direction:column}
+.rb{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 18px 12px;background:var(--nav);color:#fff}.rb b{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rs{flex:1;overflow:auto;padding:18px 10px 40px;display:flex;flex-direction:column;align-items:stretch;gap:14px}
+.rs canvas{display:block;flex:none;margin:0 auto;height:auto;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
+.rd.veil .rs{filter:blur(28px)}
+.zc{display:flex;align-items:center;gap:6px}.zb{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:10px;min-width:34px;height:34px;font-weight:800;font-size:15px;cursor:pointer;padding:0 10px}.zb.on{background:#ff3b3b}.zl{font-size:12px;min-width:46px;text-align:center}
+.lz{position:absolute;left:0;z-index:3;touch-action:none;pointer-events:none}.lz.on{pointer-events:auto;cursor:none}
+@media(max-width:820px){.pgs{display:none}}
+.toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%);background:var(--nav);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;z-index:40}
+@media print{body{display:none!important}}
+
+.in,.f input,.f select,.f textarea,.mdl input,.mdl select,.mdl textarea,.lc .in{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 14px;outline:none;margin:0 0 10px;font-size:14px}
+textarea{resize:vertical;min-height:70px}
+.mdl label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin:4px 0}
+.mdl{position:fixed;inset:0;background:rgba(5,12,30,.6);display:grid;place-items:center;z-index:35;padding:16px}
+.mdl .lc{background:var(--card);border-radius:22px;padding:24px;width:min(460px,100%);max-height:92vh;overflow:auto}.mdl .lc h2{margin:0 0 4px}.mdl .lc p{margin:0 0 12px;color:var(--mut);font-size:13px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}.tabs .jb{flex:1}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;flex-wrap:wrap;background:var(--card)}
+.row b{font-size:14px}.row span,.row small{font-size:12px;color:var(--mut)}.bt{display:flex;gap:6px;flex-wrap:wrap}
+.bs{padding:7px 12px;font-size:12px;border-radius:10px;box-shadow:none}.btn.r{background:#fde8ee;color:#c2255c;box-shadow:none}.btn.g{background:var(--soft);color:var(--pri);box-shadow:none}
+.cdl{font-size:20px;letter-spacing:4px;font-weight:800;color:var(--ink)}
+.inf{font-size:13px;line-height:1.6;color:var(--mut);margin:0}.inf b{color:var(--ink)}
+.k-Mayor{background:#c2255c}.k-Minor{background:#e8890c}.k-OFI{background:#0a7a4b}
+.tm{border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:14px;padding:12px 14px;margin-bottom:8px;background:var(--card);font-size:13px;line-height:1.55}
+.tm .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}.tm p{margin:4px 0}.tm .m{color:var(--mut);font-size:12px}
+.hr{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.mdl .lc .btn{width:auto;margin:0}.mdl #mo,.mdl #mx{min-width:90px}
+</style></head>
+<body><div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL='https://jvrcmvazuhbxlktnzwer.supabase.co', SB_KEY='sb_publishable_De5UwPKibjXjQ2dFSbaAgw_jPMluQxS', BUCKET='iso-pages';
+// sesi auditor dipisah dari sesi karyawan agar tidak saling menimpa
+const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'kim-ia-auth',persistSession:true,autoRefreshToken:true}});
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=d=>new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2600)};
+const JENIS=[['MM','Manual Mutu'],['PR','Prosedur'],['IK','Instruksi Kerja'],['FM','Formulir'],['LN','Lainnya']];
+const jOf=d=>{if(d.jenis&&JENIS.some(j=>j[0]===d.jenis))return d.jenis;const p=String(d.kode||'').split(/[-_ .]/)[0].toUpperCase();return ['MM','PR','IK','FM'].includes(p)?p:'LN'};
+const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[4])[1];
+const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
+let DOCS=[],S=null,J=null,TAB='dok',Q='',timer=null,FIND=[],JADS=[];
+const KAT=['Mayor','Minor','OFI'],STAT=['Terbuka','Dalam tindakan','Verifikasi','Ditutup'];
+const tgl=d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+const lt=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+const gen=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>a[x%a.length]).join('')};
+const tnm=t=>'TMN-'+String(t.nomor).padStart(3,'0');
+const inScope=(d,j)=>d.dept==='Semua'||(d.dept===j.dept&&(!d.bagian||!j.bagian||d.bagian===j.bagian));
+const where=j=>esc(j.dept)+(j.bagian?' &rsaquo; '+esc(j.bagian):'');
+function modal(h,ok,label){const m=document.createElement('div');m.className='mdl';m.innerHTML=`<div class="lc">${h}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn g" id="mx">Batal</button><button class="btn" id="mo">${label||'Simpan'}</button></div></div>`;document.body.append(m);
+  m.querySelector('#mx').onclick=()=>m.remove();m.querySelector('#mo').onclick=async()=>{try{await ok(m);m.remove()}catch(e){toast('Gagal: '+(e.message||e))}};return m}
+
+// ---------- masuk: kode akses atau email ----------
+function gateView(msg,tab){tab=tab||'kode';clearInterval(timer);S=null;J=null;document.querySelector('.rd')?.remove();
+  $('#app').innerHTML=`<div class="lg"><div class="lc"><span class="bdg">AUDIT INTERNAL</span><h2>Audit Internal</h2><p>PT Karya Indah Multiguna. Pilih cara masuk.</p>
+  <div class="tabs"><button class="jb${tab==='kode'?' on':''}" data-t="kode">Kode Akses</button><button class="jb${tab==='email'?' on':''}" data-t="email">Email</button></div>
+  ${tab==='kode'?`<input class="in" id="nm" placeholder="Nama Anda (auditor)" maxlength="80" autocomplete="name"><input class="cd" id="cd" maxlength="6" autocapitalize="characters" autocomplete="one-time-code" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;"><button class="btn" id="go">Masuk</button><div class="note" style="margin-top:12px">Kode akses 6 karakter dari admin. Hanya berlaku untuk jadwal audit yang ditentukan.</div>`
+  :`<input class="in" id="em" type="email" placeholder="Email" autocomplete="username"><input class="in" id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password"><button class="btn" id="go">Masuk</button>`}
+  <div class="err" id="er">${esc(msg||'')}</div><div class="lfr"><a class="lk" href="index.html">&larr; Kembali ke halaman utama</a></div></div></div>`;
+  document.querySelectorAll('.tabs .jb').forEach(b=>b.onclick=()=>gateView('',b.dataset.t));
+  const er=m=>$('#er').textContent=m;
+  if(tab==='kode'){$('#cd').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+    const go=async()=>{const code=$('#cd').value,nm=$('#nm').value.trim(),b=$('#go');er('');
+      if(nm.length<3){er('Isi nama Anda terlebih dahulu.');return}if(!/^[A-Z0-9]{6}$/.test(code)){er('Kode akses terdiri dari 6 karakter.');return}
+      b.disabled=true;
+      try{let {data:{session}}=await sb.auth.getSession();if(session&&!session.user.is_anonymous){await sb.auth.signOut();session=null}
+        if(!session){const a=await sb.auth.signInAnonymously();if(a.error)throw new Error(/anonymous/i.test(a.error.message)?'Layanan audit belum diaktifkan. Hubungi admin KIM.':a.error.message)}
+        const r=await sb.rpc('ia_redeem',{p_code:code,p_nama:nm});if(r.error)throw r.error;const d=r.data;
+        if(!d||!d.ok){er(d&&d.reason==='limit'?'Terlalu banyak percobaan salah. Coba lagi beberapa menit lagi.':'Kode salah atau sudah kedaluwarsa. Minta kode baru ke admin.');b.disabled=false;return}
+        await enterKode(d)}catch(e){er('Gagal: '+(e.message||e));b.disabled=false}};
+    $('#go').onclick=go;['#cd','#nm'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}));$('#nm').focus()}
+  else{const go=async()=>{const b=$('#go');er('');b.disabled=true;
+      try{const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
+        if(error){er(/invalid login/i.test(error.message)?'Email atau kata sandi salah.':'Gagal masuk: '+error.message);b.disabled=false;return}
+        await enterStaff()}catch(e){er('Gagal: '+(e.message||e));b.disabled=false}};
+    $('#go').onclick=go;['#em','#pw'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}));$('#em').focus()}}
+async function enterKode(d){
+  const r=await sb.from('ia_jadwal').select('*').eq('id',d.jadwal_id).maybeSingle();if(r.error||!r.data)throw new Error('Jadwal tidak ditemukan');
+  S={mode:'kode',nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false};J=r.data;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);jadwalView()}
+async function enterStaff(){
+  const {data:{session}}=await sb.auth.getSession();
+  const p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle();
+  if(!p.data){await sb.auth.signOut();gateView('Akun ini belum terdaftar sebagai karyawan KIM.','email');return}
+  S={mode:'email',nama:p.data.nama||session.user.email,label:p.data.nama||session.user.email,admin:p.data.role==='admin'};await loadDocs();await listView()}
+const tick=()=>{if(S&&S.mode==='kode'&&Date.now()>=S.exp){toast('Kode akses sudah berakhir');gateView('Kode akses sudah berakhir. Minta kode baru ke admin.')}};
+async function loadDocs(){const r=await sb.from('iso_documents').select('*').order('kode');if(r.error)throw r.error;DOCS=r.data||[]}
+const hdr=(t,back)=>`<header class="tb"><div><b>${t}</b><small>${esc(S.nama)} &middot; ${S.mode==='kode'?'Akses kode':S.admin?'Admin':'Karyawan'}</small></div><div class="tr" style="display:flex;gap:8px;align-items:center">${back?'<button class="btn g bs" id="bk">&larr; Jadwal</button>':''}<button class="btn g bs" id="lo">Keluar</button></div></header>`;
+function bindHdr(){const lo=$('#lo');lo.onclick=async()=>{if(confirm('Keluar dari audit internal?')){clearInterval(timer);await sb.auth.signOut();gateView()}};const bk=$('#bk');if(bk)bk.onclick=listView}
+
+// ---------- daftar jadwal (login email) ----------
+async function listView(){clearInterval(timer);J=null;TAB='dok';
+  const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
+  const card=j=>`<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b><br><span>${tgl(j.tanggal)} &middot; Auditor: ${esc(j.auditor||'-')}</span>${S.admin&&j.kode?`<br><span>Kode: <b class="cdl">${esc(j.kode)}</b> sampai ${fmt(j.kode_exp)}</span>`:''}</div><div class="bt"><button class="btn bs" data-o="${j.id}">Buka</button>${S.admin?`<button class="btn g bs" data-k="${j.id}">Kode</button><button class="btn g bs" data-e="${j.id}">Ubah</button><button class="btn r bs" data-x="${j.id}">Hapus</button>`:''}</div></div>`;
+  $('#app').innerHTML=hdr('Jadwal Audit Internal')+`<main class="wrap"><div class="box"><div class="bh"><h3>Jadwal</h3>${S.admin?'<button class="btn bs" id="nj">+ Jadwal Baru</button>':''}</div>${JADS.map(card).join('')||'<div class="empty">Belum ada jadwal audit.</div>'}</div></main>`;bindHdr();
+  const by=id=>JADS.find(j=>j.id===id);
+  document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{J=by(b.dataset.o);jadwalView()});
+  if(!S.admin)return;
+  $('#nj').onclick=()=>jadwalForm(null);
+  document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>jadwalForm(by(b.dataset.e)));
+  document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>kodeForm(by(b.dataset.k)));
+  document.querySelectorAll('[data-x]').forEach(b=>b.onclick=async()=>{if(!confirm('Hapus jadwal ini beserta semua temuannya?'))return;
+    const x=await sb.from('ia_jadwal').delete().eq('id',b.dataset.x);if(x.error){toast('Gagal: '+x.error.message);return}toast('Jadwal dihapus');listView()})}
+function jadwalForm(j){const v=j||{};const dl=a=>`<datalist id="${a[0]}">${[...new Set(a[1].filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+  modal(`<h2>${j?'Ubah':'Jadwal'} Audit</h2><p>Tentukan departemen dan bagian yang diaudit. Dokumen yang terbuka menyesuaikan otomatis.</p>
+  <label>Tanggal audit</label><input id="jt" type="date" value="${esc(v.tanggal||'')}"><label>Departemen</label><input id="jd" list="l1" value="${esc(v.dept||'')}" placeholder="Mis. Pre-Press"><label>Bagian (kosong = semua bagian)</label><input id="jb" list="l2" value="${esc(v.bagian||'')}" placeholder="Mis. Mounting">
+  <label>Auditor</label><input id="ja" value="${esc(v.auditor||'')}" placeholder="Nama auditor / tim"><label>Ruang lingkup / klausul</label><textarea id="jr">${esc(v.ruang_lingkup||'')}</textarea>${dl(['l1',DOCS.map(d=>d.dept)])}${dl(['l2',DOCS.map(d=>d.bagian)])}`,
+  async()=>{const o={tanggal:$('#jt').value,dept:$('#jd').value.trim(),bagian:$('#jb').value.trim()||null,auditor:$('#ja').value.trim()||null,ruang_lingkup:$('#jr').value.trim()||null};
+    if(!o.tanggal||!o.dept)throw new Error('Tanggal dan departemen wajib diisi');
+    const r=j?await sb.from('ia_jadwal').update(o).eq('id',j.id):await sb.from('ia_jadwal').insert(o);if(r.error)throw r.error;toast('Jadwal disimpan');listView()})}
+function kodeForm(j){const def=j.kode_exp?new Date(j.kode_exp):new Date(new Date(j.tanggal+'T23:59:00').getTime()+864e5);
+  const m=modal(`<h2>Kode Akses</h2><p>${where(j)} &middot; ${tgl(j.tanggal)}. Kode hanya membuka dokumen dan temuan jadwal ini.</p>
+  <label>Kode (6 karakter)</label><input class="cd" id="kk" maxlength="6" value="${esc(j.kode||gen())}" style="letter-spacing:8px"><button class="btn g bs" id="kr" type="button" style="margin-bottom:10px">Acak</button>
+  <label>Berlaku sampai</label><input id="ke" type="datetime-local" value="${lt(def)}">${j.kode?'<button class="btn r bs" id="kc" type="button">Cabut Kode</button>':''}`,
+  async()=>{const k=$('#kk').value.trim().toUpperCase(),e=$('#ke').value;if(!/^[A-Z0-9]{6}$/.test(k))throw new Error('Kode harus 6 huruf/angka');if(!e)throw new Error('Isi masa berlaku');
+    const exp=new Date(e).toISOString(),r=await sb.from('ia_jadwal').update({kode:k,kode_exp:exp}).eq('id',j.id);
+    if(r.error)throw new Error(r.error.code==='23505'?'Kode itu sudah dipakai. Pilih yang lain.':r.error.message);
+    await sb.from('ia_sesi').update({exp}).eq('jadwal_id',j.id);toast('Kode disimpan');listView()});
+  m.querySelector('#kk').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+  m.querySelector('#kr').onclick=()=>m.querySelector('#kk').value=gen();
+  const kc=m.querySelector('#kc');if(kc)kc.onclick=async()=>{if(!confirm('Cabut kode? Auditor yang sedang masuk langsung keluar.'))return;
+    await sb.from('ia_sesi').delete().eq('jadwal_id',j.id);const r=await sb.from('ia_jadwal').update({kode:null,kode_exp:null}).eq('id',j.id);if(r.error){toast('Gagal: '+r.error.message);return}m.remove();toast('Kode dicabut');listView()}}
+
+// ---------- satu jadwal: dokumen dan temuan ----------
+function jadwalView(){const j=J;
+  $('#app').innerHTML=hdr('Audit Internal',S.mode==='email')+`<main class="wrap"><div class="box"><div class="bh"><h3>${where(j)}</h3><span>${tgl(j.tanggal)}${S.mode==='kode'?' &middot; <b id="sl"></b>':''}</span></div><p class="inf"><b>Auditor:</b> ${esc(j.auditor||'-')}<br><b>Ruang lingkup:</b> ${esc(j.ruang_lingkup||'-')}</p></div>
+  <div class="tabs" style="margin:12px 0"><button class="jb" data-t="dok">Dokumen</button><button class="jb" data-t="tmn">Temuan</button></div><div class="box" id="ct"></div></main>`;bindHdr();
+  const sl=$('#sl');if(sl){const f=()=>{const m=Math.max(0,Math.round((S.exp-Date.now())/60000));sl.textContent='Sisa '+(m>=60?Math.floor(m/60)+' jam '+m%60+' menit':m+' menit')};f();setInterval(f,30000)}
+  const tabs=()=>{document.querySelectorAll('.tabs .jb').forEach(b=>{b.classList.toggle('on',b.dataset.t===TAB);b.onclick=()=>{TAB=b.dataset.t;tabs()}});TAB==='dok'?docsTab():findTab()};tabs()}
+const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div style="flex:1;min-width:0"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><span class="tag">${esc(jName(jOf(d)))}</span><span class="tag o">${esc(d.dept)}</span>${d.bagian?`<span class="tag o">${esc(d.bagian)}</span>`:''}</div></div>`;
+function docsTab(){const sc=DOCS.filter(d=>inScope(d,J));
+  $('#ct').innerHTML=`<div class="bh"><h3>Dokumen Audit</h3><span>Hanya baca &middot; berwatermark</span></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"></div><div id="ls"></div>`;
+  const draw=()=>{const f=sc.filter(d=>(d.kode+' '+d.judul).toLowerCase().includes(Q.toLowerCase())),pin=f.filter(d=>/audit|temuan/i.test(d.kode+' '+d.judul)),rest=f.filter(d=>!pin.includes(d));
+    $('#ls').innerHTML=(pin.length?`<div class="grp">Jadwal &amp; Panduan Audit<i>${pin.length}</i></div>${pin.map(item).join('')}`:'')+(rest.length?`<div class="grp">Dokumen yang diaudit<i>${rest.length}</i></div>${rest.map(item).join('')}`:'')||`<div class="empty">${sc.length?'Dokumen tidak ditemukan.':'Belum ada dokumen untuk departemen/bagian ini.'}</div>`;
+    document.querySelectorAll('.it').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)))};
+  $('#q').oninput=e=>{Q=e.target.value;draw()};draw()}
+async function findTab(){const ct=$('#ct');ct.innerHTML='<div class="empty">Memuat temuan...</div>';
+  const r=await sb.from('ia_temuan').select('*').eq('jadwal_id',J.id).order('nomor');if(r.error){ct.innerHTML='<div class="empty">Gagal memuat temuan: '+esc(r.error.message)+'</div>';return}FIND=r.data;
+  const dk=id=>{const d=DOCS.find(x=>String(x.id)===String(id));return d?esc(d.kode):''};
+  ct.innerHTML=`<div class="bh"><h3>Temuan (${FIND.length})</h3><button class="btn bs" id="nt">+ Catat Temuan</button></div>`+(FIND.map(t=>`<div class="tm"><div class="h"><b>${tnm(t)}</b><span class="tag k-${esc(t.kategori)}">${esc(t.kategori)}</span><span class="tag o">${esc(t.status)}</span>${t.klausul?`<span class="m">Klausul ${esc(t.klausul)}</span>`:''}${t.dokumen_id?`<span class="m">&middot; ${dk(t.dokumen_id)}</span>`:''}</div><p>${esc(t.uraian)}</p>${t.bukti?`<p class="m"><b>Bukti:</b> ${esc(t.bukti)}</p>`:''}<p class="m">PIC: ${esc(t.pic||'-')} &middot; dicatat ${esc(t.dibuat_oleh||'-')}</p>${t.akar||t.tindakan?`<p class="m"><b>Akar masalah:</b> ${esc(t.akar||'-')}<br><b>Tindakan korektif:</b> ${esc(t.tindakan||'-')}${t.due?'<br><b>Batas waktu:</b> '+tgl(t.due):''}</p>`:''}${S.mode==='email'?`<div class="hr"><button class="btn g bs" data-f="${t.id}">Tindak Lanjut</button>${S.admin?`<button class="btn r bs" data-d="${t.id}">Hapus</button>`:''}</div>`:''}</div>`).join('')||'<div class="empty">Belum ada temuan untuk audit ini.</div>');
+  $('#nt').onclick=()=>temuanForm();
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>tindakForm(FIND.find(t=>t.id===b.dataset.f)));
+  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(!confirm('Hapus temuan ini?'))return;const x=await sb.from('ia_temuan').delete().eq('id',b.dataset.d);if(x.error){toast('Gagal: '+x.error.message);return}findTab()})}
+function temuanForm(){const sc=DOCS.filter(d=>inScope(d,J));
+  modal(`<h2>Catat Temuan</h2><p>${where(J)}</p><label>Kategori</label><select id="tk">${KAT.map(k=>`<option>${k}</option>`).join('')}</select><label>Klausul ISO / dokumen acuan</label><input id="tc" placeholder="Mis. 7.5.3">
+  <label>Dokumen terkait (opsional)</label><select id="td"><option value="">- tidak ada -</option>${sc.map(d=>`<option value="${esc(d.id)}">${esc(d.kode)} &middot; ${esc(d.judul)}</option>`).join('')}</select>
+  <label>Uraian temuan</label><textarea id="tu"></textarea><label>Bukti objektif</label><textarea id="tb"></textarea><label>PIC / auditee</label><input id="tp">`,
+  async()=>{const u=$('#tu').value.trim();if(u.length<5)throw new Error('Uraian temuan wajib diisi');
+    const r=await sb.from('ia_temuan').insert({jadwal_id:J.id,kategori:$('#tk').value,klausul:$('#tc').value.trim()||null,dokumen_id:$('#td').value||null,uraian:u,bukti:$('#tb').value.trim()||null,pic:$('#tp').value.trim()||null,dibuat_oleh:S.nama});
+    if(r.error)throw r.error;toast('Temuan dicatat');findTab()},'Catat')}
+function tindakForm(t){
+  modal(`<h2>Tindak Lanjut ${tnm(t)}</h2><p>${esc(t.uraian)}</p><label>Akar masalah</label><textarea id="fa">${esc(t.akar||'')}</textarea><label>Tindakan korektif</label><textarea id="ft">${esc(t.tindakan||'')}</textarea><label>Batas waktu</label><input id="fd" type="date" value="${esc(t.due||'')}">
+  <label>Status${S.admin?'':' (penutupan oleh admin)'}</label><select id="fs">${STAT.map(x=>`<option${x===t.status?' selected':''}${x==='Ditutup'&&!S.admin?' disabled':''}>${x}</option>`).join('')}</select>`,
+  async()=>{const r=await sb.from('ia_temuan').update({akar:$('#fa').value.trim()||null,tindakan:$('#ft').value.trim()||null,due:$('#fd').value||null,status:$('#fs').value}).eq('id',t.id);if(r.error)throw r.error;toast('Tindak lanjut disimpan');findTab()})}
+
+// ---------- pengaturan watermark (diatur admin di index.html > Kelola) ----------
+let WM={opacity:.07,thickness:0};
+async function loadWM(){try{const r=await sb.from('iso_settings').select('value').eq('key','watermark').maybeSingle();if(r.data&&r.data.value)WM={...WM,...r.data.value}}catch{}}
+// ---------- pembaca ----------
+function mark(c){const x=c.getContext('2d'),o=WM;x.save();x.globalAlpha=o.opacity;x.fillStyle=x.strokeStyle='#0a3a8a';x.font=`700 ${Math.round(c.width/34)}px sans-serif`;x.rotate(-0.5);
+  x.lineJoin='round';x.lineWidth=o.thickness*c.width/2500;
+  const t=`AUDITOR \u2022 ${S.label} \u2022 ${fmt(Date.now())}`,put=(a,b)=>{x.fillText(t,a,b);if(o.thickness>0)x.strokeText(t,a,b)};
+  for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)put(xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
+async function openDoc(d){
+  if(!d)return;const r=document.createElement('div');r.className='rd';
+  r.innerHTML=`<div class="rb"><button class="btn g bs" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span class="zc"><button class="zb" id="zo" title="Perkecil (A)">&minus;</button><span class="zl" id="zp">100%</span><button class="zb" id="zi" title="Perbesar (Z)">+</button><button class="zb" id="lz" title="Laser / pointer (L)">Laser</button></span><span class="pgs" style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div><canvas class="lz" id="lzc"></canvas>`;
+  document.body.append(r);
+  const rs=$('#rs'),zp=$('#zp'),lzc=$('#lzc'),ac=new AbortController(),sg={signal:ac.signal};
+  let Z=1,TZ=1,fx=0,fy=0,raf=0,raf2=0,cs=[],lzOn=false,drawing=false,mx=-1,my=-1;
+  const MINZ=.5,MAXZ=4,LT=5000;
+  const close=()=>{ac.abort();cancelAnimationFrame(raf);cancelAnimationFrame(raf2);r.remove()};
+  $('#cl').onclick=close;
+  // ----- zoom halus (Z / A, Ctrl + scroll, tombol + / -) -----
+  const base=()=>Math.max(200,Math.min(820,rs.clientWidth-20));
+  const apply=nz=>{const sh=rs.scrollHeight,sw=rs.scrollWidth,sx=rs.scrollLeft+fx,sy=rs.scrollTop+fy,w=base()*nz+'px';
+    rs.querySelectorAll('canvas').forEach(c=>c.style.width=w);Z=nz;
+    rs.scrollLeft=sx*(rs.scrollWidth/sw)-fx;rs.scrollTop=sy*(rs.scrollHeight/sh)-fy;zp.textContent=Math.round(nz*100)+'%'};
+  const tk=()=>{raf=0;const df=TZ-Z;if(Math.abs(df)<.002){apply(TZ);return}apply(Z+df*.2);raf=requestAnimationFrame(tk)};
+  const zoomTo=(t,x,y)=>{TZ=Math.max(MINZ,Math.min(MAXZ,t));fx=x;fy=y;if(!raf)raf=requestAnimationFrame(tk)};
+  const zc=()=>[rs.clientWidth/2,rs.clientHeight/2];
+  $('#zi').onclick=()=>zoomTo(TZ*1.25,...zc());$('#zo').onclick=()=>zoomTo(TZ/1.25,...zc());
+  r.addEventListener('wheel',e=>{
+    if(e.ctrlKey||e.metaKey){e.preventDefault();const b=rs.getBoundingClientRect(),k=Math.abs(e.deltaY)<50?.01:.0022;zoomTo(TZ*Math.exp(-e.deltaY*k),e.clientX-b.left,e.clientY-b.top)}
+    else if(e.target===lzc){e.preventDefault();rs.scrollBy(e.deltaX,e.deltaY)}},{passive:false,signal:ac.signal});
+  // ----- laser / pointer: coretan hilang dalam 5 detik -----
+  const fitLz=()=>{const t=$('.rb').offsetHeight,w=r.clientWidth,h=r.clientHeight-t,s=devicePixelRatio||1;
+    lzc.style.top=t+'px';lzc.style.width=w+'px';lzc.style.height=h+'px';lzc.width=w*s;lzc.height=h*s;kick()};
+  const loop=()=>{raf2=0;const x=lzc.getContext('2d'),s=devicePixelRatio||1,now=performance.now();
+    x.setTransform(s,0,0,s,0,0);x.clearRect(0,0,lzc.width,lzc.height);x.lineCap=x.lineJoin='round';
+    cs=cs.map(st=>st.filter(p=>now-p.t<LT)).filter(st=>st.length);
+    x.shadowColor='#ff2a2a';x.shadowBlur=10;x.strokeStyle=x.fillStyle='#ff2a2a';x.lineWidth=4;
+    for(const st of cs){
+      if(st.length===1){x.globalAlpha=Math.max(0,1-(now-st[0].t)/LT);x.beginPath();x.arc(st[0].x,st[0].y,2.5,0,7);x.fill()}
+      for(let i=1;i<st.length;i++){x.globalAlpha=Math.max(0,1-(now-st[i].t)/LT);x.beginPath();x.moveTo(st[i-1].x,st[i-1].y);x.lineTo(st[i].x,st[i].y);x.stroke()}}
+    if(lzOn&&mx>=0){x.globalAlpha=1;x.shadowBlur=16;x.beginPath();x.arc(mx,my,drawing?7:6,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#fff';x.beginPath();x.arc(mx,my,2.2,0,7);x.fill()}
+    if(cs.length)kick()};
+  const kick=()=>{if(!raf2)raf2=requestAnimationFrame(loop)};
+  const pt=e=>{const b=lzc.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top,t:performance.now()}};
+  const toggleLz=()=>{lzOn=!lzOn;drawing=false;if(!lzOn)mx=-1;lzc.classList.toggle('on',lzOn);$('#lz').classList.toggle('on',lzOn);kick()};
+  $('#lz').onclick=toggleLz;
+  lzc.addEventListener('pointerdown',e=>{drawing=true;lzc.setPointerCapture(e.pointerId);const p=pt(e);mx=p.x;my=p.y;cs.push([p]);kick()},sg);
+  lzc.addEventListener('pointermove',e=>{const p=pt(e);mx=p.x;my=p.y;if(drawing)cs[cs.length-1].push(p);kick()},sg);
+  ['pointerup','pointercancel'].forEach(n=>lzc.addEventListener(n,()=>{drawing=false;kick()},sg));
+  lzc.addEventListener('pointerleave',()=>{mx=-1;kick()},sg);
+  addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();
+    if(k==='z'||k==='a'){e.preventDefault();const f=e.repeat?1.05:1.25;zoomTo(k==='z'?TZ*f:TZ/f,...zc())}
+    else if(k==='l')toggleLz()},sg);
+  addEventListener('resize',()=>{[fx,fy]=zc();apply(Z);fitLz()},sg);
+  fitLz();
+  // ----- halaman -----
+  await loadWM();
+  const paths=Array.from({length:d.pages},(_,i)=>`${d.id}/${String(i+1).padStart(3,'0')}.webp`);
+  const s=await sb.storage.from(BUCKET).createSignedUrls(paths,90);
+  if(s.error){close();toast('Akses ditolak. Kode mungkin sudah berakhir.');tick();return}
+  const urls=(s.data||[]).map(x=>x.signedUrl);rs.innerHTML='';
+  for(let i=0;i<d.pages;i++){
+    const c=document.createElement('canvas');c.style.width=base()*Z+'px';rs.append(c);const x=c.getContext('2d');
+    try{const bm=await createImageBitmap(await (await fetch(urls[i])).blob());c.width=bm.width;c.height=bm.height;x.drawImage(bm,0,0)}catch{c.width=820;c.height=200;x.fillText('Gagal memuat halaman',20,100)}
+    mark(c)}}
+
+// ---------- penghalang (pencegah awam, bukan pengaman mutlak) ----------
+addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('dragstart',e=>e.preventDefault());
+addEventListener('copy',e=>{if(!/INPUT/.test(e.target.tagName))e.preventDefault()});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&['s','p','u','c','a'].includes(k)&&!/INPUT/.test(document.activeElement.tagName)||k==='f12'||k==='printscreen'){e.preventDefault();if(k==='printscreen'){navigator.clipboard?.writeText('');toast('Tangkapan layar dilarang')}}});
+const veil=on=>{const r=$('.rd');if(r)r.classList.toggle('veil',on)};
+document.addEventListener('visibilitychange',()=>veil(document.hidden));addEventListener('blur',()=>veil(true));addEventListener('focus',()=>veil(false));
+
+// ---------- mulai ----------
+(async()=>{
+  try{const {data:{session}}=await sb.auth.getSession();
+    if(session){
+      if(session.user.is_anonymous){const r=await sb.rpc('ia_status');if(r.data&&r.data.ok){await enterKode(r.data);return}}
+      else{await enterStaff();return}}}catch(e){}
+  gateView()})();
+</script></body></html>
