@@ -328,108 +328,96 @@ const itemTxt=r=>(r.q||'')+(r.note?(r.q?'\n':'')+'Ket: '+r.note:'');
 
 // ---------- ekspor Excel (mengikuti KIM-FM-QAD-018) ----------
 async function clXlsx(){await lib('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',()=>window.ExcelJS);
-  const h=CL.header,L=CL.rows.filter(clFilled).map(r=>({...r,txt:itemTxt(r)})),NR=Math.max(34,L.length),wb=new ExcelJS.Workbook(),
+  const h=CL.header,L=CL.rows.filter(clFilled).map(r=>({...r,txt:itemTxt(r)})),NR=Math.max(22,L.length+2),wb=new ExcelJS.Workbook(),
   ws=wb.addWorksheet('CHECKLIST AUDIT',{views:[{showGridLines:false}],pageSetup:{paperSize:14,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:1,horizontalCentered:true,margins:{left:.4,right:.4,top:.4,bottom:.4,header:.2,footer:.2}}});
-  ws.columns=[5,12.7,9.14,9.14,9.14,9.14,9.14,14,10.6,5.6,6.6,8.1].map(width=>({width}));
+  ws.columns=[5,16,9.14,9.14,9.14,9.14,9.14,14,10.6,5.6,6.6,8.1].map(width=>({width}));
   const TN='Times New Roman',T={style:'thin'};
-  const cell=(r,c,v,o={})=>{const e=ws.getCell(r,c);e.value=v;e.font={name:TN,size:o.sz||9,bold:!!o.b,color:o.col?{argb:o.col}:undefined};e.alignment={vertical:o.v||'middle',horizontal:o.h||'left',wrapText:o.nw?false:true};return e};
+  const cell=(r,c,v,o={})=>{const e=ws.getCell(r,c);e.value=v;e.font={name:TN,size:o.sz||11,bold:!!o.b,color:o.col?{argb:o.col}:undefined};e.alignment={vertical:o.v||'middle',horizontal:o.h||'left',wrapText:o.nw?false:true};return e};
   const mg=(r1,c1,r2,c2)=>ws.mergeCells(r1,c1,r2,c2);
   const edge=(r,c,side,style)=>{const e=ws.getCell(r,c);e.border={...(e.border||{}),[side]:{style}}};
   const grid=(r1,c1,r2,c2)=>{for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)ws.getCell(r,c).border={top:T,left:T,bottom:T,right:T}};
-  for(let r=1;r<=3;r++)ws.getRow(r).height=15.75;
-  ws.addImage(wb.addImage({base64:LOGO,extension:'png'}),{tl:{col:.1,row:.2},ext:{width:190,height:Math.round(190*LOGO_H/LOGO_W)}});
-  [['No. Dokumen',FORM_NO],['Revisi',FORM_REV],['Tgl. Berlaku',FORM_TGL]].forEach((a,i)=>{const r=1+i;cell(r,8,a[0]);mg(r,9,r,12);cell(r,9,': '+a[1])});
-  mg(5,1,5,12);cell(5,1,'PT. KARYA INDAH MULTIGUNA',{b:1,sz:11,h:'center'});mg(6,1,6,12);cell(6,1,'DAFTAR PEMERIKSAAN INTERNAL AUDIT',{b:1,sz:11,h:'center'});
-  mg(7,1,7,12);cell(7,1,'QUALITY MANAGEMENT SYSTEM',{b:1,sz:10,h:'center'});
-  for(let c=1;c<=12;c++){edge(6,c,'bottom','medium');edge(7,c,'bottom','thin')}
+  const rh=(r,v)=>{ws.getRow(r).height=v};
+  [1,2,3].forEach(r=>rh(r,19));rh(4,12);rh(5,21);rh(6,21);rh(7,21);rh(8,7);rh(12,7);
+  ws.addImage(wb.addImage({base64:LOGO,extension:'png'}),{tl:{col:.15,row:.3},ext:{width:260,height:Math.round(260*LOGO_H/LOGO_W)}});
+  [['No. Dokumen',FORM_NO],['Revisi',FORM_REV],['Tgl. Berlaku',FORM_TGL]].forEach((a,i)=>{const r=1+i;cell(r,8,a[0],{nw:1});mg(r,9,r,12);cell(r,9,': '+a[1],{nw:1})});
+  mg(5,1,5,12);cell(5,1,'PT. KARYA INDAH MULTIGUNA',{b:1,sz:13,h:'center'});mg(6,1,6,12);cell(6,1,'DAFTAR PEMERIKSAAN INTERNAL AUDIT',{b:1,sz:13,h:'center'});
+  mg(7,1,7,12);cell(7,1,'QUALITY MANAGEMENT SYSTEM',{b:1,sz:12,h:'center'});
+  for(let c=1;c<=12;c++){edge(6,c,'bottom','medium');edge(7,c,'bottom','medium')}
   [['Audit Date',dt(h.tgl),'Audit No',h.no],['Audited Dept./Sect',h.dept,'Auditor Name',h.auditor],['Auditee Name',h.auditee,'Dept./Section',h.dept2]].forEach((a,i)=>{const r=9+i;
-    mg(r,1,r,2);cell(r,1,a[0]);cell(r,3,':',{h:'center'});mg(r,4,r,7);cell(r,4,a[1]||'');cell(r,8,a[2]);cell(r,9,':',{h:'center'});mg(r,10,r,12);cell(r,10,a[3]||'');ws.getRow(r).height=27});
-  ws.getRow(8).height=8;ws.getRow(12).height=10;
+    mg(r,1,r,2);cell(r,1,a[0],{nw:1});cell(r,3,':',{h:'center'});mg(r,4,r,7);cell(r,4,a[1]||'');cell(r,8,a[2],{nw:1});cell(r,9,':',{h:'center'});mg(r,10,r,12);cell(r,10,a[3]||'');rh(r,19)});
   mg(13,1,14,1);cell(13,1,'No',{h:'center'});mg(13,2,14,2);cell(13,2,'Relevant\nDocument',{h:'center'});mg(13,3,14,8);cell(13,3,'Item Audited / Question',{h:'center'});mg(13,9,14,9);cell(13,9,'Reff.\nClause',{h:'center'});mg(13,10,13,12);cell(13,10,'Finding',{h:'center'});
-  ['C','NC','OBS'].forEach((t,i)=>cell(14,10+i,t,{h:'center'}));grid(13,1,14,12);ws.getRow(13).height=15.75;ws.getRow(14).height=15.75;
+  ['C','NC','OBS'].forEach((t,i)=>cell(14,10+i,t,{h:'center'}));grid(13,1,14,12);rh(13,18);rh(14,18);
+  const lines=(s,w)=>String(s||'').split('\n').reduce((a,p)=>a+Math.max(1,Math.ceil(p.length/w)),0);
   for(let i=0;i<NR;i++){const n=15+i,r=L[i]||{doc:'',q:'',ref:'',f:'',txt:''};mg(n,3,n,8);
     cell(n,1,L[i]?i+1:'',{h:'center'});cell(n,2,r.doc);cell(n,3,r.txt);cell(n,9,r.ref,{h:'center'});
-    ['C','NC','OBS'].forEach((t,k)=>cell(n,10+k,r.f===t?'\u221A':'',{b:1,h:'center',sz:11}));grid(n,1,n,12);
-    ws.getRow(n).height=Math.max(20.1,12*Math.max(1,Math.ceil(r.txt.length/62)+(r.txt.split('\n').length-1),Math.ceil((r.doc||'').length/14)))}
+    ['C','NC','OBS'].forEach((t,k)=>cell(n,10+k,r.f===t?'\u221A':'',{b:1,h:'center',sz:12}));grid(n,1,n,12);
+    rh(n,Math.max(24,14.5*Math.max(lines(r.txt,60),lines(r.doc,13))+6))}
   const last=14+NR;
-  for(let r=7;r<=last;r++){edge(r,1,'left','medium');edge(r,12,'right','medium')}
-  for(let c=1;c<=12;c++){edge(7,c,'top','medium');edge(last,c,'bottom','medium')}
-  let r=last+2;cell(r,2,'Remarks :');cell(r,3,'C = Conformity',{nw:1});cell(r,6,'NC = Nonconformity',{nw:1});cell(r,9,'OBS = Observation',{nw:1});
-  r+=2;for(let i=0;i<3;i++)ws.getRow(r+i).height=17;
-  cell(r,2,'Auditee Sign');cell(r,3,':',{h:'center'});cell(r,8,'Auditor Sign');cell(r,9,':',{h:'center'});
-  [[CL.sigE,3],[CL.sigA,9]].forEach(([s,c0])=>{if(!s)return;const ar=s.w/s.h,hh=Math.min(50,170/ar);ws.addImage(wb.addImage({base64:s.img,extension:'png'}),{tl:{col:c0+.1,row:r-1},ext:{width:hh*ar,height:hh}})});
-  r+=3;cell(r,2,'Nama');cell(r,3,':',{h:'center'});mg(r,4,r,7);cell(r,4,CL.sigE?CL.sigE.nama:'');cell(r,8,'Nama');cell(r,9,':',{h:'center'});mg(r,10,r,12);cell(r,10,CL.sigA?CL.sigA.nama:'');
-  r++;cell(r,2,'Date');cell(r,3,':',{h:'center'});mg(r,4,r,7);cell(r,4,sd(CL.sigE));cell(r,8,'Date');cell(r,9,':',{h:'center'});mg(r,10,r,12);cell(r,10,sd(CL.sigA));
-  if(!CL.final){r++;cell(r,2,'DRAFT (belum difinalkan)',{sz:8,col:'FFC2255C',nw:1})}
+  for(let r=1;r<=last;r++){edge(r,1,'left','medium');edge(r,12,'right','medium')}
+  for(let c=1;c<=12;c++){edge(1,c,'top','medium');edge(last,c,'bottom','medium')}
+  let r=last+2;rh(r,20);cell(r,2,'Remarks :',{nw:1});cell(r,3,'C = Conformity',{nw:1});cell(r,6,'NC = Nonconformity',{nw:1});cell(r,9,'OBS = Observation',{nw:1});
+  r+=2;[0,1,2].forEach(i=>rh(r+i,20));
+  cell(r,2,'Auditee Sign',{nw:1});cell(r,3,':',{h:'center'});cell(r,8,'Auditor Sign',{nw:1});cell(r,9,':',{h:'center'});
+  [[CL.sigE,3],[CL.sigA,9]].forEach(([s,c0])=>{if(!s)return;const ar=s.w/s.h,hh=Math.min(56,125/ar);ws.addImage(wb.addImage({base64:s.img,extension:'png'}),{tl:{col:c0+.1,row:r-1+.1},ext:{width:hh*ar,height:hh}})});
+  r+=3;rh(r,19);cell(r,2,'Nama',{nw:1});cell(r,3,':',{h:'center'});mg(r,4,r,7);cell(r,4,CL.sigE?CL.sigE.nama:'');cell(r,8,'Nama',{nw:1});cell(r,9,':',{h:'center'});mg(r,10,r,12);cell(r,10,CL.sigA?CL.sigA.nama:'');
+  r++;rh(r,19);cell(r,2,'Date',{nw:1});cell(r,3,':',{h:'center'});mg(r,4,r,7);cell(r,4,sd(CL.sigE));cell(r,8,'Date',{nw:1});cell(r,9,':',{h:'center'});mg(r,10,r,12);cell(r,10,sd(CL.sigA));
+  if(!CL.final){r++;cell(r,2,'DRAFT (belum difinalkan)',{sz:9,col:'FFC2255C',nw:1})}
   ws.pageSetup.printArea='A1:L'+r;
   const buf=await wb.xlsx.writeBuffer();return new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
 
-// ---------- ekspor PDF (F4, satu halaman, mengikuti KIM-FM-QAD-018) ----------
+// ---------- ekspor PDF (F4, satu halaman, huruf 11, mengikuti KIM-FM-QAD-018) ----------
 async function clPdf(){await lib('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',()=>window.jspdf);
-  const {jsPDF}=window.jspdf,PW=609.45,PH=935.43,d=new jsPDF({unit:'pt',format:[PW,PH]}),M=28,TW=PW-2*M,h=CL.header,F='times';
+  const {jsPDF}=window.jspdf,PW=609.45,PH=935.43,d=new jsPDF({unit:'pt',format:[PW,PH]}),M=28,TW=PW-2*M,h=CL.header,F='times',FS=11,LH=13.2,MINH=24,MINROWS=22,FOOT=122;
   const L=CL.rows.filter(clFilled).map(r=>({...r,txt:itemTxt(r)}));
-  const fr=[.045,.145,.525,.096,.053,.059,.078],cx=[M];fr.forEach(f=>cx.push(cx[cx.length-1]+f*TW));cx[7]=M+TW;
+  const fr=[.045,.17,.5,.096,.053,.059,.077],cx=[M];fr.forEach(f=>cx.push(cx[cx.length-1]+f*TW));cx[7]=M+TW;
   const ln=(x1,y1,x2,y2,w)=>{d.setLineWidth(w||.6);d.line(x1,y1,x2,y2)},tx=(s,x,y,o)=>d.text(String(s),x,y,o);
-  const fit=(s,x,y,mw,fs)=>{let f=fs;d.setFontSize(f);while(d.getTextWidth(s)>mw&&f>5){f-=.5;d.setFontSize(f)}tx(s,x,y);d.setFontSize(fs)};
-  const FOOT=104,YB=PH-M-FOOT,MINH=17;
+  const fit=(s,x,y,mw)=>{let f=FS;d.setFontSize(f);while(d.getTextWidth(s)>mw&&f>9){f-=.5;d.setFontSize(f)}tx(s,x,y);d.setFontSize(FS)};
+  const YB=PH-M-FOOT;
   function head(){d.setDrawColor(0);d.setTextColor(0);
-    const lh=30,lw=lh*LOGO_W/LOGO_H;d.addImage(LOGO,'PNG',M,M,lw,lh);
-    d.setFont(F,'normal');d.setFontSize(8.5);const bx=M+TW*.56;
-    [['No. Dokumen',FORM_NO],['Revisi',FORM_REV],['Tgl. Berlaku',FORM_TGL]].forEach((a,i)=>{tx(a[0],bx,M+9+i*11);tx(': '+a[1],bx+62,M+9+i*11)});
-    d.setFont(F,'bold');d.setFontSize(10);tx('PT. KARYA INDAH MULTIGUNA',PW/2,M+62,{align:'center'});tx('DAFTAR PEMERIKSAAN INTERNAL AUDIT',PW/2,M+74,{align:'center'});
-    const top=M+80;ln(M,top,M+TW,top,1.3);d.setFontSize(9);tx('QUALITY MANAGEMENT SYSTEM',PW/2,top+12,{align:'center'});ln(M,top+17,M+TW,top+17,.8);
-    d.setFont(F,'normal');const fy=top+33;
-    [['Audit Date',dt(h.tgl),'Audit No',h.no],['Audited Dept./Sect',h.dept,'Auditor Name',h.auditor],['Auditee Name',h.auditee,'Dept./Section',h.dept2]].forEach((a,i)=>{const y=fy+i*13;
-      d.setFontSize(8.5);tx(a[0],M+4,y);tx(':',M+TW*.2,y);fit(a[1]||'',M+TW*.2+8,y,TW*.34,8.5);tx(a[2],M+TW*.57,y);tx(':',M+TW*.79,y);fit(a[3]||'',M+TW*.79+8,y,TW*.2,8.5)});
-    const hy=fy+3*13+6,hh=26;d.setFontSize(8.5);
+    ln(M,M,M+TW,M,1.4);
+    const lh=36,lw=lh*LOGO_W/LOGO_H;d.addImage(LOGO,'PNG',M+8,M+9,lw,lh);
+    d.setFont(F,'normal');d.setFontSize(FS);const bx=M+TW*.575;
+    [['No. Dokumen',FORM_NO],['Revisi',FORM_REV],['Tgl. Berlaku',FORM_TGL]].forEach((a,i)=>{tx(a[0],bx,M+19+i*14);tx(': '+a[1],bx+70,M+19+i*14)});
+    d.setFont(F,'bold');d.setFontSize(13);tx('PT. KARYA INDAH MULTIGUNA',PW/2,M+84,{align:'center'});tx('DAFTAR PEMERIKSAAN INTERNAL AUDIT',PW/2,M+100,{align:'center'});
+    const top=M+108;ln(M,top,M+TW,top,1.3);d.setFontSize(11.5);tx('QUALITY MANAGEMENT SYSTEM',PW/2,top+14.5,{align:'center'});ln(M,top+20,M+TW,top+20,1.3);
+    d.setFont(F,'normal');d.setFontSize(FS);const fy=top+40;
+    [['Audit Date',dt(h.tgl),'Audit No',h.no],['Audited Dept./Sect',h.dept,'Auditor Name',h.auditor],['Auditee Name',h.auditee,'Dept./Section',h.dept2]].forEach((a,i)=>{const y=fy+i*17;
+      tx(a[0],M+4,y);tx(':',M+TW*.2,y);fit(a[1]||'',M+TW*.2+9,y,TW*.35);tx(a[2],M+TW*.575,y);tx(':',M+TW*.8,y);fit(a[3]||'',M+TW*.8+9,y,TW*.18)});
+    const hy=fy+34+12,hh=36;
     ln(cx[0],hy,cx[7],hy);ln(cx[0],hy+hh,cx[7],hy+hh);ln(cx[4],hy+hh/2,cx[7],hy+hh/2);
     [1,2,3,4].forEach(i=>ln(cx[i],hy,cx[i],hy+hh));[5,6].forEach(i=>ln(cx[i],hy+hh/2,cx[i],hy+hh));
-    const mid=(a,b)=>(cx[a]+cx[b])/2,cy=hy+hh/2+3;
-    tx('No',mid(0,1),cy,{align:'center'});tx('Relevant',mid(1,2),hy+10,{align:'center'});tx('Document',mid(1,2),hy+21,{align:'center'});tx('Item Audited / Question',mid(2,3),cy,{align:'center'});
-    tx('Reff.',mid(3,4),hy+10,{align:'center'});tx('Clause',mid(3,4),hy+21,{align:'center'});tx('Finding',mid(4,7),hy+10,{align:'center'});
-    ['C','NC','OBS'].forEach((t,i)=>tx(t,mid(4+i,5+i),hy+hh-3.5,{align:'center'}));
-    return{top,y0:hy+hh}}
-  // tata letak: kecilkan huruf sampai muat 1 halaman
-  let H0;{d.setFont(F,'normal');}
-  const lay=fs=>{d.setFont(F,'normal');d.setFontSize(fs);const lhh=fs*1.18;
-    return L.map(r=>{const a=d.splitTextToSize(r.doc||'',cx[2]-cx[1]-6),b=d.splitTextToSize(r.txt||'',cx[3]-cx[2]-6),n=Math.max(a.length,b.length,1);return{r,a,b,hgt:Math.max(MINH,n*lhh+5),lhh}})};
-  let fs=8.5,cap,items;
-  const sim=(its,cp)=>{let pg=1,u=0;its.forEach(i=>{if(u+i.hgt>cp){pg++;u=0}u+=i.hgt});return pg};
-  const hd0=(()=>{d.setPage(1);return head()})();cap=YB-hd0.y0;
-  for(;fs>=5.5;fs-=.5){items=lay(fs);if(sim(items,cap)===1)break}
-  if(fs<5.5){fs=7;items=lay(fs)}
-  // bagi ke halaman
+    const mid=(a,b)=>(cx[a]+cx[b])/2;
+    tx('No',mid(0,1),hy+hh/2+4,{align:'center'});tx('Relevant',mid(1,2),hy+14,{align:'center'});tx('Document',mid(1,2),hy+29,{align:'center'});tx('Item Audited / Question',mid(2,3),hy+hh/2+4,{align:'center'});
+    tx('Reff.',mid(3,4),hy+14,{align:'center'});tx('Clause',mid(3,4),hy+29,{align:'center'});tx('Finding',mid(4,7),hy+13,{align:'center'});
+    ['C','NC','OBS'].forEach((t,i)=>tx(t,mid(4+i,5+i),hy+hh-5,{align:'center'}));
+    return{top:M,y0:hy+hh}}
+  const hd0=head(),cap=YB-hd0.y0;
+  d.setFont(F,'normal');d.setFontSize(FS);
+  const items=L.map(r=>{const a=d.splitTextToSize(r.doc||'',cx[2]-cx[1]-6),b=d.splitTextToSize(r.txt||'',cx[3]-cx[2]-6),n=Math.max(a.length,b.length,1);return{r,a,b,hgt:Math.max(MINH,n*LH+8)}});
   const pages=[[]];let u=0;items.forEach(i=>{if(u+i.hgt>cap&&pages[pages.length-1].length){pages.push([]);u=0}pages[pages.length-1].push(i);u+=i.hgt});
   let no=0;
-  pages.forEach((pg,pi)=>{let hd;if(pi===0)hd=hd0;else{d.addPage();hd=head()}
-    let y=hd.y0;d.setFont(F,'normal');
-    const rowsDraw=[];pg.forEach(i=>rowsDraw.push({i,hgt:i.hgt}));
-    let used=pg.reduce((s,i)=>s+i.hgt,0),left=YB-hd.y0-used;
-    const nb=Math.max(0,Math.floor(left/MINH));let extra=left-nb*MINH;
-    for(let k=0;k<nb;k++)rowsDraw.push({i:null,hgt:MINH+(k===nb-1?extra:0)});
-    if(!nb&&rowsDraw.length)rowsDraw[rowsDraw.length-1].hgt+=left;
-    rowsDraw.forEach(rw=>{const it=rw.i;
-      if(it){no++;d.setFont(F,'normal');d.setFontSize(fs);const r=it.r,cy=y+rw.hgt/2;
-        tx(no,(cx[0]+cx[1])/2,cy+fs*.35,{align:'center'});
-        const oy=(n)=>y+(rw.hgt-n*it.lhh)/2+fs*.85;
-        it.a.forEach((s,k)=>tx(s,cx[1]+3,oy(it.a.length)+k*it.lhh));
-        it.b.forEach((s,k)=>tx(s,cx[2]+3,oy(it.b.length)+k*it.lhh));
-        tx(r.ref||'',(cx[3]+cx[4])/2,cy+fs*.35,{align:'center',maxWidth:cx[4]-cx[3]-4});
-        ['C','NC','OBS'].forEach((t,k)=>{if(r.f===t){const mx=(cx[4+k]+cx[5+k])/2;d.setDrawColor(0);d.setLineWidth(1.2);d.line(mx-4,cy,mx-1,cy+3.5);d.line(mx-1,cy+3.5,mx+5,cy-4)}})}
-      y+=rw.hgt;ln(cx[0],y,cx[7],y,.5)});
+  pages.forEach((pg,pi)=>{const lastPg=pi===pages.length-1;let hd;if(pi===0)hd=hd0;else{d.addPage();hd=head()}
+    let y=hd.y0;const rw=pg.map(i=>({i,hgt:i.hgt}));
+    if(lastPg){const used=pg.reduce((s,i)=>s+i.hgt,0);let nb=Math.max(0,MINROWS-pg.length);nb=Math.min(nb,Math.floor((cap-used)/MINH));
+      if(nb){const bh=Math.min(MINH+4,(cap-used)/nb);for(let k=0;k<nb;k++)rw.push({i:null,hgt:bh})}}
+    rw.forEach(w=>{const it=w.i;
+      if(it){no++;d.setFont(F,'normal');d.setFontSize(FS);const r=it.r,cy=y+w.hgt/2,oy=n=>y+(w.hgt-n*LH)/2+FS*.8;
+        tx(no,(cx[0]+cx[1])/2,cy+FS*.35,{align:'center'});
+        it.a.forEach((s,k)=>tx(s,cx[1]+3,oy(it.a.length)+k*LH));it.b.forEach((s,k)=>tx(s,cx[2]+3,oy(it.b.length)+k*LH));
+        tx(r.ref||'',(cx[3]+cx[4])/2,cy+FS*.35,{align:'center',maxWidth:cx[4]-cx[3]-4});
+        ['C','NC','OBS'].forEach((t,k)=>{if(r.f===t){const mx=(cx[4+k]+cx[5+k])/2;d.setDrawColor(0);d.setLineWidth(1.3);d.line(mx-4,cy,mx-1,cy+4);d.line(mx-1,cy+4,mx+5,cy-4.5)}})}
+      y+=w.hgt;ln(cx[0],y,cx[7],y,.5)});
     for(let i=1;i<=6;i++)ln(cx[i],hd.y0,cx[i],y,.5);
-    ln(cx[0],hd.top,cx[0],y,1.3);ln(cx[7],hd.top,cx[7],y,1.3);ln(cx[0],y,cx[7],y,1.3);
-    // remarks + tanda tangan
-    d.setFont(F,'normal');d.setFontSize(8.5);d.setTextColor(0);const fy=y+16;
-    tx('Remarks :',M+TW*.045,fy);tx('C = Conformity',M+TW*.15,fy);tx('NC = Nonconformity',M+TW*.43,fy);tx('OBS = Observation',M+TW*.7,fy);
-    if(pi===pages.length-1){
-      const sy=fy+22;
-      [[CL.sigE,'Auditee Sign',.045,.15,.17],[CL.sigA,'Auditor Sign',.57,.68,.70]].forEach(([s,lb,lx,cxn,ix])=>{
-        tx(lb,M+TW*lx,sy+14);tx(':',M+TW*cxn,sy+14);
-        if(s){const ar=s.w/s.h,bh=Math.min(38,(TW*.28)/ar),bw=bh*ar;d.addImage(s.img,'PNG',M+TW*ix,sy+(40-bh)/2-4,bw,bh)}
-        tx('Nama',M+TW*lx,sy+46);tx(':',M+TW*cxn,sy+46);tx(s?s.nama:'',M+TW*ix,sy+46);
-        tx('Date',M+TW*lx,sy+58);tx(':',M+TW*cxn,sy+58);tx(sd(s),M+TW*ix,sy+58)})}
-    d.setFontSize(7);d.setTextColor(120);
+    ln(cx[0],hd.top,cx[0],y,1.4);ln(cx[7],hd.top,cx[7],y,1.4);ln(cx[0],y,cx[7],y,1.4);
+    d.setFont(F,'normal');d.setFontSize(FS);d.setTextColor(0);const fy=y+20;
+    tx('Remarks :',M+TW*.02,fy);tx('C = Conformity',M+TW*.17,fy);tx('NC = Nonconformity',M+TW*.43,fy);tx('OBS = Observation',M+TW*.7,fy);
+    if(lastPg){const sy=fy+14;
+      [[CL.sigE,'Auditee Sign',.02,.17,.19],[CL.sigA,'Auditor Sign',.55,.69,.71]].forEach(([s,lb,lx,cxn,ix])=>{
+        tx(lb,M+TW*lx,sy+22);tx(':',M+TW*cxn,sy+22);
+        if(s){const ar=s.w/s.h,bh=Math.min(42,(TW*.27)/ar),bw=bh*ar;d.addImage(s.img,'PNG',M+TW*ix,sy+(46-bh)/2,bw,bh)}
+        tx('Nama',M+TW*lx,sy+58);tx(':',M+TW*cxn,sy+58);tx(s?s.nama:'',M+TW*ix,sy+58);
+        tx('Date',M+TW*lx,sy+73);tx(':',M+TW*cxn,sy+73);tx(sd(s),M+TW*ix,sy+73)})}
+    d.setFontSize(8);d.setTextColor(120);
     if(!CL.final)tx('DRAFT (belum difinalkan)',M,PH-14);
     if(pages.length>1)tx('Hal. '+(pi+1)+'/'+pages.length,PW-M,PH-14,{align:'right'});d.setTextColor(0)});
   return d.output('blob')}
