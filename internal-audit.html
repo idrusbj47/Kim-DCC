@@ -62,6 +62,36 @@ textarea{resize:vertical;min-height:70px}
 .tm .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}.tm p{margin:4px 0}.tm .m{color:var(--mut);font-size:12px}
 .hr{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .mdl .lc .btn{width:auto;margin:0}.mdl #mo,.mdl #mx{min-width:90px}
+
+/* ---- checklist audit ---- */
+input,textarea,select{-webkit-user-select:text;user-select:text}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media(max-width:620px){.cgrid{grid-template-columns:1fr}}
+.cgrid label,.cr label{display:block;font-size:11px;font-weight:700;color:var(--mut);margin:8px 0 3px}
+.cgrid input,.cr input,.cr textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;outline:none;font-size:14px;margin:0}
+.cgrid input:focus,.cr input:focus,.cr textarea:focus{border-color:var(--pri)}
+.cr textarea{min-height:56px}
+.cr{position:relative;display:flex;gap:12px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:10px 14px 12px 12px;margin-bottom:10px;background:var(--card)}
+.cr.fc{border-left-color:#0a7a4b}.cr.fn{border-left-color:#c2255c}.cr.fo{border-left-color:#e8890c}
+.cn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--soft);color:var(--pri);display:grid;place-items:center;font-weight:800;font-size:13px;margin-top:4px}
+.cf{flex:1;min-width:0;padding-right:14px}
+.c2{display:grid;grid-template-columns:1fr 1.5fr;gap:10px;align-items:end}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 0;font-weight:800;font-size:13px;cursor:pointer}
+.seg button.on[data-v=C]{background:#0a7a4b;color:#fff;border-color:transparent}
+.seg button.on[data-v=NC]{background:#c2255c;color:#fff;border-color:transparent}
+.seg button.on[data-v=OBS]{background:#e8890c;color:#fff;border-color:transparent}
+.seg button:disabled{opacity:.7}
+.cx{position:absolute;top:6px;right:8px;border:0;background:none;color:var(--mut);font-size:22px;cursor:pointer;line-height:1;padding:4px 6px}
+#ccn,#cst{font-size:12px;color:var(--mut)}
+.sgg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:620px){.sgg{grid-template-columns:1fr}}
+.sgb{border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.sgb img{max-width:100%;max-height:90px;display:block;margin:8px auto;background:#fff}
+.sgb small{display:block;font-size:12px;color:var(--mut);line-height:1.5}
+.sgb .sgph{height:70px;display:grid;place-items:center;color:var(--mut);font-size:12px;border:1px dashed var(--line);border-radius:10px;margin:8px 0}
+.spw{border:1.5px dashed var(--pri);border-radius:12px;background:#fff;margin:6px 0 10px}
+.spw canvas{display:block;width:100%;height:200px;touch-action:none;cursor:crosshair}
 </style></head>
 <body><div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
@@ -122,10 +152,10 @@ async function enterStaff(){
 const tick=()=>{if(S&&S.mode==='kode'&&Date.now()>=S.exp){toast('Kode akses sudah berakhir');gateView('Kode akses sudah berakhir. Minta kode baru ke admin.')}};
 async function loadDocs(){const r=await sb.from('iso_documents').select('*').order('kode');if(r.error)throw r.error;DOCS=r.data||[]}
 const hdr=(t,back)=>`<header class="tb"><div><b>${t}</b><small>${esc(S.nama)} &middot; ${S.mode==='kode'?'Akses kode':S.admin?'Admin':'Karyawan'}</small></div><div class="tr" style="display:flex;gap:8px;align-items:center">${back?'<button class="btn g bs" id="bk">&larr; Jadwal</button>':''}<button class="btn g bs" id="lo">Keluar</button></div></header>`;
-function bindHdr(){const lo=$('#lo');lo.onclick=async()=>{if(confirm('Keluar dari audit internal?')){clearInterval(timer);await sb.auth.signOut();gateView()}};const bk=$('#bk');if(bk)bk.onclick=listView}
+function bindHdr(){const lo=$('#lo');lo.onclick=async()=>{if(confirm('Keluar dari audit internal?')){clearInterval(timer);await clFlush();await sb.auth.signOut();gateView()}};const bk=$('#bk');if(bk)bk.onclick=listView}
 
 // ---------- daftar jadwal (login email) ----------
-async function listView(){clearInterval(timer);J=null;TAB='dok';
+async function listView(){clearInterval(timer);await clFlush();J=null;TAB='dok';
   const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
   const card=j=>`<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b><br><span>${tgl(j.tanggal)} &middot; Auditor: ${esc(j.auditor||'-')}</span>${S.admin&&j.kode?`<br><span>Kode: <b class="cdl">${esc(j.kode)}</b> sampai ${fmt(j.kode_exp)}</span>`:''}</div><div class="bt"><button class="btn bs" data-o="${j.id}">Buka</button>${S.admin?`<button class="btn g bs" data-k="${j.id}">Kode</button><button class="btn g bs" data-e="${j.id}">Ubah</button><button class="btn r bs" data-x="${j.id}">Hapus</button>`:''}</div></div>`;
   $('#app').innerHTML=hdr('Jadwal Audit Internal')+`<main class="wrap"><div class="box"><div class="bh"><h3>Jadwal</h3>${S.admin?'<button class="btn bs" id="nj">+ Jadwal Baru</button>':''}</div>${JADS.map(card).join('')||'<div class="empty">Belum ada jadwal audit.</div>'}</div></main>`;bindHdr();
@@ -160,9 +190,9 @@ function kodeForm(j){const def=j.kode_exp?new Date(j.kode_exp):new Date(new Date
 // ---------- satu jadwal: dokumen dan temuan ----------
 function jadwalView(){const j=J;
   $('#app').innerHTML=hdr('Audit Internal',S.mode==='email')+`<main class="wrap"><div class="box"><div class="bh"><h3>${where(j)}</h3><span>${tgl(j.tanggal)}${S.mode==='kode'?' &middot; <b id="sl"></b>':''}</span></div><p class="inf"><b>Auditor:</b> ${esc(j.auditor||'-')}<br><b>Ruang lingkup:</b> ${esc(j.ruang_lingkup||'-')}</p></div>
-  <div class="tabs" style="margin:12px 0"><button class="jb" data-t="dok">Dokumen</button><button class="jb" data-t="tmn">Temuan</button></div><div class="box" id="ct"></div></main>`;bindHdr();
+  <div class="tabs" style="margin:12px 0"><button class="jb" data-t="dok">Dokumen</button><button class="jb" data-t="cl">Checklist</button><button class="jb" data-t="tmn">Temuan</button></div><div class="box" id="ct"></div></main>`;bindHdr();
   const sl=$('#sl');if(sl){const f=()=>{const m=Math.max(0,Math.round((S.exp-Date.now())/60000));sl.textContent='Sisa '+(m>=60?Math.floor(m/60)+' jam '+m%60+' menit':m+' menit')};f();setInterval(f,30000)}
-  const tabs=()=>{document.querySelectorAll('.tabs .jb').forEach(b=>{b.classList.toggle('on',b.dataset.t===TAB);b.onclick=()=>{TAB=b.dataset.t;tabs()}});TAB==='dok'?docsTab():findTab()};tabs()}
+  const tabs=()=>{document.querySelectorAll('.tabs .jb').forEach(b=>{b.classList.toggle('on',b.dataset.t===TAB);b.onclick=()=>{TAB=b.dataset.t;tabs()}});TAB==='dok'?docsTab():TAB==='cl'?checklistTab():findTab()};tabs()}
 const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div><div style="flex:1;min-width:0"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><span class="tag">${esc(jName(jOf(d)))}</span><span class="tag o">${esc(d.dept)}</span>${d.bagian?`<span class="tag o">${esc(d.bagian)}</span>`:''}</div></div>`;
 function docsTab(){const sc=DOCS.filter(d=>inScope(d,J));
   $('#ct').innerHTML=`<div class="bh"><h3>Dokumen Audit</h3><span>Hanya baca &middot; berwatermark</span></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"></div><div id="ls"></div>`;
@@ -177,17 +207,183 @@ async function findTab(){const ct=$('#ct');ct.innerHTML='<div class="empty">Memu
   $('#nt').onclick=()=>temuanForm();
   document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>tindakForm(FIND.find(t=>t.id===b.dataset.f)));
   document.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(!confirm('Hapus temuan ini?'))return;const x=await sb.from('ia_temuan').delete().eq('id',b.dataset.d);if(x.error){toast('Gagal: '+x.error.message);return}findTab()})}
-function temuanForm(){const sc=DOCS.filter(d=>inScope(d,J));
-  modal(`<h2>Catat Temuan</h2><p>${where(J)}</p><label>Kategori</label><select id="tk">${KAT.map(k=>`<option>${k}</option>`).join('')}</select><label>Klausul ISO / dokumen acuan</label><input id="tc" placeholder="Mis. 7.5.3">
-  <label>Dokumen terkait (opsional)</label><select id="td"><option value="">- tidak ada -</option>${sc.map(d=>`<option value="${esc(d.id)}">${esc(d.kode)} &middot; ${esc(d.judul)}</option>`).join('')}</select>
-  <label>Uraian temuan</label><textarea id="tu"></textarea><label>Bukti objektif</label><textarea id="tb"></textarea><label>PIC / auditee</label><input id="tp">`,
+function temuanForm(pre){pre=pre||{};const sc=DOCS.filter(d=>inScope(d,J));
+  modal(`<h2>Catat Temuan</h2><p>${where(J)}</p><label>Kategori</label><select id="tk">${KAT.map(k=>`<option${k===pre.kategori?' selected':''}>${k}</option>`).join('')}</select><label>Klausul ISO / dokumen acuan</label><input id="tc" placeholder="Mis. 7.5.3" value="${esc(pre.klausul||'')}">
+  <label>Dokumen terkait (opsional)</label><select id="td"><option value="">- tidak ada -</option>${sc.map(d=>`<option value="${esc(d.id)}"${String(d.id)===String(pre.dokumen_id)?' selected':''}>${esc(d.kode)} &middot; ${esc(d.judul)}</option>`).join('')}</select>
+  <label>Uraian temuan</label><textarea id="tu">${esc(pre.uraian||'')}</textarea><label>Bukti objektif</label><textarea id="tb"></textarea><label>PIC / auditee</label><input id="tp" value="${esc(pre.pic||'')}">`,
   async()=>{const u=$('#tu').value.trim();if(u.length<5)throw new Error('Uraian temuan wajib diisi');
     const r=await sb.from('ia_temuan').insert({jadwal_id:J.id,kategori:$('#tk').value,klausul:$('#tc').value.trim()||null,dokumen_id:$('#td').value||null,uraian:u,bukti:$('#tb').value.trim()||null,pic:$('#tp').value.trim()||null,dibuat_oleh:S.nama});
-    if(r.error)throw r.error;toast('Temuan dicatat');findTab()},'Catat')}
+    if(r.error)throw r.error;toast('Temuan dicatat');if(pre.cb)pre.cb();if(TAB==='tmn')findTab()},'Catat')}
 function tindakForm(t){
   modal(`<h2>Tindak Lanjut ${tnm(t)}</h2><p>${esc(t.uraian)}</p><label>Akar masalah</label><textarea id="fa">${esc(t.akar||'')}</textarea><label>Tindakan korektif</label><textarea id="ft">${esc(t.tindakan||'')}</textarea><label>Batas waktu</label><input id="fd" type="date" value="${esc(t.due||'')}">
   <label>Status${S.admin?'':' (penutupan oleh admin)'}</label><select id="fs">${STAT.map(x=>`<option${x===t.status?' selected':''}${x==='Ditutup'&&!S.admin?' disabled':''}>${x}</option>`).join('')}</select>`,
   async()=>{const r=await sb.from('ia_temuan').update({akar:$('#fa').value.trim()||null,tindakan:$('#ft').value.trim()||null,due:$('#fd').value||null,status:$('#fs').value}).eq('id',t.id);if(r.error)throw r.error;toast('Tindak lanjut disimpan');findTab()})}
+
+// ---------- checklist audit (KIM-FM-QAD-018) ----------
+const FORM_NO='KIM-FM-QAD-018',FORM_REV='02',FORM_TGL='01-01-2021';
+const libs={};
+const lib=(src,ok)=>libs[src]||(libs[src]=new Promise((res,rej)=>{if(ok())return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>{delete libs[src];rej(new Error('Pustaka ekspor gagal dimuat, cek koneksi internet'))};document.head.append(s)}));
+let CL=null,clTimer=null,clOff=false;
+const clBlank=n=>Array.from({length:n},()=>({doc:'',q:'',ref:'',f:'',note:''}));
+const clNew=()=>{const dp=[J.dept,J.bagian].filter(Boolean).join(' > ');return{header:{tgl:J.tanggal||'',no:'',dept:dp,auditor:J.auditor||(S&&S.nama)||'',auditee:'',dept2:dp},rows:clBlank(15),sigE:null,sigA:null,final:false}};
+const clFilled=r=>!!(r.doc||r.q||r.ref||r.f||r.note);
+const clLs=v=>{try{localStorage.setItem('kim-ia-cl-'+CL.jid,JSON.stringify(v))}catch{}};
+const clSt=t=>{const e=document.querySelector('#cst');if(e)e.textContent=t};
+const dt=s=>s?tgl(s):'';
+const sd=s=>s?new Date(s.at).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'';
+const dl=(blob,name)=>{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),6e4)};
+const clName=ext=>'Checklist-Audit_'+String([CL.header.dept||'dept',CL.header.tgl||''].join('_')).replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.'+ext;
+
+async function clLoad(){
+  const jid=J.id;let loc=null,srv=null;clOff=false;
+  try{loc=JSON.parse(localStorage.getItem('kim-ia-cl-'+jid)||'null')}catch{}
+  try{const r=await sb.from('ia_checklist').select('*').eq('jadwal_id',jid).maybeSingle();if(r.error)clOff=true;else srv=r.data}catch(e){clOff=true}
+  if(loc&&(loc.dirty||!srv))CL=loc;
+  else if(srv)CL={header:srv.header,rows:srv.butir,sigE:srv.sig_auditee,sigA:srv.sig_auditor,final:!!srv.final};
+  else CL=clNew();
+  CL.jid=jid;if(!CL.rows||!CL.rows.length)CL.rows=clBlank(15);
+  if(clOff&&!CL.dirty&&!loc)CL.dirty=false}
+const clBody=()=>({jadwal_id:CL.jid,header:CL.header,butir:CL.rows,sig_auditee:CL.sigE,sig_auditor:CL.sigA,final:CL.final,updated_by:S?S.nama:null,updated_at:new Date().toISOString()});
+async function clSave(){clTimer=null;if(!CL)return false;const snap=JSON.stringify(CL);
+  try{const r=await sb.from('ia_checklist').upsert(clBody(),{onConflict:'jadwal_id'});if(r.error)throw r.error;
+    if(JSON.stringify(CL)===snap){CL.dirty=false;clLs(CL)}
+    clSt('Tersimpan '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));return true}
+  catch(e){clLs(CL);clSt('Tersimpan di perangkat ini (belum ke server)');return false}}
+function clDirty(){CL.dirty=true;clLs(CL);clSt('Menyimpan...');clearTimeout(clTimer);clTimer=setTimeout(clSave,900)}
+async function clFlush(){if(clTimer){clearTimeout(clTimer);await clSave()}}
+addEventListener('pagehide',()=>{if(clTimer)clSave()});
+
+async function checklistTab(){const ct=$('#ct');ct.innerHTML='<div class="empty">Memuat checklist...</div>';
+  try{await clLoad()}catch(e){ct.innerHTML='<div class="empty">Gagal memuat checklist: '+esc(e.message||e)+'</div>';return}
+  clRender();if(CL.dirty&&!clOff)clSave()}
+const fnm={C:'fc',NC:'fn',OBS:'fo'};
+function rowHtml(r,i){const ro=CL.final?' disabled':'',f=r.f,showN=f==='NC'||f==='OBS'||r.note;
+  return `<div class="cr ${fnm[f]||''}" data-i="${i}"><div class="cn">${i+1}</div><div class="cf">
+  <label>Relevant Document</label><input data-k="doc" list="cdocs" value="${esc(r.doc)}"${ro} placeholder="Kode / nama dokumen terkait">
+  <label>Item Audited / Question</label><textarea data-k="q" rows="2"${ro} placeholder="Butir atau pertanyaan yang diperiksa">${esc(r.q)}</textarea>
+  <div class="c2"><div><label>Reff. Clause</label><input data-k="ref" value="${esc(r.ref)}"${ro} placeholder="Mis. 7.5.3"></div>
+  <div><label>Finding</label><div class="seg">${['C','NC','OBS'].map(v=>`<button type="button" data-v="${v}" class="${f===v?'on':''}"${ro}>${v}</button>`).join('')}</div></div></div>
+  ${showN?`<label>Keterangan temuan / bukti objektif</label><textarea data-k="note" rows="2"${ro} placeholder="Uraikan temuan dan bukti objektif">${esc(r.note)}</textarea>`:''}
+  ${(f==='NC'||f==='OBS')?(r.tm?'<span class="tag o" style="margin-top:8px">Sudah dicatat di tab Temuan</span>':'<button type="button" class="btn g bs" data-tm style="margin-top:8px">Catat ke tab Temuan</button>'):''}
+  </div>${CL.final?'':'<button type="button" class="cx" data-del title="Hapus butir">&times;</button>'}</div>`}
+function clCnt(){const n={C:0,NC:0,OBS:0,x:0};CL.rows.forEach(r=>{if(r.f)n[r.f]++;else if(clFilled(r))n.x++});const e=$('#ccn');if(e)e.innerHTML=`C <b>${n.C}</b> &middot; NC <b>${n.NC}</b> &middot; OBS <b>${n.OBS}</b>${n.x?` &middot; belum dinilai <b>${n.x}</b>`:''}`}
+function clRender(){const ct=$('#ct'),h=CL.header,ro=CL.final?' disabled':'';
+  const hf=(k,l,t)=>`<div><label>${l}</label><input data-h="${k}" type="${t||'text'}" value="${esc(h[k])}"${ro}></div>`;
+  ct.innerHTML=`<div class="bh"><h3>Checklist Audit</h3><span id="cst"></span></div>
+  <p class="inf" style="margin-bottom:6px">${FORM_NO} Rev. ${FORM_REV} &middot; isian tersimpan otomatis</p>
+  ${clOff?'<div class="note" style="margin:8px 0">Tabel server <b>ia_checklist</b> belum ada, jadi isian baru tersimpan di perangkat ini saja. Jalankan <b>ia_checklist.sql</b> di Supabase agar tersimpan di server dan bisa dibuka dari HP/komputer lain.</div>':''}
+  ${CL.final?`<div class="note" style="margin:8px 0">Checklist sudah difinalkan, isian terkunci.${S.admin?' <button class="btn g bs" id="cun" type="button" style="margin-left:6px">Buka kunci</button>':''}</div>`:''}
+  <div class="cgrid">${hf('tgl','Audit Date','date')}${hf('no','Audit No')}${hf('dept','Audited Dept./Sect')}${hf('auditor','Auditor Name')}${hf('auditee','Auditee Name')}${hf('dept2','Dept./Section (auditee)')}</div>
+  <div class="bh" style="margin-top:16px"><h3 style="font-size:15px">Butir Pemeriksaan</h3><span id="ccn"></span></div>
+  <div id="crows">${CL.rows.map(rowHtml).join('')}</div>${CL.final?'':'<button class="btn g bs" id="cadd" type="button">+ Tambah Butir</button>'}
+  <div class="bh" style="margin-top:18px"><h3 style="font-size:15px">Tanda Tangan</h3></div><div class="sgg" id="csg"></div>
+  <div class="bh" style="margin-top:18px;margin-bottom:6px"><h3 style="font-size:15px">Ekspor</h3></div>
+  <div class="hr" style="margin-top:0"><button class="btn bs" id="cxl" type="button">Unduh Excel</button><button class="btn bs" id="cpd" type="button">Unduh PDF</button>${CL.final?'':'<button class="btn g bs" id="cfn" type="button">Finalkan &amp; Kunci</button>'}</div>
+  <datalist id="cdocs">${DOCS.filter(d=>inScope(d,J)).map(d=>`<option value="${esc(d.kode)}">${esc(d.judul)}</option>`).join('')}</datalist>`;
+  ct.querySelectorAll('[data-h]').forEach(i=>i.oninput=()=>{CL.header[i.dataset.h]=i.value;clDirty()});
+  const rw=$('#crows');
+  rw.oninput=e=>{const c=e.target.closest('.cr');if(!c||!e.target.dataset.k)return;CL.rows[+c.dataset.i][e.target.dataset.k]=e.target.value;clDirty();clCnt()};
+  rw.onclick=e=>{const c=e.target.closest('.cr');if(!c)return;const i=+c.dataset.i,r=CL.rows[i],b=e.target.closest('[data-v]');
+    if(b&&!CL.final){r.f=r.f===b.dataset.v?'':b.dataset.v;clDirty();c.outerHTML=rowHtml(r,i);clCnt();return}
+    if(e.target.closest('[data-del]')){if(clFilled(r)&&!confirm('Hapus butir '+(i+1)+'?'))return;CL.rows.splice(i,1);if(!CL.rows.length)CL.rows=clBlank(1);clDirty();rw.innerHTML=CL.rows.map(rowHtml).join('');clCnt();return}
+    if(e.target.closest('[data-tm]'))clTemuan(i)};
+  const ad=$('#cadd');if(ad)ad.onclick=()=>{CL.rows.push(...clBlank(1));clDirty();rw.insertAdjacentHTML('beforeend',rowHtml(CL.rows[CL.rows.length-1],CL.rows.length-1));clCnt();const l=rw.lastElementChild;l.scrollIntoView({block:'center'});l.querySelector('input').focus()};
+  const fn=$('#cfn');if(fn)fn.onclick=clFinal;
+  const un=$('#cun');if(un)un.onclick=async()=>{if(!confirm('Buka kunci checklist? Kedua tanda tangan akan dihapus dan harus diulang.'))return;CL.final=false;CL.sigE=CL.sigA=null;CL.dirty=true;clLs(CL);await clSave();clRender()};
+  const run=(id,fnc,ext,msg)=>{$(id).onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{await clFlush();dl(await fnc(),clName(ext));toast(msg)}catch(x){toast('Gagal: '+(x.message||x))}b.disabled=false}};
+  run('#cxl',clXlsx,'xlsx','Excel diunduh');run('#cpd',clPdf,'pdf','PDF diunduh');
+  clCnt();clSig()}
+function clSig(){
+  const box=(w,k,l)=>{const s=CL[k];return `<div class="sgb"><b>${l} Sign</b>${s?`<img src="${s.img}" alt="tanda tangan ${l}"><small>${esc(s.nama)}<br>${fmt(s.at)}</small>${CL.final?'':`<div class="hr" style="justify-content:center"><button class="btn g bs" data-sg="${w}" type="button">Ulangi</button><button class="btn r bs" data-sx="${w}" type="button">Hapus</button></div>`}`:`<div class="sgph">Belum ditandatangani</div>${CL.final?'':`<button class="btn bs" data-sg="${w}" type="button">Tanda tangan</button>`}`}</div>`};
+  const g=$('#csg');g.innerHTML=box('E','sigE','Auditee')+box('A','sigA','Auditor');
+  g.querySelectorAll('[data-sg]').forEach(b=>b.onclick=()=>clSign(b.dataset.sg));
+  g.querySelectorAll('[data-sx]').forEach(b=>b.onclick=()=>{CL[b.dataset.sx==='E'?'sigE':'sigA']=null;clDirty();clSig()})}
+function clSign(w){const k=w==='E'?'sigE':'sigA',lab=w==='E'?'Auditee':'Auditor',nm=(CL[k]&&CL[k].nama)||(w==='E'?CL.header.auditee:CL.header.auditor)||'';
+  let st={n:0,x0:1e9,y0:1e9,x1:-1,y1:-1},c,x,dpr;
+  const m=modal(`<h2>Tanda Tangan ${lab}</h2><p>Tanda tangan dengan jari (HP) atau mouse pada kotak di bawah.</p><label>Nama ${lab}</label><input id="sn" value="${esc(nm)}" maxlength="80"><div class="spw"><canvas id="spc"></canvas></div><button class="btn r bs" id="scl" type="button">Ulang</button>`,
+  async m=>{const name=m.querySelector('#sn').value.trim();if(name.length<2)throw new Error('Isi nama penandatangan');if(st.n<8)throw new Error('Tanda tangan masih kosong');
+    const p=6,sx=Math.max(0,(st.x0-p)*dpr),sy=Math.max(0,(st.y0-p)*dpr),sw=Math.min(c.width-sx,(st.x1-st.x0+2*p)*dpr),sh=Math.min(c.height-sy,(st.y1-st.y0+2*p)*dpr),sc=Math.min(1,560/sw),o=document.createElement('canvas');
+    o.width=Math.max(1,Math.round(sw*sc));o.height=Math.max(1,Math.round(sh*sc));o.getContext('2d').drawImage(c,sx,sy,sw,sh,0,0,o.width,o.height);
+    CL[k]={img:o.toDataURL('image/png'),w:o.width,h:o.height,nama:name,at:new Date().toISOString()};clDirty();clSig()},'Simpan');
+  c=m.querySelector('#spc');dpr=Math.min(devicePixelRatio||1,3);c.width=c.clientWidth*dpr;c.height=c.clientHeight*dpr;x=c.getContext('2d');x.scale(dpr,dpr);x.lineWidth=2.6;x.lineCap=x.lineJoin='round';x.strokeStyle=x.fillStyle='#0b1f4d';
+  let dr=false,lp=null;
+  const pos=e=>{const b=c.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}},bb=p=>{st.x0=Math.min(st.x0,p.x);st.y0=Math.min(st.y0,p.y);st.x1=Math.max(st.x1,p.x);st.y1=Math.max(st.y1,p.y)};
+  c.addEventListener('pointerdown',e=>{e.preventDefault();dr=true;c.setPointerCapture(e.pointerId);lp=pos(e);bb(lp);x.beginPath();x.arc(lp.x,lp.y,1.3,0,7);x.fill();st.n++});
+  c.addEventListener('pointermove',e=>{if(!dr)return;const p=pos(e);x.beginPath();x.moveTo(lp.x,lp.y);x.lineTo(p.x,p.y);x.stroke();lp=p;bb(p);st.n++});
+  ['pointerup','pointercancel'].forEach(n=>c.addEventListener(n,()=>{dr=false}));
+  m.querySelector('#scl').onclick=()=>{x.clearRect(0,0,c.clientWidth,c.clientHeight);st={n:0,x0:1e9,y0:1e9,x1:-1,y1:-1}}}
+async function clFinal(){const h=CL.header,fl=CL.rows.filter(clFilled);
+  if(!fl.length)return toast('Isi minimal satu butir pemeriksaan');
+  if(fl.some(r=>!r.f))return toast('Masih ada butir yang belum dinilai (C / NC / OBS)');
+  if(!h.auditee.trim()||!h.auditor.trim())return toast('Nama auditor dan auditee wajib diisi');
+  if(!CL.sigE||!CL.sigA)return toast('Tanda tangan auditee dan auditor wajib diisi');
+  if(!confirm('Finalkan dan kunci checklist? Isian tidak bisa diubah lagi'+(S.admin?'.':', kecuali oleh admin.')))return;
+  CL.final=true;CL.dirty=true;clLs(CL);await clSave();clRender()}
+function clTemuan(i){const r=CL.rows[i],d=DOCS.find(x=>x.kode===r.doc&&inScope(x,J));
+  temuanForm({kategori:r.f==='NC'?'Minor':'OFI',klausul:r.ref,dokumen_id:d?d.id:'',uraian:[r.q,r.note].filter(Boolean).join('\n'),pic:CL.header.auditee,
+    cb:()=>{r.tm=true;clDirty();const e=document.querySelector(`.cr[data-i="${i}"]`);if(e)e.outerHTML=rowHtml(r,i)}})}
+
+// ---------- ekspor Excel ----------
+async function clXlsx(){await lib('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',()=>window.ExcelJS);
+  const h=CL.header,L=CL.rows.filter(clFilled),R=L.length?L:[{doc:'',q:'',ref:'',f:'',note:''}],wb=new ExcelJS.Workbook(),
+  ws=wb.addWorksheet('CHECKLIST AUDIT',{pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:.4,right:.4,top:.5,bottom:.5,header:.3,footer:.3}}});
+  ws.columns=[5,22,10,10,10,10,10,10,13,5,5,6].map(width=>({width}));
+  const T={style:'thin'},BD={top:T,left:T,bottom:T,right:T};
+  const cell=(r,c,v,o={})=>{const e=ws.getCell(r,c);e.value=v;e.font={name:'Arial',size:o.sz||10,bold:!!o.b,color:o.col?{argb:o.col}:undefined};e.alignment={vertical:o.v||'middle',horizontal:o.h||'left',wrapText:true};return e};
+  const mg=(r1,c1,r2,c2)=>ws.mergeCells(r1,c1,r2,c2);
+  const bx=(r1,c1,r2,c2)=>{for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)ws.getCell(r,c).border=BD};
+  if(!CL.final){mg(1,1,1,6);cell(1,1,'DRAFT (belum difinalkan)',{b:1,sz:9,col:'FFC2255C'})}
+  [['No. Dokumen',FORM_NO],['Revisi',FORM_REV],['Tgl. Berlaku',FORM_TGL]].forEach((a,i)=>{const r=1+i;cell(r,8,a[0],{sz:9});mg(r,9,r,12);cell(r,9,': '+a[1],{sz:9})});
+  [[5,'PT. KARYA INDAH MULTIGUNA',12],[6,'DAFTAR PEMERIKSAAN INTERNAL AUDIT',12],[7,'QUALITY MANAGEMENT SYSTEM',11]].forEach(([r,t,s])=>{mg(r,1,r,12);cell(r,1,t,{b:1,sz:s,h:'center'})});
+  [['Audit Date',dt(h.tgl),'Audit No',h.no],['Audited Dept./Sect',h.dept,'Auditor Name',h.auditor],['Auditee Name',h.auditee,'Dept./Section',h.dept2]].forEach((a,i)=>{const r=9+i;
+    mg(r,1,r,2);cell(r,1,a[0],{b:1});mg(r,3,r,6);cell(r,3,': '+(a[1]||''));mg(r,7,r,8);cell(r,7,a[2],{b:1});mg(r,9,r,12);cell(r,9,': '+(a[3]||''));ws.getRow(r).height=28});
+  mg(13,1,14,1);cell(13,1,'No',{b:1,h:'center'});mg(13,2,14,2);cell(13,2,'Relevant Document',{b:1,h:'center'});mg(13,3,14,8);cell(13,3,'Item Audited / Question',{b:1,h:'center'});mg(13,9,14,9);cell(13,9,'Reff. Clause',{b:1,h:'center'});mg(13,10,13,12);cell(13,10,'Finding',{b:1,h:'center'});
+  ['C','NC','OBS'].forEach((t,i)=>cell(14,10+i,t,{b:1,h:'center'}));bx(13,1,14,12);
+  R.forEach((r,i)=>{const n=15+i;mg(n,3,n,8);cell(n,1,i+1,{h:'center'});cell(n,2,r.doc);cell(n,3,r.q);cell(n,9,r.ref,{h:'center'});
+    ['C','NC','OBS'].forEach((t,k)=>cell(n,10+k,r.f===t?'\u221A':'',{b:1,h:'center'}));bx(n,1,n,12);
+    ws.getRow(n).height=Math.max(22,15*Math.max(1,Math.ceil((r.q||'').length/58),Math.ceil((r.doc||'').length/20)))});
+  let r=15+R.length+1;mg(r,3,r,5);mg(r,6,r,8);mg(r,9,r,12);cell(r,2,'Remarks :',{b:1,sz:9});cell(r,3,'C = Conformity',{sz:9});cell(r,6,'NC = Nonconformity',{sz:9});cell(r,9,'OBS = Observation',{sz:9});
+  const N=R.map((x,i)=>[i+1,x]).filter(([i,x])=>x.f==='NC'||x.f==='OBS');
+  if(N.length){r+=2;mg(r,3,r,12);cell(r,1,'No',{b:1,h:'center'});cell(r,2,'Finding',{b:1,h:'center'});cell(r,3,'Uraian temuan / bukti objektif',{b:1});bx(r,1,r,12);
+    N.forEach(([i,x])=>{r++;mg(r,3,r,12);cell(r,1,i,{h:'center'});cell(r,2,x.f,{h:'center',b:1});cell(r,3,x.note||'-');bx(r,1,r,12);ws.getRow(r).height=Math.max(20,15*Math.ceil((x.note||'-').length/90))})}
+  r+=2;mg(r,1,r,6);cell(r,1,'Auditee Sign :',{b:1});mg(r,7,r,12);cell(r,7,'Auditor Sign :',{b:1});
+  for(let i=1;i<=4;i++)ws.getRow(r+i).height=20;
+  mg(r+1,1,r+4,6);mg(r+1,7,r+4,12);bx(r+1,1,r+4,6);bx(r+1,7,r+4,12);
+  [[CL.sigE,0],[CL.sigA,6]].forEach(([s,c0])=>{if(!s)return;const id=wb.addImage({base64:s.img,extension:'png'}),ar=s.w/s.h,hh=Math.min(70,200/ar);ws.addImage(id,{tl:{col:c0+.3,row:r},ext:{width:hh*ar,height:hh}})});
+  mg(r+5,1,r+5,6);cell(r+5,1,'Nama : '+(CL.sigE?CL.sigE.nama:''));mg(r+5,7,r+5,12);cell(r+5,7,'Nama : '+(CL.sigA?CL.sigA.nama:''));
+  mg(r+6,1,r+6,6);cell(r+6,1,'Date : '+sd(CL.sigE));mg(r+6,7,r+6,12);cell(r+6,7,'Date : '+sd(CL.sigA));
+  const buf=await wb.xlsx.writeBuffer();return new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+
+// ---------- ekspor PDF ----------
+async function clPdf(){await lib('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',()=>window.jspdf);
+  await lib('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js',()=>window.jspdf.jsPDF.API.autoTable);
+  const {jsPDF}=window.jspdf,d=new jsPDF({unit:'pt',format:'a4'}),W=d.internal.pageSize.getWidth(),H=d.internal.pageSize.getHeight(),M=36,h=CL.header;
+  const L=CL.rows.filter(clFilled),R=L.length?L:[{doc:'',q:'',ref:'',f:'',note:''}];
+  d.setFont('helvetica','normal');d.setFontSize(8);
+  [['No. Dokumen',FORM_NO],['Revisi',FORM_REV],['Tgl. Berlaku',FORM_TGL]].forEach((a,i)=>{d.text(a[0],W-M-140,M+8+i*11);d.text(': '+a[1],W-M-80,M+8+i*11)});
+  d.setFont('helvetica','bold');d.setFontSize(12);d.text('PT. KARYA INDAH MULTIGUNA',W/2,M+55,{align:'center'});d.text('DAFTAR PEMERIKSAAN INTERNAL AUDIT',W/2,M+70,{align:'center'});d.setFontSize(10);d.text('QUALITY MANAGEMENT SYSTEM',W/2,M+84,{align:'center'});
+  d.autoTable({startY:M+96,margin:{left:M,right:M},theme:'plain',styles:{fontSize:9,cellPadding:2,textColor:0},columnStyles:{0:{cellWidth:92,fontStyle:'bold'},1:{cellWidth:150},2:{cellWidth:72,fontStyle:'bold'},3:{cellWidth:'auto'}},
+    body:[['Audit Date',': '+dt(h.tgl),'Audit No',': '+(h.no||'')],['Audited Dept./Sect',': '+(h.dept||''),'Auditor Name',': '+(h.auditor||'')],['Auditee Name',': '+(h.auditee||''),'Dept./Section',': '+(h.dept2||'')]]});
+  d.autoTable({startY:d.lastAutoTable.finalY+10,margin:{left:M,right:M,bottom:50},theme:'grid',styles:{fontSize:8.5,cellPadding:3,lineColor:[0,0,0],lineWidth:.5,textColor:20,valign:'middle',minCellHeight:22},
+    headStyles:{fillColor:[255,255,255],textColor:0,halign:'center',fontStyle:'bold'},
+    head:[[{content:'No',rowSpan:2},{content:'Relevant Document',rowSpan:2},{content:'Item Audited / Question',rowSpan:2},{content:'Reff. Clause',rowSpan:2},{content:'Finding',colSpan:3}],['C','NC','OBS']],
+    body:R.map((r,i)=>[i+1,r.doc||'',r.q||'',r.ref||'','','','']),
+    columnStyles:{0:{cellWidth:24,halign:'center'},1:{cellWidth:84},2:{cellWidth:'auto'},3:{cellWidth:56,halign:'center'},4:{cellWidth:26},5:{cellWidth:26},6:{cellWidth:30}},
+    didDrawCell:t=>{if(t.section==='body'&&t.column.index>=4){const f=['C','NC','OBS'][t.column.index-4];if(R[t.row.index].f===f){const cx=t.cell.x+t.cell.width/2,cy=t.cell.y+t.cell.height/2;d.setDrawColor(0);d.setLineWidth(1.3);d.line(cx-4,cy,cx-1,cy+3.5);d.line(cx-1,cy+3.5,cx+5,cy-4);d.setLineWidth(.5)}}}});
+  let y=d.lastAutoTable.finalY+14;d.setFont('helvetica','normal');d.setFontSize(8);
+  if(y>H-60){d.addPage();y=M}
+  d.text('Remarks :   C = Conformity      NC = Nonconformity      OBS = Observation',M,y);y+=10;
+  const N=R.map((x,i)=>[i+1,x.f,x.note||'-']).filter(a=>a[1]==='NC'||a[1]==='OBS');
+  if(N.length){d.autoTable({startY:y+6,margin:{left:M,right:M,bottom:50},theme:'grid',styles:{fontSize:8.5,cellPadding:3,lineColor:[0,0,0],lineWidth:.5,textColor:20},headStyles:{fillColor:[255,255,255],textColor:0,fontStyle:'bold'},head:[['No','Finding','Uraian temuan / bukti objektif']],body:N,columnStyles:{0:{cellWidth:24,halign:'center'},1:{cellWidth:44,halign:'center'},2:{cellWidth:'auto'}}});y=d.lastAutoTable.finalY}
+  y+=24;if(y+130>H-40){d.addPage();y=M}
+  const bw=(W-2*M-20)/2;
+  [[CL.sigE,'Auditee Sign :',M],[CL.sigA,'Auditor Sign :',M+bw+20]].forEach(([s,lb,x0])=>{
+    d.setFont('helvetica','bold');d.setFontSize(9);d.text(lb,x0,y);d.setDrawColor(0);d.setLineWidth(.5);d.rect(x0,y+6,bw,70);
+    if(s){const ar=s.w/s.h,hh=Math.min(60,(bw-20)/ar),ww=hh*ar;d.addImage(s.img,'PNG',x0+(bw-ww)/2,y+6+(70-hh)/2,ww,hh)}
+    d.setFont('helvetica','normal');d.text('Nama : '+(s?s.nama:''),x0,y+90);d.text('Date : '+sd(s),x0,y+102)});
+  const n=d.getNumberOfPages();for(let p=1;p<=n;p++){d.setPage(p);d.setFont('helvetica','normal');d.setFontSize(7.5);d.setTextColor(90);
+    d.text(FORM_NO+' Rev. '+FORM_REV+(CL.final?'':'   |   DRAFT (belum difinalkan)'),M,H-22);d.text('Halaman '+p+' / '+n,W-M,H-22,{align:'right'})}
+  return d.output('blob')}
 
 // ---------- pengaturan watermark (diatur admin di index.html > Kelola) ----------
 let WM={opacity:.07,thickness:0};
@@ -257,9 +453,9 @@ async function openDoc(d){
 // ---------- penghalang (pencegah awam, bukan pengaman mutlak) ----------
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('dragstart',e=>e.preventDefault());
-addEventListener('copy',e=>{if(!/INPUT/.test(e.target.tagName))e.preventDefault()});
+addEventListener('copy',e=>{if(!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))e.preventDefault()});
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();
-  if((e.ctrlKey||e.metaKey)&&['s','p','u','c','a'].includes(k)&&!/INPUT/.test(document.activeElement.tagName)||k==='f12'||k==='printscreen'){e.preventDefault();if(k==='printscreen'){navigator.clipboard?.writeText('');toast('Tangkapan layar dilarang')}}});
+  if((e.ctrlKey||e.metaKey)&&['s','p','u','c','a'].includes(k)&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)||k==='f12'||k==='printscreen'){e.preventDefault();if(k==='printscreen'){navigator.clipboard?.writeText('');toast('Tangkapan layar dilarang')}}});
 const veil=on=>{const r=$('.rd');if(r)r.classList.toggle('veil',on)};
 document.addEventListener('visibilitychange',()=>veil(document.hidden));addEventListener('blur',()=>veil(true));addEventListener('focus',()=>veil(false));
 
