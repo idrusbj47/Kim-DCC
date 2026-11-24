@@ -149,7 +149,7 @@ let PERS=[],persOff=false,VT=null;
 const nikList=x=>String(x||'').split(',').map(v=>v.trim()).filter(Boolean);
 const pNik=n=>PERS.find(p=>p.nik===n);
 const isMe=(j,k)=>!!(S&&S.nik)&&nikList(j[k]).includes(S.nik);
-const mineOf=j=>isMe(j,'auditor_nik')||isMe(j,'auditee_nik')||(S.mode==='kode'&&j.id===S.jid);
+const mineOf=j=>isMe(j,'auditor_nik')||isMe(j,'auditee_nik');
 const tNo=(nik,n)=>'T'+(nik||'')+'-'+String(n).padStart(2,'0');
 const sq=t=>{const m=String(t.no_temuan||'').match(/-(\d+)$/);return m?+m[1]:1e9};
 const PERAN={auditor:'Auditor',auditee:'Auditee',keduanya:'Auditor & Auditee'};
@@ -171,7 +171,7 @@ function modal(h,ok,label){const m=document.createElement('div');m.className='md
 function gateView(msg,tab){VIEW='gate';tab=tab||'kode';clearInterval(timer);S=null;J=null;document.querySelector('.rd')?.remove();
   $('#app').innerHTML=`<div class="lg"><div class="lc"><span class="bdg">AUDIT INTERNAL</span><h2>Audit Internal</h2><p>PT Karya Indah Multiguna. Pilih cara masuk.</p>
   <div class="tabs"><button class="jb${tab==='kode'?' on':''}" data-t="kode">Kode Akses</button><button class="jb${tab==='email'?' on':''}" data-t="email">Email</button></div>
-  ${tab==='kode'?`<input class="in" id="nm" placeholder="NIK Anda (5 angka)" maxlength="5" inputmode="numeric" autocomplete="off"><input class="cd" id="cd" maxlength="6" autocapitalize="characters" autocomplete="one-time-code" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;"><button class="btn" id="go">Masuk</button><div class="note" style="margin-top:12px">Masukkan NIK Anda dan kode akses 6 karakter dari admin. Hanya berlaku untuk jadwal audit yang ditentukan.</div>`
+  ${tab==='kode'?`<input class="in" id="nm" placeholder="NIK Anda (5 angka)" maxlength="5" inputmode="numeric" autocomplete="off"><input class="cd" id="cd" maxlength="6" autocapitalize="characters" autocomplete="one-time-code" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;"><button class="btn" id="go">Masuk</button><div class="note" style="margin-top:12px">Masukkan NIK Anda dan kode akses 6 karakter dari admin. Satu kode berlaku untuk semua jadwal audit Anda selama masa berlakunya.</div>`
   :`<input class="in" id="em" type="email" placeholder="Email" autocomplete="username"><input class="in" id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password"><button class="btn" id="go">Masuk</button>`}
   <div class="err" id="er">${esc(msg||'')}</div><div class="lfr"><a class="lk" href="index.html">&larr; Kembali ke halaman utama</a></div></div></div>`;
   document.querySelectorAll('.tabs .jb').forEach(b=>b.onclick=()=>gateView('',b.dataset.t));
@@ -182,20 +182,17 @@ function gateView(msg,tab){VIEW='gate';tab=tab||'kode';clearInterval(timer);S=nu
       b.disabled=true;
       try{let {data:{session}}=await sb.auth.getSession();if(session&&!session.user.is_anonymous){await sb.auth.signOut();session=null}
         if(!session){const a=await sb.auth.signInAnonymously();if(a.error)throw new Error(/anonymous/i.test(a.error.message)?'Layanan audit belum diaktifkan. Hubungi admin KIM.':a.error.message)}
-        const nr=await sb.rpc('ia_nik_nama',{p_nik:nik});if(nr.error)throw new Error('Fitur NIK belum aktif di server. Hubungi admin KIM.');
-        if(!nr.data){er('NIK tidak terdaftar. Hubungi admin.');b.disabled=false;return}nm=nr.data;
-        const r=await sb.rpc('ia_redeem',{p_code:code,p_nama:nm});if(r.error)throw r.error;const d=r.data;
-        if(!d||!d.ok){er(d&&d.reason==='limit'?'Terlalu banyak percobaan salah. Coba lagi beberapa menit lagi.':'Kode salah atau sudah kedaluwarsa. Minta kode baru ke admin.');b.disabled=false;return}
-        try{localStorage.setItem('kim-ia-nik',nik)}catch(_){}await enterKode(d,nik)}catch(e){er('Gagal: '+(e.message||e));b.disabled=false}};
+        const r=await sb.rpc('ia_masuk',{p_nik:nik,p_code:code});if(r.error)throw new Error(/ia_masuk/i.test(r.error.message||'')?'Fitur kode per NIK belum aktif di server. Hubungi admin KIM.':r.error.message);const d=r.data;
+        if(!d||!d.ok){er(d&&d.reason==='limit'?'Terlalu banyak percobaan salah. Coba lagi beberapa menit lagi.':'NIK atau kode salah, atau kode sudah kedaluwarsa. Minta kode baru ke admin.');b.disabled=false;return}
+        await enterKode(d)}catch(e){er('Gagal: '+(e.message||e));b.disabled=false}};
     $('#go').onclick=go;['#cd','#nm'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}));$('#nm').focus()}
   else{const go=async()=>{const b=$('#go');er('');b.disabled=true;
       try{const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
         if(error){er(/invalid login/i.test(error.message)?'Email atau kata sandi salah.':'Gagal masuk: '+error.message);b.disabled=false;return}
         await enterStaff()}catch(e){er('Gagal: '+(e.message||e));b.disabled=false}};
     $('#go').onclick=go;['#em','#pw'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}));$('#em').focus()}}
-async function enterKode(d,nik){if(!nik){try{nik=localStorage.getItem('kim-ia-nik')}catch(_){}}
-  const r=await sb.from('ia_jadwal').select('*').eq('id',d.jadwal_id).maybeSingle();if(r.error||!r.data)throw new Error('Jadwal tidak ditemukan');
-  S={mode:'kode',jid:d.jadwal_id,nik:nik||null,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false};J=r.data;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;listView()}
+async function enterKode(d){
+  S={mode:'kode',nik:d.nik,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false};J=null;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;await listView()}
 async function enterStaff(){
   const {data:{session}}=await sb.auth.getSession();
   const p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle();
@@ -210,11 +207,11 @@ function bindHdr(){const lo=$('#lo');lo.onclick=async()=>{if(confirm('Keluar dar
 
 // ---------- beranda (login email): jadwal saya, temuan saya, semua jadwal, personel ----------
 const jcard=(j,adm)=>{const ra=isMe(j,'auditor_nik'),re=isMe(j,'auditee_nik');
-  return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b>${ra?' <span class="tag o">Saya auditor</span>':''}${re?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)}${j.waktu?' &middot; '+esc(j.waktu):''} &middot; Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</span>${adm&&j.kode?`<br><span>Kode: <b class="cdl">${esc(j.kode)}</b> sampai ${fmt(j.kode_exp)}</span>`:''}</div><div class="bt"><button class="btn bs" data-o="${j.id}">Buka</button>${adm?`<button class="btn g bs" data-k="${j.id}">Kode</button><button class="btn g bs" data-e="${j.id}">Ubah</button><button class="btn r bs" data-x="${j.id}">Hapus</button>`:''}</div></div>`};
+  return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b>${ra?' <span class="tag o">Saya auditor</span>':''}${re?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)}${j.waktu?' &middot; '+esc(j.waktu):''} &middot; Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</span></div><div class="bt"><button class="btn bs" data-o="${j.id}">Buka</button>${adm?`<button class="btn g bs" data-e="${j.id}">Ubah</button><button class="btn r bs" data-x="${j.id}">Hapus</button>`:''}</div></div>`};
 async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInterval(timer);await clFlush();J=null;TAB='dok';
   await loadPers();
   const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
-  const lk=!!S.nik||S.mode==='kode',tb=[...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.admin||!lk)?[['all','Semua Jadwal']]:[]),...(S.admin?[['psn','Personel']]:[])];
+  const lk=!!S.nik,tb=[...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.admin||!lk)?[['all','Semua Jadwal']]:[]),...(S.admin?[['psn','Personel']]:[])];
   if(!tb.some(x=>x[0]===VT))VT=tb[0][0];
   $('#app').innerHTML=hdr('Audit Internal')+`<main class="wrap"><div class="tabs" style="margin:0 0 12px;flex-wrap:wrap">${tb.map(x=>`<button class="jb${x[0]===VT?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><div class="box" id="lv"></div></main>`;bindHdr();
   document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{VT=b.dataset.v;listView()});
@@ -245,14 +242,27 @@ async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInte
   else if(VT==='psn')persView()}
 
 // ---------- daftar personel (admin) ----------
-function persView(){const lv=$('#lv');let q='';
+let AK=[];
+const akOf=p=>{const a=AK.find(x=>x.nik===p.nik);return a?`<br><span>Kode: <b class="cdl">${esc(a.kode)}</b> ${new Date(a.exp)<new Date()?'(kedaluwarsa)':'sampai '+fmt(a.exp)}</span>`:'<br><span class="m">Belum ada kode akses</span>'};
+async function persView(){const lv=$('#lv');let q='';{const ak=await sb.from('ia_nik_akses').select('*');AK=ak.error?[]:(ak.data||[])}
   lv.innerHTML=`<div class="bh"><h3>Daftar Personel (${PERS.length})</h3><button class="btn bs" id="pn">+ Tambah</button></div>${persOff?'<div class="note" style="margin-bottom:8px">Tabel <b>ia_personel</b> belum ada. Jalankan <b>ia_personel.sql</b> di Supabase.</div>':''}<input class="in" id="pq" placeholder="Cari NIK / nama / departemen / email"><div id="pl"></div>`;
   const draw=()=>{const f=PERS.filter(p=>[p.nik,p.nama,p.dept,p.bagian,p.email].join(' ').toLowerCase().includes(q.toLowerCase()));
-    $('#pl').innerHTML=f.map(p=>`<div class="row"><div style="flex:1;min-width:0"><b>${esc(p.nama)}</b> <span class="tag o">${esc(PERAN[p.peran]||p.peran)}</span>${p.aktif===false?' <span class="tag">Nonaktif</span>':''}<br><span>NIK ${esc(p.nik)}${p.dept?' &middot; '+esc(p.dept):''}${p.bagian?' &rsaquo; '+esc(p.bagian):''}${p.email?' &middot; '+esc(p.email):' &middot; belum ditautkan email'}</span></div><div class="bt"><button class="btn g bs" data-pe="${esc(p.nik)}">Ubah</button><button class="btn r bs" data-pd="${esc(p.nik)}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada personel.</div>';
+    $('#pl').innerHTML=f.map(p=>`<div class="row"><div style="flex:1;min-width:0"><b>${esc(p.nama)}</b> <span class="tag o">${esc(PERAN[p.peran]||p.peran)}</span>${p.aktif===false?' <span class="tag">Nonaktif</span>':''}<br><span>NIK ${esc(p.nik)}${p.dept?' &middot; '+esc(p.dept):''}${p.bagian?' &rsaquo; '+esc(p.bagian):''}${p.email?' &middot; '+esc(p.email):' &middot; belum ditautkan email'}</span>${akOf(p)}</div><div class="bt"><button class="btn bs" data-pk="${esc(p.nik)}">Kode</button><button class="btn g bs" data-pe="${esc(p.nik)}">Ubah</button><button class="btn r bs" data-pd="${esc(p.nik)}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada personel.</div>';
+    $('#pl').querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>kodeNikForm(pNik(b.dataset.pk),AK.find(x=>x.nik===b.dataset.pk)));
     $('#pl').querySelectorAll('[data-pe]').forEach(b=>b.onclick=()=>persForm(pNik(b.dataset.pe)));
     $('#pl').querySelectorAll('[data-pd]').forEach(b=>b.onclick=async()=>{const p=pNik(b.dataset.pd);if(!confirm('Hapus '+p.nama+' dari daftar? Jadwal lama tetap menyimpan namanya.'))return;
       const x=await sb.from('ia_personel').delete().eq('nik',p.nik);if(x.error){toast('Gagal: '+x.error.message);return}toast('Personel dihapus');await loadPers();persView()})};
   $('#pq').oninput=e=>{q=e.target.value;draw()};$('#pn').onclick=()=>persForm(null);draw()}
+function kodeNikForm(p,a){const def=a?new Date(a.exp):new Date(Date.now()+30*864e5);
+  const m=modal(`<h2>Kode Akses</h2><p>${esc(p.nama)} (NIK ${esc(p.nik)}). Satu kode untuk semua jadwal audit orang ini, dipakai bersama NIK saat masuk.</p>
+  <label>Kode (6 karakter)</label><input class="cd" id="kk" maxlength="6" value="${esc(a?a.kode:gen())}" style="letter-spacing:8px"><button class="btn g bs" id="kr" type="button" style="margin-bottom:10px">Acak</button>
+  <label>Berlaku sampai</label><input id="ke" type="datetime-local" value="${lt(def)}">${a?'<button class="btn r bs" id="kc" type="button">Cabut Kode</button>':''}`,
+  async()=>{const k=$('#kk').value.trim().toUpperCase(),e=$('#ke').value;if(!/^[A-Z0-9]{6}$/.test(k))throw new Error('Kode harus 6 huruf/angka');if(!e)throw new Error('Isi masa berlaku');
+    const r=await sb.rpc('ia_set_kode',{p_nik:p.nik,p_kode:k,p_exp:new Date(e).toISOString()});if(r.error)throw new Error(/ia_set_kode/i.test(r.error.message||'')?'Jalankan ia_akses_nik.sql di Supabase dulu':r.error.message);toast('Kode disimpan');persView()});
+  m.querySelector('#kk').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+  m.querySelector('#kr').onclick=()=>m.querySelector('#kk').value=gen();
+  const kc=m.querySelector('#kc');if(kc)kc.onclick=async()=>{if(!confirm('Cabut kode? '+p.nama+' yang sedang masuk langsung keluar.'))return;
+    const r=await sb.rpc('ia_cabut',{p_nik:p.nik});if(r.error){toast('Gagal: '+r.error.message);return}m.remove();toast('Kode dicabut');persView()}}
 function persForm(p){const v=p||{},ed=!!p,dep=[...new Set([...DOCS.map(d=>d.dept),...PERS.map(x=>x.dept),...JADS.map(j=>j.dept)].filter(Boolean))].sort();
   modal(`<h2>${ed?'Ubah':'Tambah'} Personel</h2><p>Daftar ini dipakai untuk memilih auditor dan auditee saat membuat jadwal.</p>
   <label>NIK (5 angka)</label><input id="pk" maxlength="5" inputmode="numeric" value="${esc(v.nik||'')}"${ed?' disabled':''} placeholder="Mis. 20994"><label>Nama</label><input id="pm" value="${esc(v.nama||'')}" maxlength="80">
@@ -1064,7 +1074,7 @@ addEventListener('popstate',async()=>{
 (async()=>{
   try{const {data:{session}}=await sb.auth.getSession();
     if(session){
-      if(session.user.is_anonymous){const r=await sb.rpc('ia_status');if(r.data&&r.data.ok){await enterKode(r.data);return}}
+      if(session.user.is_anonymous){const r=await sb.rpc('ia_status_nik');if(r.data&&r.data.ok){await enterKode(r.data);return}}
       else{await enterStaff();return}}}catch(e){}
   gateView()})();
 </script><script>
