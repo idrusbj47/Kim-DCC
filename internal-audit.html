@@ -556,6 +556,16 @@ async function laporanDocx(list){
     rows.push(row(mk((it,w)=>cell([P([R('('+sp(it.sp||20)+')',{size:20}),R('*'+it.name,{size:14})],{alignment:AlignmentType.CENTER})],w,{b:{top:ln,bottom:no,left:no,right:no},m:cm}))));
     if(tgl)rows.push(row(mk((it,w)=>cell([P([R('('+sp(it.sp?it.sp-6:14)+')',{size:20}),R('*tgl',{size:14})],{alignment:AlignmentType.CENTER})],w,{b:none,m:cm}))));
     return tbl(cols,rows,{borders:NB})};
+  // blok tanda tangan versi baru: label (Diketahui/Disetujui/Verifikator) di SAMPING KIRI garis, kolom nama & tgl lebar
+  const sg3=(groups,gap,tgl=true)=>{const cm={top:0,bottom:0,left:40,right:40},BT={top:ln,bottom:no,left:no,right:no};
+    const E=(w)=>cell([P(R('',{size:20}))],w,{b:none,m:cm});
+    const mk=(f)=>groups.flatMap(g=>g.sp?[E(g.sp)]:[...(g.label?[f('lw',g)]:[]),f('line',g),f('lab',g)]);
+    const cols=groups.flatMap(g=>g.sp?[g.sp]:[...(g.label?[g.lw]:[]),g.lineW,g.labW]);
+    const rows=[];
+    if(gap)rows.push(row(mk((k,g)=>k==='lw'?cell([P(R(g.label))],g.lw,{b:none,m:cm,v:VerticalAlign.BOTTOM}):E(k==='line'?g.lineW:g.labW)),gap));
+    rows.push(row(mk((k,g)=>k==='lw'?E(g.lw):k==='line'?cell([P([R('(',{size:20}),R('\t',{size:20}),R(')',{size:20})],{tabStops:[{type:TabStopType.RIGHT,position:g.lineW-90}]})],g.lineW,{b:BT,m:cm}):cell([P(R('*'+g.name,{size:14}))],g.labW,{b:none,m:cm,v:VerticalAlign.BOTTOM}))));
+    if(tgl)rows.push(row(mk((k,g)=>k==='lw'?E(g.lw):k==='line'?cell([P([R('(',{size:20}),R('\t',{size:20}),R(')',{size:20})],{indent:{left:250},tabStops:[{type:TabStopType.RIGHT,position:g.lineW-330}]})],g.lineW,{b:none,m:cm}):cell([P(R('*tgl',{size:14}))],g.labW,{b:none,m:cm,v:VerticalAlign.BOTTOM}))));
+    return tbl(cols,rows,{borders:NB})};
   const sm=(t)=>P(R(t,{size:15,italics:true}));
   const notes=[sm('*Pengisian No. Laporan : KIM/INT/YYYY/MM/No.urut (3 digit).'),sm('** Referensi no. urut dari : Internal Audit Log (KIM-FM-QAD-020)'),sm('*** Lembar ke (urutan laporan temuan yang diterima oleh departemen terkait) dari (total laporan temuan yang diterima oleh departemen terkait)')];
   const wmImg=RPT_B64(RPT_IMG.wm),hdImg=RPT_B64(RPT_IMG.hdr);
@@ -576,19 +586,26 @@ async function laporanDocx(list){
   const info=(r)=>{const ic=[5340,5250],c2=(a,b)=>row([cell([a],ic[0]),cell([b],ic[1])],290);
     const L=(k,v)=>P([R(k),R('\t:  '+v)],{tabStops:[{type:TabStopType.LEFT,position:1500}]});
     return tbl(ic,[c2(L('No. Laporan',r.no),P(R('Lembar ke (  '+r.lembarKe+'  ) dari (  '+r.lembarDari+'  )'))),c2(L('Area Audit',r.area),L('Tanggal Audit',r.tgl)),c2(L('Lingkup',r.lingkup),L('Waktu Audit',r.waktu)),c2(L('Auditee',r.auditee),L('Auditor',r.auditor))])};
-  const body=(r)=>{const cw=[8800,1790],pjs=[P(R('Penanggung Jawab',{bold:true})),new Paragraph({children:[],spacing:{before:0,after:0}})];
-    const pj=()=>cell([P(R('Penanggung Jawab',{bold:true})),P(R(''),{spacing:{before:0,after:0,line:240}}),P(R(''),{spacing:{before:700,after:0}}),sig([1574],[{name:'nama',sp:10}],0,true),P(R('',{size:2}))],cw[1]);
+  const body=(r)=>{const cw=[8490,2100];
+    const TOPB={top:ln,left:ln,right:ln,bottom:no},BOTB={top:no,left:ln,right:ln,bottom:ln},tiny=()=>P(R('',{size:2}));
+    const pjT=()=>cell([P(R('Penanggung Jawab',{bold:true})),tiny()],cw[1],{b:TOPB});
+    const pjS=()=>cell([sg3([{lineW:1400,labW:480,name:'nama'}],0,true),tiny()],cw[1],{b:BOTB,v:VerticalAlign.BOTTOM});
     const fl=rptLines(r).map(x=>P(x.t?R(x.t,{italics:!!x.i}):R(''),{alignment:AlignmentType.JUSTIFIED}));
     const fz=r.foto?(()=>{const q=Math.min(280/r.foto.w,140/r.foto.h,1);return{w:Math.round(r.foto.w*q),h:Math.round(r.foto.h*q)}})():null;
-    const row1=row([cell([P(R('Temuan Ketidaksesuaian :',{bold:true})),...fl,...(fz?[new Paragraph({spacing:{before:60,after:0},children:[new ImageRun({type:'jpg',data:r.foto.d,transformation:{width:fz.w,height:fz.h}})]})]:[]),P(R('')),sig([300,2400,3180,2400,300],[null,{title:'Diketahui',name:'Auditee'},null,{title:'Disetujui',name:'Kabag./Mng'},null],560),P(R('',{size:2}))],cw[0]),
-      cell([P(R('Jenis Ketidaksesuaian',{bold:true})),P(R(''),{spacing:{before:300,after:0}}),P(R(r.jenis,{size:28}),{alignment:AlignmentType.CENTER,spacing:{before:0,after:700}}),P(R('*observasi/mayor/minor',{size:13}),{spacing:{before:700,after:0}})],cw[1])],3950);
+    const row1=row([cell([P(R('Temuan Ketidaksesuaian :',{bold:true})),...fl,...(fz?[new Paragraph({spacing:{before:60,after:0},children:[new ImageRun({type:'jpg',data:r.foto.d,transformation:{width:fz.w,height:fz.h}})]})]:[]),P(R('')),
+        sg3([{label:'Diketahui',lw:1100,lineW:2000,labW:900,name:'Auditee'},{sp:250},{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],600,true),tiny()],cw[0]),
+      cell([P(R('Jenis Ketidaksesuaian',{bold:true})),P(R(''),{spacing:{before:300,after:0}}),P(R(r.jenis,{size:28}),{alignment:AlignmentType.CENTER,spacing:{before:0,after:700}}),P(R('*observasi/mayor/minor',{size:13}),{spacing:{before:700,after:0}})],cw[1])],3750);
     const row2=row([cell([P(R('Investigasi Akar Permasalahan:',{bold:true}))],10590,{span:2})],1300);
-    const row3=row([cell([P(R('Tindakan Perbaikan:',{bold:true})),P(R(''),{spacing:{before:900,after:0}}),P(R('Tanggal Penyelesaian:',{bold:true}))],cw[0],{v:VerticalAlign.TOP}),pj()],1750);
-    const row4=row([cell([P(R('Tindakan Pencegahan:',{bold:true})),sig([2200,3000,3400],[null,null,{title:'Disetujui',name:'Kabag./Mng'}],300,false),P(R('Tanggal Penyelesaian:',{bold:true}),{spacing:{before:140,after:0}}),P(R('( '+sp(14)+' )',{size:20}),{indent:{left:2400}}),P(R('',{size:2}))],cw[0]),pj()],1900);
+    // Tindakan Perbaikan: isi + "Tanggal Penyelesaian" di baris sendiri, menempel garis bawah
+    const row3a=row([cell([P(R('Tindakan Perbaikan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],1100);
+    const row3b=row([cell([P(R('Tanggal Penyelesaian:',{bold:true}))],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],640);
+    const row4a=row([cell([P(R('Tindakan Pencegahan:',{bold:true}),{spacing:{before:0,after:300}}),
+        sg3([{sp:4250},{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],500,true),tiny()],cw[0],{b:TOPB}),pjT()],1500);
+    const row4b=row([cell([P([R('Tanggal Penyelesaian:',{bold:true}),R('\t'),R('(',{size:20}),R('\t',{size:20}),R(')',{size:20}),R('*tgl',{size:14})],{tabStops:[{type:TabStopType.LEFT,position:3000},{type:TabStopType.RIGHT,position:5300}]})],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],640);
     const row5=row([cell([P(R('Verifikasi Tindakan Perbaikan dan Pencegahan:')),P([R('\u2610',{font:'Segoe UI Symbol',size:26}),R('  Lulus',{}),R('\t\u2610',{font:'Segoe UI Symbol',size:26}),R('  Gagal')],{tabStops:[{type:TabStopType.LEFT,position:6400},{type:TabStopType.LEFT,position:7600}],indent:{left:5000},spacing:{before:80,after:200}}),
-        sig([4400,3000,1200],[null,{title:'Verifikator',name:'Auditor'},null],520),P(R('',{size:2}))],10590,{span:2})],1900);
+        sg3([{sp:5400},{label:'Verifikator',lw:1300,lineW:2800,labW:850,name:'Auditor'}],520,true),tiny()],10590,{span:2})],1700);
     const row6=row([cell([P([R('Tindak Lanjut ke Nomor Laporan',{bold:true}),R(' : '+rptDari(r)[0])])],10590,{span:2})],340);
-    return tbl([8800,1790],[row1,row2,row3,row4,row5,row6])};
+    return tbl([8490,2100],[row1,row2,row3a,row3b,row4a,row4b,row5,row6],{borders:NB})};
   const sections=list.map(r=>({properties:{page:{size:{width:12240,height:18720},margin:{top:1620,bottom:1300,left:748,right:902,header:283,footer:283}}},headers:{default:header},footers:{default:footer},
     children:[info(r),...notes,body(r),...notes.slice(0,2)]}));
   const doc=new Document({creator:'PT Karya Indah Multiguna',title:'Laporan Temuan Internal Audit',styles:{default:{document:{run:{font:TN,size:SZ}}}},sections});
