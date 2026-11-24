@@ -557,7 +557,7 @@ async function laporanDocx(list){
     if(tgl)rows.push(row(mk((it,w)=>cell([P([R('('+sp(it.sp?it.sp-6:14)+')',{size:20}),R('*tgl',{size:14})],{alignment:AlignmentType.CENTER})],w,{b:none,m:cm}))));
     return tbl(cols,rows,{borders:NB})};
   // blok tanda tangan versi baru: label (Diketahui/Disetujui/Verifikator) di SAMPING KIRI garis, kolom nama & tgl lebar
-  const sg3=(groups,gap,tgl=true)=>{const cm={top:0,bottom:0,left:40,right:40},BT={top:ln,bottom:no,left:no,right:no};
+  const sg3=(groups,gap,tgl=true)=>{const cm={top:0,bottom:0,left:40,right:40},BT={top:no,bottom:ln,left:no,right:no};
     const E=(w)=>cell([P(R('',{size:20}))],w,{b:none,m:cm});
     const mk=(f)=>groups.flatMap(g=>g.sp?[E(g.sp)]:[...(g.label?[f('lw',g)]:[]),f('line',g),f('lab',g)]);
     const cols=groups.flatMap(g=>g.sp?[g.sp]:[...(g.label?[g.lw]:[]),g.lineW,g.labW]);
@@ -580,9 +580,15 @@ async function laporanDocx(list){
   // footer: No. Dokumen, revisi, tanggal berlaku, halaman
   const bx=(s)=>[...s].flatMap(c=>[new TextRun({text:c,font:AR,size:15,border:{style:BorderStyle.SINGLE,size:4,color:'000000',space:1}}),new TextRun({text:' ',font:AR,size:12})]);
   const F=(t,o={})=>new TextRun({text:t,font:AR,size:15,...o});
-  const footer=new Footer({children:[
-    new Paragraph({spacing:{before:0,after:80},indent:{left:200},tabStops:[{type:TabStopType.LEFT,position:1500},{type:TabStopType.LEFT,position:6700},{type:TabStopType.LEFT,position:7600}],children:[F('No. Dokumen'),F('\t:  '),...bx('KIM'),F('-  '),...bx('FM'),F('-  '),...bx('QAD'),F('-  '),...bx('019'),F('\tRevisi\t:  '),...bx('00')]}),
-    new Paragraph({spacing:{before:0,after:0},indent:{left:200},tabStops:[{type:TabStopType.LEFT,position:1500},{type:TabStopType.LEFT,position:6700},{type:TabStopType.LEFT,position:7600}],children:[F('Tgl. Berlaku'),F('\t:  '),...bx('01'),F('/  '),...bx('04'),F('/  '),...bx('2018'),F('\tHalaman\t:  '),new TextRun({children:[PageNumber.CURRENT],font:AR,size:15,bold:true}),F(' dari '),new TextRun({children:[PageNumber.TOTAL_PAGES],font:AR,size:15,bold:true})]})]});
+  const FG='404040',fb={style:BorderStyle.SINGLE,size:4,color:'808080'},fm={top:0,bottom:0,left:0,right:0};
+  const FT=(t,o={})=>new TextRun({text:t,font:AR,size:19,color:FG,...o});
+  const fc=(w,ch,box,al)=>new TableCell({children:[new Paragraph({alignment:al||AlignmentType.CENTER,spacing:{before:0,after:0,line:240},children:ch}) ],width:{size:w,type:WidthType.DXA},borders:box?{top:fb,bottom:fb,left:fb,right:fb}:none,verticalAlign:VerticalAlign.CENTER,margins:fm});
+  const fT=(t)=>fc(0,[FT(t)],false,AlignmentType.LEFT);
+  const ftab=(spec,h=330)=>{const cols=spec.map(x=>x[0]);return new Table({width:{size:cols.reduce((a,b)=>a+b,0),type:WidthType.DXA},columnWidths:cols,borders:NB,rows:[new TableRow({height:{value:h,rule:HeightRule.EXACT},children:spec.map(([w,t,k,al,bold])=>{const c=fc(w,t===''||t==null?[FT('')]:(Array.isArray(t)?t:[FT(t,bold?{bold:true}:{})]),!!k,al);return c})})]})};
+  const L_=AlignmentType.LEFT,bx1=(w,ch)=>[w,ch,1];
+  const r1=[[300,''],[1400,'No. Dokumen',0,L_],[300,':',0,AlignmentType.CENTER],...[...'KIM'].map(c=>bx1(370,c)),[280,'-'],...[...'FM'].map(c=>bx1(370,c)),[280,'-'],...[...'QAD'].map(c=>bx1(370,c)),[280,'-'],...[...'019'].map(c=>bx1(370,c)),[1260,''],[800,'Revisi',0,L_],[350,':'],[860,'00',1]];
+  const r2=[[300,''],[1400,'Tgl. Berlaku',0,L_],[300,':'],...[...'01'].map(c=>bx1(370,c)),[280,'/'],...[...'04'].map(c=>bx1(370,c)),[280,'/'],...[...'2018'].map(c=>bx1(370,c)),[2650,''],[800,'Halaman',0,L_],[350,':'],[1200,[FT('',{}),new TextRun({children:[PageNumber.CURRENT],font:AR,size:19,bold:true,color:FG}),FT(' dari '),new TextRun({children:[PageNumber.TOTAL_PAGES],font:AR,size:19,bold:true,color:FG})],0,L_]];
+  const footer=new Footer({children:[ftab(r1),new Paragraph({spacing:{before:0,after:0,line:60},children:[FT('',{size:4})]}),ftab(r2),new Paragraph({spacing:{before:0,after:0},children:[FT('',{size:4})]})]});
   const info=(r)=>{const ic=[5340,5250],c2=(a,b)=>row([cell([a],ic[0]),cell([b],ic[1])],290);
     const L=(k,v)=>P([R(k),R('\t:  '+v)],{tabStops:[{type:TabStopType.LEFT,position:1500}]});
     return tbl(ic,[c2(L('No. Laporan',r.no),P(R('Lembar ke (  '+r.lembarKe+'  ) dari (  '+r.lembarDari+'  )'))),c2(L('Area Audit',r.area),L('Tanggal Audit',r.tgl)),c2(L('Lingkup',r.lingkup),L('Waktu Audit',r.waktu)),c2(L('Auditee',r.auditee),L('Auditor',r.auditor))])};
@@ -599,11 +605,16 @@ async function laporanDocx(list){
     // Tindakan Perbaikan: isi + "Tanggal Penyelesaian" di baris sendiri, menempel garis bawah
     const row3a=row([cell([P(R('Tindakan Perbaikan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],1100);
     const row3b=row([cell([P(R('Tanggal Penyelesaian:',{bold:true}))],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],640);
-    const row4a=row([cell([P(R('Tindakan Pencegahan:',{bold:true}),{spacing:{before:0,after:300}}),
-        sg3([{sp:4250},{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],500,true),tiny()],cw[0],{b:TOPB}),pjT()],1500);
-    const row4b=row([cell([P([R('Tanggal Penyelesaian:',{bold:true}),R('\t'),R('(',{size:20}),R('\t',{size:20}),R(')',{size:20}),R('*tgl',{size:14})],{tabStops:[{type:TabStopType.LEFT,position:3000},{type:TabStopType.RIGHT,position:5300}]})],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],640);
-    const row5=row([cell([P(R('Verifikasi Tindakan Perbaikan dan Pencegahan:')),P([R('\u2610',{font:'Segoe UI Symbol',size:26}),R('  Lulus',{}),R('\t\u2610',{font:'Segoe UI Symbol',size:26}),R('  Gagal')],{tabStops:[{type:TabStopType.LEFT,position:6400},{type:TabStopType.LEFT,position:7600}],indent:{left:5000},spacing:{before:80,after:200}}),
-        sg3([{sp:5400},{label:'Verifikator',lw:1300,lineW:2800,labW:850,name:'Auditor'}],520,true),tiny()],10590,{span:2})],1700);
+    const row4a=row([cell([P(R('Tindakan Pencegahan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],1100);
+    const nb0={top:no,bottom:no,left:no,right:no},nm0={top:0,bottom:0,left:0,right:0};
+    const row4b=row([cell([tbl([4250,4000],[row([cell([P(R('Tanggal Penyelesaian:',{bold:true}))],4250,{b:nb0,m:{top:0,bottom:30,left:0,right:0},v:VerticalAlign.BOTTOM}),
+        cell([sg3([{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],400,true),tiny()],4000,{b:nb0,m:nm0,v:VerticalAlign.BOTTOM})])],{borders:NB}),tiny()],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],1000);
+    const ck=(w)=>cell([P(R('',{size:20}))],w,{b:all,m:nm0});
+    const ckl=(w,t)=>cell([P(R(t),{indent:{left:60}})],w,{b:nb0,m:nm0,v:VerticalAlign.CENTER});
+    const spc=(w)=>cell([P(R('',{size:20}))],w,{b:nb0,m:nm0});
+    const lg=tbl([6900,340,850,300,340,900],[row([spc(6900),ck(340),ckl(850,'Lulus'),spc(300),ck(340),ckl(900,'Gagal')],340)],{borders:NB});
+    const row5=row([cell([P(R('Verifikasi Tindakan Perbaikan dan Pencegahan:')),P(R('',{size:8})),lg,P(R('',{size:8})),
+        sg3([{sp:5400},{label:'Verifikator',lw:1300,lineW:2800,labW:850,name:'Auditor'}],700,true),tiny()],10590,{span:2})],1700);
     const row6=row([cell([P([R('Tindak Lanjut ke Nomor Laporan',{bold:true}),R(' : '+rptDari(r)[0])])],10590,{span:2})],340);
     return tbl([8490,2100],[row1,row2,row3a,row3b,row4a,row4b,row5,row6],{borders:NB})};
   const sections=list.map(r=>({properties:{page:{size:{width:12240,height:18720},margin:{top:1620,bottom:1300,left:748,right:902,header:283,footer:283}}},headers:{default:header},footers:{default:footer},
