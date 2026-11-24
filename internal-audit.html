@@ -779,4 +779,105 @@ addEventListener('popstate',async()=>{
       if(session.user.is_anonymous){const r=await sb.rpc('ia_status');if(r.data&&r.data.ok){await enterKode(r.data);return}}
       else{await enterStaff();return}}}catch(e){}
   gateView()})();
-</script></body></html>
+</script><script>
+(()=>{
+const FW=1500,FH=500; // rasio 3:1
+
+// ---------- helper: tambal fungsi yang sudah ada (ganti potongan kode) ----------
+function patch(name,pairs){
+  try{
+    let s=window[name].toString(),ok=true;
+    for(const [a,b] of pairs){if(!s.includes(a)){ok=false;console.warn('[ia-foto-frame] bagian tidak ditemukan di',name,':',a);continue}s=s.replace(a,()=>b)}
+    (0,eval)('window.'+name+'='+s);
+    return ok;
+  }catch(e){console.warn('[ia-foto-frame] gagal menambal',name,e);return false}
+}
+
+const st=document.createElement('style');
+st.textContent='.fed .fz{flex:1;min-width:140px;width:auto;margin:0;padding:0;border:0;background:transparent}.fed .fcv canvas.frm{cursor:grab;outline:2px dashed #fff;outline-offset:-2px}.fed .fcv canvas.frm:active{cursor:grabbing}.fed .fhint{color:#cbd9f5;font-size:12px;margin-right:auto;align-self:center;line-height:1.4}';
+document.head.append(st);
+
+// ---------- editor frame: geser & zoom foto di dalam frame 3:1 ----------
+window.fotoFrame=function(src,done){
+  const img=new Image();
+  img.onerror=()=>toast('Foto tidak bisa dibuka');
+  img.onload=()=>{
+    const iw=img.naturalWidth,ih=img.naturalHeight,ov=document.createElement('div');ov.className='fed';
+    ov.innerHTML='<div class="ftb"><div class="ftl"><b style="color:#fff;font-size:13px">Atur foto di dalam frame</b></div>'
+      +'<div class="ftl"><button type="button" data-m="fill">Isi frame</button><button type="button" data-m="fit">Tampil utuh</button><span style="color:#fff;font-size:12px">Zoom</span><input type="range" class="fz" min="0" max="100" value="0"></div></div>'
+      +'<div class="fcv"><canvas class="frm" width="'+FW+'" height="'+FH+'"></canvas></div>'
+      +'<div class="fab"><span class="fhint">Geser foto dengan jari/mouse. Bagian di dalam frame persis yang masuk laporan.</span><button class="btn g" type="button" data-b>Batal</button><button class="btn" type="button" data-s>Lanjut</button></div>';
+    document.body.append(ov);
+    const cv=ov.querySelector('canvas'),x=cv.getContext('2d'),z=ov.querySelector('.fz');
+    const contain=Math.min(FW/iw,FH/ih),cover=Math.max(FW/iw,FH/ih),lo=contain*.5,hi=Math.max(cover,contain)*4;
+    let sc=cover,ox=0,oy=0,dr=null;
+    const draw=()=>{x.fillStyle='#fff';x.fillRect(0,0,FW,FH);const w=iw*sc,h=ih*sc;x.drawImage(img,FW/2+ox-w/2,FH/2+oy-h/2,w,h)};
+    const sync=()=>{z.value=Math.round(100*Math.log(sc/lo)/Math.log(hi/lo))};
+    const setS=v=>{sc=Math.max(lo,Math.min(hi,v));sync();draw()};
+    setS(cover);
+    z.oninput=()=>{sc=lo*Math.pow(hi/lo,z.value/100);draw()};
+    cv.addEventListener('pointerdown',e=>{e.preventDefault();cv.setPointerCapture(e.pointerId);dr={x:e.clientX,y:e.clientY,ox,oy}});
+    cv.addEventListener('pointermove',e=>{if(!dr)return;const k=FW/cv.getBoundingClientRect().width;ox=dr.ox+(e.clientX-dr.x)*k;oy=dr.oy+(e.clientY-dr.y)*k;draw()});
+    ['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,()=>{dr=null}));
+    cv.addEventListener('wheel',e=>{e.preventDefault();setS(sc*Math.exp(-e.deltaY*.0015))},{passive:false});
+    ov.addEventListener('click',e=>{
+      const m=e.target.closest('[data-m]');
+      if(m){ox=oy=0;setS(m.dataset.m==='fit'?contain:cover);return}
+      if(e.target.closest('[data-b]'))ov.remove();
+      else if(e.target.closest('[data-s]')){const u=cv.toDataURL('image/jpeg',.92);ov.remove();done(u)}
+    });
+  };
+  img.src=src;
+};
+
+// ---------- pilih foto -> frame -> coret/anotasi ----------
+window.fotoPick=function(done){
+  const i=document.createElement('input');i.type='file';i.accept='image/*';
+  i.onchange=()=>{const f=i.files&&i.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>fotoFrame(r.result,u=>fotoEdit(u,done));
+    r.onerror=()=>toast('Foto gagal dibaca');r.readAsDataURL(f)};
+  i.click();
+};
+
+// editor anotasi: jangan perkecil gambar frame (1500 px)
+patch('fotoEdit',[['MAX=1280','MAX=1600']]);
+
+// tombol "Atur frame" di samping "Edit foto"
+patch('fotoMount',[
+  ['<button type="button" class="btn g bs" data-fe>Edit foto</button>','<button type="button" class="btn g bs" data-fr>Atur frame</button><button type="button" class="btn g bs" data-fe>Edit foto</button>'],
+  ["else if(b.hasAttribute('data-fe'))","else if(b.hasAttribute('data-fr'))fotoFrame(get(),u=>fotoEdit(u,v=>{set(v);draw()}));else if(b.hasAttribute('data-fe'))"]
+]);
+
+// ---------- foto untuk laporan: selalu dimasukkan ke frame 3:1 (foto tinggi tidak melebar) ----------
+window.fotoJpg=function(u){
+  return new Promise((res,rej)=>{
+    const im=new Image();im.onerror=()=>rej(new Error('foto'));
+    im.onload=()=>{
+      const c=document.createElement('canvas');c.width=FW;c.height=FH;const x=c.getContext('2d');
+      x.fillStyle='#fff';x.fillRect(0,0,FW,FH);
+      const s=Math.min(FW/im.naturalWidth,FH/im.naturalHeight),w=im.naturalWidth*s,h=im.naturalHeight*s;
+      x.drawImage(im,(FW-w)/2,(FH-h)/2,w,h);
+      x.strokeStyle='#8a8a8a';x.lineWidth=4;x.strokeRect(2,2,FW-4,FH-4);
+      const b=atob(c.toDataURL('image/jpeg',.9).split(',')[1]);
+      res({d:Uint8Array.from(b,ch=>ch.charCodeAt(0)),w:FW,h:FH});
+    };
+    im.src=u;
+  });
+};
+
+// ---------- ukuran foto di Word: lebar (maks 540 px), tinggi menyesuaikan sisa ruang halaman ----------
+window.IAFZ=function(r){
+  const nl=rptLines(r).reduce((a,x)=>a+Math.max(1,Math.ceil(String(x.t||'').length/78)),0),
+        hp=Math.max(80,Math.min(135,215-nl*14));        // tinggi foto (pt)
+  let h=hp*4/3,w=h*r.foto.w/r.foto.h;                    // ke px
+  if(w>540){h*=540/w;w=540}
+  return{w:Math.round(w),h:Math.round(h)};
+};
+patch('laporanDocx',[['const q=Math.min(280/r.foto.w,140/r.foto.h,1);return{w:Math.round(r.foto.w*q),h:Math.round(r.foto.h*q)}','return IAFZ(r)']]);
+
+// ---------- ukuran foto di PDF ----------
+patch('laporanPdf',[['Math.min(220/r.foto.w,90/r.foto.h)','Math.min(330/r.foto.w,105/r.foto.h)']]);
+})();
+
+</script>
+</body></html>
