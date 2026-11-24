@@ -107,6 +107,12 @@ input,textarea,select{-webkit-user-select:text;user-select:text}
 .fcv{flex:1;min-height:0;display:grid;place-items:center;padding:8px;overflow:hidden}
 .fcv canvas{max-width:100%;max-height:100%;background:#fff;touch-action:none;cursor:crosshair;border-radius:4px}
 .fab{display:flex;gap:10px;justify-content:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--nav)}
+
+/* ---- layar penuh & cetak laporan temuan ---- */
+.tm{position:relative}.tm .h{padding-right:42px}
+.fsb{position:absolute;top:8px;right:8px;width:34px;height:34px;border:0;border-radius:10px;background:var(--soft);color:var(--pri);display:grid;place-items:center;cursor:pointer;padding:0}
+.fsb svg{width:18px;height:18px}
+.rp .rpf{flex:1;width:100%;border:0;background:#d9dde5}
 </style></head>
 <body><div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
@@ -123,6 +129,15 @@ const jName=c=>(JENIS.find(j=>j[0]===c)||JENIS[4])[1];
 const sortDocs=a=>a.sort((x,y)=>JENIS.findIndex(j=>j[0]===jOf(x))-JENIS.findIndex(j=>j[0]===jOf(y))||String(x.kode).localeCompare(String(y.kode),'id',{numeric:true}));
 let DOCS=[],S=null,J=null,TAB='dok',Q='',timer=null,FIND=[],JADS=[];
 const KAT=['Mayor','Minor','OFI'],STAT=['Terbuka','Dalam tindakan','Verifikasi','Ditutup'];
+// tampilan: OFI di database tetap 'OFI', tapi di layar disebut OBS (istilah yang dipakai perusahaan)
+const katL=k=>k==='OFI'?'OBS':k;
+// tindak lanjut auditee: akar -> kolom akar, due -> tgl selesai perbaikan, sisanya dibungkus JSON di kolom tindakan (tanpa ubah tabel)
+const tlParse=t=>{const o={akar:t.akar||'',perb:'',cegah:'',tp:t.due||'',tc:''},s=String(t.tindakan||'');
+  if(s.startsWith('{"tl":1')){try{const j=JSON.parse(s);o.perb=j.perb||'';o.cegah=j.cegah||'';o.tc=j.tc||''}catch(e){o.perb=s}}else o.perb=s;return o};
+const tlPack=o=>(o.perb||o.cegah||o.tc)?JSON.stringify({tl:1,perb:o.perb||'',cegah:o.cegah||'',tc:o.tc||''}):null;
+const tlExtra=t=>{const o=tlParse(t);return{akar:o.akar,perb:o.perb,cegah:o.cegah,tp:o.tp,tc:o.tc}};
+const tlHtml=t=>{const o=tlParse(t);if(!(o.akar||o.perb||o.cegah))return'';
+  return `<p class="m"><b>Investigasi akar permasalahan:</b> ${esc(o.akar||'-')}<br><b>Tindakan perbaikan:</b> ${esc(o.perb||'-')}${o.tp?' (selesai '+tgl(o.tp)+')':''}<br><b>Tindakan pencegahan:</b> ${esc(o.cegah||'-')}${o.tc?' (selesai '+tgl(o.tc)+')':''}</p>`};
 const tgl=d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
 const lt=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
 const gen=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>a[x%a.length]).join('')};
@@ -223,24 +238,34 @@ function docsTab(){const sc=DOCS.filter(d=>inScope(d,J));
 async function findTab(){const ct=$('#ct');ct.innerHTML='<div class="empty">Memuat temuan...</div>';await clFlush();
   const r=await sb.from('ia_temuan').select('*').eq('jadwal_id',J.id).order('nomor');if(r.error){ct.innerHTML='<div class="empty">Gagal memuat temuan: '+esc(r.error.message)+'</div>';return}FIND=r.data;
   const dk=id=>{const d=DOCS.find(x=>String(x.id)===String(id));return d?esc(d.kode):''};
-  ct.innerHTML=`<div class="bh"><h3>Temuan (${FIND.length})</h3><div class="bt">${FIND.length?'<button class="btn g bs" id="ua">Unduh Laporan</button>':''}<button class="btn bs" id="nt">+ Catat Temuan</button></div></div>`+(FIND.map(t=>`<div class="tm"><div class="h"><b>${tnm(t)}</b><span class="tag k-${esc(t.kategori)}">${esc(t.kategori)}</span><span class="tag o">${esc(t.status)}</span>${t.klausul?`<span class="m">Klausul ${esc(t.klausul)}</span>`:''}${t.dokumen_id?`<span class="m">&middot; ${dk(t.dokumen_id)}</span>`:''}</div><p>${esc(t.uraian)}</p>${t.bukti?`<p class="m"><b>Bukti:</b> ${esc(t.bukti)}</p>`:''}${t.foto?`<img class="fimg" src="${esc(t.foto)}" alt="foto bukti">`:''}<p class="m">PIC: ${esc(t.pic||'-')} &middot; dicatat ${esc(t.dibuat_oleh||'-')}</p>${t.akar||t.tindakan?`<p class="m"><b>Akar masalah:</b> ${esc(t.akar||'-')}<br><b>Tindakan korektif:</b> ${esc(t.tindakan||'-')}${t.due?'<br><b>Batas waktu:</b> '+tgl(t.due):''}</p>`:''}<div class="hr"><button class="btn g bs" data-r="${t.id}">Unduh Laporan</button>${S.mode==='email'?`<button class="btn g bs" data-f="${t.id}">Tindak Lanjut</button>${S.admin?`<button class="btn r bs" data-d="${t.id}">Hapus</button>`:''}`:''}</div></div>`).join('')||'<div class="empty">Belum ada temuan untuk audit ini.</div>');
+  ct.innerHTML=`<div class="bh"><h3>Temuan (${FIND.length})</h3><div class="bt">${FIND.length?'<button class="btn g bs" id="up">Layar Penuh &amp; Cetak</button><button class="btn g bs" id="ua">Unduh Laporan</button>':''}<button class="btn bs" id="nt">+ Catat Temuan</button></div></div>`+(FIND.map(t=>`<div class="tm"><button class="fsb" data-pv="${t.id}" type="button" title="Layar penuh" aria-label="Layar penuh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="h"><b>${tnm(t)}</b><span class="tag k-${esc(t.kategori)}">${esc(katL(t.kategori))}</span><span class="tag o">${esc(t.status)}</span>${t.klausul?`<span class="m">Klausul ${esc(t.klausul)}</span>`:''}${t.dokumen_id?`<span class="m">&middot; ${dk(t.dokumen_id)}</span>`:''}</div><p>${esc(t.uraian)}</p>${t.bukti?`<p class="m"><b>Bukti:</b> ${esc(t.bukti)}</p>`:''}${t.foto?`<img class="fimg" src="${esc(t.foto)}" alt="foto bukti">`:''}<p class="m">PIC: ${esc(t.pic||'-')} &middot; dicatat ${esc(t.dibuat_oleh||'-')}</p>${tlHtml(t)}<div class="hr"><button class="btn g bs" data-r="${t.id}">Unduh Laporan</button>${S.mode==='email'?`<button class="btn g bs" data-f="${t.id}">Tindak Lanjut</button>${S.admin?`<button class="btn r bs" data-d="${t.id}">Hapus</button>`:''}`:''}</div></div>`).join('')||'<div class="empty">Belum ada temuan untuk audit ini.</div>');
   $('#nt').onclick=()=>temuanForm();
-  const lapT=ids=>laporanForm(FIND.map((t,i)=>({nomor:t.nomor,kategori:t.kategori,uraian:t.uraian,bukti:t.bukti,foto:t.foto||null,klausul:t.klausul,pic:t.pic,ke:i+1,dari:FIND.length})).filter(x=>!ids||ids.includes(FIND[x.ke-1].id)),{area:areaOf(J),tgl:J.tanggal,auditee:'',auditor:J.auditor||S.nama,lingkup:J.ruang_lingkup||'',waktu:J.waktu||''});
+  const lapItems=ids=>FIND.map((t,i)=>({nomor:t.nomor,kategori:t.kategori,uraian:t.uraian,bukti:t.bukti,foto:t.foto||null,klausul:t.klausul,pic:t.pic,ke:i+1,dari:FIND.length,...tlExtra(t)})).filter(x=>!ids||ids.includes(FIND[x.ke-1].id));
+  const lapBase=()=>({area:areaOf(J),tgl:J.tanggal,auditee:'',auditor:J.auditor||S.nama,lingkup:J.ruang_lingkup||'',waktu:J.waktu||''});
+  const lapT=ids=>laporanForm(lapItems(ids),lapBase());
   const ua=$('#ua');if(ua)ua.onclick=()=>lapT();
+  const up=$('#up');if(up)up.onclick=()=>rptView(lapItems(),lapBase(),'Laporan Temuan');
+  document.querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>{const t=FIND.find(x=>x.id===b.dataset.pv);rptView(lapItems([b.dataset.pv]),lapBase(),tnm(t))});
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>lapT([b.dataset.r]));
   document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>tindakForm(FIND.find(t=>t.id===b.dataset.f)));
   document.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(!confirm('Hapus temuan ini?'))return;const x=await sb.from('ia_temuan').delete().eq('id',b.dataset.d);if(x.error){toast('Gagal: '+x.error.message);return}findTab()})}
 function temuanForm(pre){pre=pre||{};let ft=pre.foto||null;const sc=DOCS.filter(d=>inScope(d,J));
-  const mm=modal(`<h2>Catat Temuan</h2><p>${where(J)}</p><label>Jenis ketidaksesuaian</label><select id="tk">${KAT.map(k=>`<option value="${k}"${k===pre.kategori?' selected':''}>${k==='OFI'?'OFI (Observasi)':k}</option>`).join('')}</select><label>Clause ISO</label><input id="tc" placeholder="Mis. 7.5 &ndash; Pengendalian Informasi Terdokumentasi" value="${esc(pre.klausul||'')}">
+  const mm=modal(`<h2>Catat Temuan</h2><p>${where(J)}</p><label>Jenis ketidaksesuaian</label><select id="tk">${KAT.map(k=>`<option value="${k}"${k===pre.kategori?' selected':''}>${k==='OFI'?'OBS (Observasi)':k}</option>`).join('')}</select><label>Clause ISO</label><input id="tc" placeholder="Mis. 7.5 &ndash; Pengendalian Informasi Terdokumentasi" value="${esc(pre.klausul||'')}">
   <label>Dokumen terkait (opsional)</label><select id="td"><option value="">- tidak ada -</option>${sc.map(d=>`<option value="${esc(d.id)}"${String(d.id)===String(pre.dokumen_id)?' selected':''}>${esc(d.kode)} &middot; ${esc(d.judul)}</option>`).join('')}</select>
   <label>Uraian temuan: dokumen acuan &amp; poin persyaratan</label><textarea id="tu" placeholder="Mis. Prosedur Pengendalian Dokumen (KIM-PR-QAD-001 Rev.01) ; Point 4.12 i. ...">${esc(pre.uraian||'')}</textarea><label>Bukti objektif: kondisi yang ditemukan</label><textarea id="tb" placeholder="Mis. Memo Revisi Dokumen (KIM-FM-QAD-012 Rev01) belum ada tanda tangan persetujuan ...">${esc(pre.bukti||'')}</textarea><label>PIC / auditee</label><input id="tp" value="${esc(pre.pic||'')}"><label>Foto bukti (opsional)</label><div id="tfw"></div>`,
   async()=>{const u=$('#tu').value.trim();if(u.length<5)throw new Error('Uraian temuan wajib diisi');
     const r=await tmIns0({jadwal_id:J.id,foto:ft||undefined,kategori:$('#tk').value,klausul:$('#tc').value.trim()||null,dokumen_id:$('#td').value||null,uraian:u,bukti:$('#tb').value.trim()||null,pic:$('#tp').value.trim()||null,dibuat_oleh:S.nama});
     if(r.error)throw r.error;toast('Temuan dicatat');if(pre.cb)pre.cb();if(TAB==='tmn')findTab()},'Catat');fotoMount(mm.querySelector('#tfw'),()=>ft,v=>{ft=v},false)}
-function tindakForm(t){
-  modal(`<h2>Tindak Lanjut ${tnm(t)}</h2><p>${esc(t.uraian)}</p><label>Akar masalah</label><textarea id="fa">${esc(t.akar||'')}</textarea><label>Tindakan korektif</label><textarea id="ft">${esc(t.tindakan||'')}</textarea><label>Batas waktu</label><input id="fd" type="date" value="${esc(t.due||'')}">
+function tindakForm(t){const o=tlParse(t);
+  modal(`<h2>Tindak Lanjut ${tnm(t)}</h2><p>${esc(t.uraian)}</p><p><b>Diisi oleh auditee.</b> Isian ini otomatis masuk ke Laporan Temuan (kolom yang harus diisi auditee). Tanda tangan diisi manual setelah dicetak.</p>
+  <label>Investigasi akar permasalahan</label><textarea id="fa">${esc(o.akar)}</textarea>
+  <label>Tindakan perbaikan</label><textarea id="fb">${esc(o.perb)}</textarea><label>Tanggal penyelesaian perbaikan</label><input id="fbd" type="date" value="${esc(o.tp)}">
+  <label>Tindakan pencegahan</label><textarea id="fc">${esc(o.cegah)}</textarea><label>Tanggal penyelesaian pencegahan</label><input id="fcd" type="date" value="${esc(o.tc)}">
   <label>Status${S.admin?'':' (penutupan oleh admin)'}</label><select id="fs">${STAT.map(x=>`<option${x===t.status?' selected':''}${x==='Ditutup'&&!S.admin?' disabled':''}>${x}</option>`).join('')}</select>`,
-  async()=>{const r=await sb.from('ia_temuan').update({akar:$('#fa').value.trim()||null,tindakan:$('#ft').value.trim()||null,due:$('#fd').value||null,status:$('#fs').value}).eq('id',t.id);if(r.error)throw r.error;toast('Tindak lanjut disimpan');findTab()})}
+  async()=>{const r=await sb.from('ia_temuan').update({akar:$('#fa').value.trim()||null,tindakan:tlPack({perb:$('#fb').value.trim(),cegah:$('#fc').value.trim(),tc:$('#fcd').value}),due:$('#fbd').value||null,status:$('#fs').value}).eq('id',t.id);if(r.error)throw r.error;toast('Tindak lanjut disimpan');findTab()},'Simpan')}
+
+
+
 
 // ---------- checklist audit (KIM-FM-QAD-018) ----------
 function fotoCompress(cv){let c=cv,q=.82;
@@ -545,7 +570,7 @@ async function laporanDocx(list){
   const R=(t,o={})=>new TextRun({text:t,font:TN,size:K.sz,...o});
   const P=(ch,o={})=>new Paragraph({children:Array.isArray(ch)?ch:[ch],spacing:{before:0,after:0,line:240},...o});
   const sp=n=>' '.repeat(n);
-  const cell=(ch,w,o={})=>new TableCell({children:ch,width:{size:w,type:WidthType.DXA},borders:o.b||all,verticalAlign:o.v||VerticalAlign.TOP,columnSpan:o.span,shading:o.fill?{type:ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,margins:o.m||{top:30,bottom:30,left:100,right:100}});
+  const cell=(ch,w,o={})=>new TableCell({children:ch,width:{size:w,type:WidthType.DXA},borders:o.b||all,verticalAlign:o.v||VerticalAlign.TOP,columnSpan:o.span,rowSpan:o.rs,shading:o.fill?{type:ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,margins:o.m||{top:30,bottom:30,left:100,right:100}});
   const tbl=(cols,rows,o={})=>new Table({width:{size:cols.reduce((a,b)=>a+b,0),type:WidthType.DXA},columnWidths:cols,rows,borders:o.borders});
   const row=(cells,h)=>new TableRow({children:cells,height:h?{value:h,rule:HeightRule.ATLEAST}:undefined,cantSplit:true});
   const NB={top:no,bottom:no,left:no,right:no,insideHorizontal:no,insideVertical:no};
@@ -561,11 +586,19 @@ async function laporanDocx(list){
   const fzOf=(r)=>r.foto?(()=>{const q=Math.min(280/r.foto.w,140/r.foto.h,1);return{w:Math.round(r.foto.w*q),h:Math.round(r.foto.h*q)}})():null;
   // skala otomatis: uraian panjang -> font uraian mengecil (min 7pt) dan tabel/foto mengecil sedikit supaya tetap 1 halaman F4
   const fitK=(r)=>{const fzb=fzOf(r);let best={fs:12,ts:1};
-    for(let fs=12;fs>=7;fs-=.5){const ts=1-(12-fs)/5*.22;
+    const nn=(s,w,fs)=>String(s||'').split('\n').reduce((a,l)=>a+Math.max(1,Math.ceil(l.length*.5*fs/w)),0);
+    for(let fs=12;fs>=6;fs-=.5){const ts=1-(12-fs)/5*.22;
       const n=rptLines(r).reduce((a,x)=>a+Math.max(1,Math.ceil(String(x.t||'').length*.46*fs/414)),0);
-      const ph=fzb?fzb.h*15*ts:0,row1=Math.max(3750*ts,ts*1822+n*fs*23+(ph?ph+60:0)),tot=ts*9814+row1;
-      best={fs,ts};if(tot<=13500)break}
+      const ph=fzb?fzb.h*15*ts:0,row1=Math.max(3750*ts,ts*1822+n*fs*23+(ph?ph+60:0));
+      const rh=(s,w,min)=>Math.max(min*ts,s?ts*340+nn(s,w,fs)*fs*23:0),
+        tot=ts*6314+row1+rh(r.akar,519,1300)+rh(r.perb,414,1100)+rh(r.cegah,414,1100);
+      best={fs,ts};if(tot<=13300)break}
     K.ts=best.ts;K.tf=Math.round(best.fs*2);K.sz=Math.round(24*best.ts)};
+
+
+
+
+
   const sg3=(groups,gap,tgl=true)=>{const cm={top:0,bottom:0,left:40,right:40},BT={top:no,bottom:ln,left:no,right:no};
     const E=(w)=>cell([P(R('',{size:Z(20)}))],w,{b:none,m:cm});
     const mk=(f)=>groups.flatMap(g=>g.sp?[E(g.sp)]:[...(g.label?[f('lw',g)]:[]),f('line',g),f('lab',g)]);
@@ -607,16 +640,21 @@ async function laporanDocx(list){
     const pjS=()=>cell([sg3([{lineW:1400,labW:480,name:'nama'}],0,true),tiny()],cw[1],{b:BOTB,v:VerticalAlign.BOTTOM});
     const fl=rptLines(r).map(x=>P(x.t?R(x.t,{italics:!!x.i,size:K.tf}):R('',{size:K.tf}),{alignment:AlignmentType.JUSTIFIED}));
     const fz0=fzOf(r),fz=fz0?{w:Math.max(20,Math.round(fz0.w*K.ts)),h:Math.max(20,Math.round(fz0.h*K.ts))}:null;
-    const row1=row([cell([P(R('Temuan Ketidaksesuaian :',{bold:true})),...fl,...(fz?[new Paragraph({spacing:{before:60,after:0},children:[new ImageRun({type:'jpg',data:r.foto.d,transformation:{width:fz.w,height:fz.h}})]})]:[]),P(R('')),
-        sg3([{label:'Diketahui',lw:1100,lineW:2000,labW:900,name:'Auditee'},{sp:250},{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],H(600),true),tiny()],cw[0]),
-      cell([P(R('Jenis Ketidaksesuaian',{bold:true})),P(R(''),{spacing:{before:H(300),after:0}}),P(R(r.jenis,{size:Z(28)}),{alignment:AlignmentType.CENTER,spacing:{before:0,after:H(700)}}),P(R('*observasi/mayor/minor',{size:Z(13)}),{spacing:{before:H(700),after:0}})],cw[1])],H(3750));
-    const row2=row([cell([P(R('Investigasi Akar Permasalahan:',{bold:true}))],10590,{span:2})],H(1300));
+    const tp=(s)=>String(s||'').split('\n').map(l=>P(R(l,{size:K.tf}),{alignment:AlignmentType.JUSTIFIED})),dtx=(d)=>d?[R(' '+d,{size:K.tf})]:[];
+    // kotak Temuan dipecah 2 baris: isi (atas) + tanda tangan (bawah, selalu menempel di dasar kotak); sel "Jenis" menyatu (rowSpan)
+    const sigH=H(1250);
+    const row1a=row([cell([P(R('Temuan Ketidaksesuaian :',{bold:true})),...fl,...(fz?[new Paragraph({spacing:{before:60,after:0},children:[new ImageRun({type:'jpg',data:r.foto.d,transformation:{width:fz.w,height:fz.h}})]})]:[]),tiny()],cw[0],{b:TOPB}),
+      cell([P(R('Jenis Ketidaksesuaian',{bold:true})),P(R(''),{spacing:{before:H(300),after:0}}),P(R(r.jenis,{size:Z(28)}),{alignment:AlignmentType.CENTER,spacing:{before:0,after:H(700)}}),P(R('*observasi/mayor/minor',{size:Z(13)}),{spacing:{before:H(700),after:0}})],cw[1],{rs:2})],Math.max(H(3750)-sigH,H(1200)));
+    const row1b=row([cell([sg3([{label:'Diketahui',lw:1100,lineW:2000,labW:900,name:'Auditee'},{sp:250},{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],H(600),true),tiny()],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM})],sigH);
+
+
+    const row2=row([cell([P(R('Investigasi Akar Permasalahan:',{bold:true})),...(r.akar?tp(r.akar):[])],10590,{span:2})],H(1300));
     // Tindakan Perbaikan: isi + "Tanggal Penyelesaian" di baris sendiri, menempel garis bawah
-    const row3a=row([cell([P(R('Tindakan Perbaikan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],H(1100));
-    const row3b=row([cell([P(R('Tanggal Penyelesaian:',{bold:true}))],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],H(640));
-    const row4a=row([cell([P(R('Tindakan Pencegahan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],H(1100));
+    const row3a=row([cell([P(R('Tindakan Perbaikan:',{bold:true})),...(r.perb?tp(r.perb):[])],cw[0],{b:TOPB}),pjT()],H(1100));
+    const row3b=row([cell([P([R('Tanggal Penyelesaian:',{bold:true}),...dtx(r.tp)])],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],H(640));
+    const row4a=row([cell([P(R('Tindakan Pencegahan:',{bold:true})),...(r.cegah?tp(r.cegah):[])],cw[0],{b:TOPB}),pjT()],H(1100));
     const nb0={top:no,bottom:no,left:no,right:no},nm0={top:0,bottom:0,left:0,right:0};
-    const row4b=row([cell([tbl([4250,4000],[row([cell([P(R('Tanggal Penyelesaian:',{bold:true}))],4250,{b:nb0,m:{top:0,bottom:30,left:0,right:0},v:VerticalAlign.BOTTOM}),
+    const row4b=row([cell([tbl([4250,4000],[row([cell([P([R('Tanggal Penyelesaian:',{bold:true}),...dtx(r.tc)])],4250,{b:nb0,m:{top:0,bottom:30,left:0,right:0},v:VerticalAlign.BOTTOM}),
         cell([sg3([{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],H(400),true),tiny()],4000,{b:nb0,m:nm0,v:VerticalAlign.BOTTOM})])],{borders:NB}),tiny()],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],H(1000));
     const ck=(w)=>cell([P(R('',{size:Z(20)}))],w,{b:all,m:nm0});
     const ckl=(w,t)=>cell([P(R(t),{indent:{left:60}})],w,{b:nb0,m:nm0,v:VerticalAlign.CENTER});
@@ -625,7 +663,7 @@ async function laporanDocx(list){
     const row5=row([cell([P(R('Verifikasi Tindakan Perbaikan dan Pencegahan:')),P(R('',{size:8})),lg,P(R('',{size:8})),
         sg3([{sp:5400},{label:'Verifikator',lw:1300,lineW:2800,labW:850,name:'Auditor'}],H(700),true),tiny()],10590,{span:2})],H(1700));
     const row6=row([cell([P([R('Tindak Lanjut ke Nomor Laporan',{bold:true}),R(' : '+rptDari(r)[0])])],10590,{span:2})],H(340));
-    return tbl([8490,2100],[row1,row2,row3a,row3b,row4a,row4b,row5,row6],{borders:NB})};
+    return tbl([8490,2100],[row1a,row1b,row2,row3a,row3b,row4a,row4b,row5,row6],{borders:NB})};
   const sections=list.map(r=>{fitK(r);return {properties:{page:{size:{width:12240,height:18720},margin:{top:1620,bottom:1300,left:748,right:902,header:283,footer:283}}},headers:{default:header},footers:{default:footer},
     children:[info(r),...notes,body(r),...notes.slice(0,2)]}});
   const doc=new Document({creator:'PT Karya Indah Multiguna',title:'Laporan Temuan Internal Audit',styles:{default:{document:{run:{font:TN,size:SZ}}}},sections});
@@ -661,24 +699,38 @@ async function laporanPdf(list){
     const sg=(cx,yy,name,tgl=true,w=96)=>{line(cx-w/2,yy,cx+w/2,yy);tx('(',cx-w/2,yy-2,9.5,f.r);tx(')',cx+w/2-4,yy-2,9.5,f.r);tx('*'+name,cx+w/2,yy-2,6.5,f.r);if(tgl){tx('(',cx-w/2+10,yy+10,9.5,f.r);tx(')',cx+w/2-14,yy+10,9.5,f.r);tx('*tgl',cx+w/2-10,yy+10,6.5,f.r)}};
     // baris 1
     tx('Temuan Ketidaksesuaian :',L+3,Y+13,12,f.b);
-    let fs=12,lh=14.1;const lay=()=>{const o=[];rptLines(r).forEach(x=>{const ft=x.i?f.i:f.r;wrap(x.t,ft,fs,LW-8).forEach(q=>o.push([q,ft]))});return o};let ls=lay();const hasF=!!r.foto;let hs=1,H2,H3,H4,H5,hmax,ps,pw,ph;
-    const setH=()=>{H2=Math.round((hasF?44:62)*hs);H3=Math.round((hasF?74:88)*hs);H4=Math.round((hasF?86:96)*hs);H5=Math.round((hasF?94:102)*hs);hmax=810-y0-(H2+H3+H4+H5+20);ps=hasF?Math.min(220/r.foto.w,90/r.foto.h)*hs:0;pw=hasF?ps*r.foto.w:0;ph=hasF?ps*r.foto.h:0};
+    let fs=12,lh=14.1;const wl=(s,ft,sz,mw)=>String(s||'').split('\n').flatMap(l=>wrap(l,ft,sz,mw));
+    const lay=()=>{const o=[];rptLines(r).forEach(x=>{const ft=x.i?f.i:f.r;wrap(x.t,ft,fs,LW-8).forEach(q=>o.push([q,ft]))});return o};
+    let ls=lay(),la=[],lp=[],lc=[];const hasF=!!r.foto;let hs=1,H1,H2,H3,H4,H5,ps,pw,ph;const BUD=810-y0;
+    const setH=()=>{ps=hasF?Math.min(220/r.foto.w,90/r.foto.h)*hs:0;pw=hasF?ps*r.foto.w:0;ph=hasF?ps*r.foto.h:0;
+      ls=lay();la=r.akar?wl(r.akar,f.r,fs,W-8):[];lp=r.perb?wl(r.perb,f.r,fs,LW-8):[];lc=r.cegah?wl(r.cegah,f.r,fs,LW-8):[];
+      H1=Math.max(Math.round(207*hs),27+ls.length*lh+(hasF?ph+6:0)+8+62);
+      H2=Math.max(Math.round((hasF?44:62)*hs),26+la.length*lh);
+      H3=Math.max(Math.round((hasF?74:88)*hs),lp.length?44+lp.length*lh:0);
+      H4=Math.max(Math.round((hasF?86:96)*hs),lc.length?70+lc.length*lh:0);
+      H5=Math.round((hasF?94:102)*hs)};
     setH();
-    // uraian panjang: font uraian mengecil (min 7) dan tabel mengecil sedikit supaya tetap 1 halaman
-    while(fs>7&&27+ls.length*lh+(hasF?ph+8:0)+8+78>hmax){fs-=.5;lh=fs*1.17;hs=Math.max(.85,1-(12-fs)/5*.15);setH();ls=lay()}
+    // isian panjang: font isian mengecil (min 6) dan tabel mengecil sedikit supaya tetap 1 halaman
+    while(fs>6&&H1+H2+H3+H4+H5+20>BUD){fs-=.5;lh=fs*1.17;hs=Math.max(.7,1-(12-fs)/6*.3);setH()}
+
+
+
+
     let ty=Y+27;ls.forEach(([q,ft])=>{tx(q,L+3,ty,fs,ft);ty+=lh});if(hasF){const fimg=await pdf.embedJpg(r.foto.d),top=ty-lh+6;pg.drawImage(fimg,{x:L+3,y:T(top+ph),width:pw,height:ph});pg.drawRectangle({x:L+3,y:T(top+ph),width:pw,height:ph,borderColor:k,borderWidth:.5});ty+=ph+6}
-    const sy=ty+8;tx('Diketahui',L+3,sy+30,12,f.r);tx('Disetujui',L+225,sy+30,12,f.r);sg(L+117,sy+44,'Auditee',true,110);sg(L+340,sy+44,'Kabag./Mng',true,100);
-    const h1=Math.max(Math.round(207*hs),sy+62-Y);rect(L,Y,W,h1);line(lx,Y,lx,Y+h1);
-    tx('Jenis',lx+3,Y+13,12,f.b);tx('Ketidaksesuaian',lx+3,Y+26,12,f.b);tx(r.jenis,lx+RW/2,Y+60,14,f.r,{c:1});tx('*observasi/mayor/minor',lx+RW/2,Y+112,6.5,f.r,{c:1});Y+=h1;
+    const sy=Y+H1-62; // tanda tangan selalu menempel di dasar kotak Temuan
+    tx('Diketahui',L+3,sy+30,12,f.r);tx('Disetujui',L+225,sy+30,12,f.r);sg(L+117,sy+44,'Auditee',true,110);sg(L+340,sy+44,'Kabag./Mng',true,100);
+    rect(L,Y,W,H1);line(lx,Y,lx,Y+H1);
+    tx('Jenis',lx+3,Y+13,12,f.b);tx('Ketidaksesuaian',lx+3,Y+26,12,f.b);tx(r.jenis,lx+RW/2,Y+60,14,f.r,{c:1});tx('*observasi/mayor/minor',lx+RW/2,Y+112,6.5,f.r,{c:1});Y+=H1;
     // baris 2
-    rect(L,Y,W,H2);tx('Investigasi Akar Permasalahan:',L+3,Y+13,12,f.b);Y+=H2;
+    rect(L,Y,W,H2);tx('Investigasi Akar Permasalahan:',L+3,Y+13,12,f.b);la.forEach((s,k)=>tx(s,L+3,Y+27+k*lh,fs,f.r));Y+=H2;
     // PJ
     const pj=(yy,h)=>{tx('Penanggung',lx+3,yy+13,12,f.b);tx('Jawab',lx+3,yy+26,12,f.b);sg(lx+RW/2-14,yy+h-20,'nama',true,58)};
     // baris 3
-    rect(L,Y,W,H3);line(lx,Y,lx,Y+H3);tx('Tindakan Perbaikan:',L+3,Y+13,12,f.b);tx('Tanggal Penyelesaian:',L+3,Y+H3-8,12,f.b);pj(Y,H3);Y+=H3;
+    const tgp=(yy,d)=>{const lb='Tanggal Penyelesaian:';tx(lb,L+3,yy,12,f.b);if(d)tx(d,L+3+f.b.widthOfTextAtSize(lb,12)+4,yy,Math.min(12,fs),f.r)};
+    rect(L,Y,W,H3);line(lx,Y,lx,Y+H3);tx('Tindakan Perbaikan:',L+3,Y+13,12,f.b);lp.forEach((s,k)=>tx(s,L+3,Y+27+k*lh,fs,f.r));tgp(Y+H3-8,r.tp);pj(Y,H3);Y+=H3;
     // baris 4
-    rect(L,Y,W,H4);line(lx,Y,lx,Y+H4);tx('Tindakan Pencegahan:',L+3,Y+13,12,f.b);tx('Disetujui',L+225,Y+H4-34,12,f.r);sg(L+340,Y+H4-20,'Kabag./Mng',true,100);
-    tx('Tanggal Penyelesaian:',L+3,Y+H4-8,12,f.b);pj(Y,H4);Y+=H4;
+    rect(L,Y,W,H4);line(lx,Y,lx,Y+H4);tx('Tindakan Pencegahan:',L+3,Y+13,12,f.b);lc.forEach((s,k)=>tx(s,L+3,Y+27+k*lh,fs,f.r));tx('Disetujui',L+225,Y+H4-34,12,f.r);sg(L+340,Y+H4-20,'Kabag./Mng',true,100);
+    tgp(Y+H4-8,r.tc);pj(Y,H4);Y+=H4;
     // baris 5
     rect(L,Y,W,H5);tx('Verifikasi Tindakan Perbaikan dan Pencegahan:',L+3,Y+13,12,f.r);
     [['Lulus',L+345],['Gagal',L+425]].forEach(([t,x])=>{pg.drawRectangle({x,y:T(Y+33),width:15,height:15,borderColor:k,borderWidth:.7});tx(t,x+21,Y+29,12,f.r)});
@@ -704,10 +756,16 @@ async function laporanPdf(list){
 let RPTF={waktu:''};
 const JENIS_LAP={Mayor:'Mayor',Minor:'Minor',OFI:'Observasi'};
 const areaOf=j=>j.dept+(j.bagian?' - '+j.bagian:'');
-function clLaporan(){const h=CL.header,fl=CL.rows.filter(r=>r.f==='NC'||r.f==='OBS');
+async function clLaporan(){const h=CL.header,fl=CL.rows.filter(r=>r.f==='NC'||r.f==='OBS');
   if(!fl.length)return toast('Belum ada butir NC / OBS di checklist');
-  laporanForm(fl.map((r,i)=>({nomor:i+1,kategori:r.f==='NC'?'Minor':'OFI',uraian:(r.doc&&r.q?r.doc+' ; ':'')+(r.q||r.note||''),bukti:r.q?r.note:'',foto:r.foto||null,klausul:clKl(r),pic:h.auditee,ke:i+1,dari:fl.length})),
+  const ids=fl.map(r=>r.tid).filter(Boolean),tm={};
+  if(ids.length){try{const q=await sb.from('ia_temuan').select('id,akar,tindakan,due').in('id',ids);(q.data||[]).forEach(x=>tm[x.id]=tlExtra(x))}catch(e){}}
+  laporanForm(fl.map((r,i)=>({nomor:i+1,kategori:r.f==='NC'?'Minor':'OFI',uraian:(r.doc&&r.q?r.doc+' ; ':'')+(r.q||r.note||''),bukti:r.q?r.note:'',foto:r.foto||null,klausul:clKl(r),pic:h.auditee,ke:i+1,dari:fl.length,...(r.tid&&tm[r.tid]||{})})),
     {area:String(h.dept||J.dept).replace(/\s*>\s*/g,' - '),tgl:h.tgl||J.tanggal,auditee:h.auditee,auditor:h.auditor||J.auditor||S.nama,lingkup:J.ruang_lingkup||'',waktu:J.waktu||''})}
+const rptExtra=t=>({akar:t.akar||'',perb:t.perb||'',cegah:t.cegah||'',tp:t.tp?tgl(t.tp):'',tc:t.tc?tgl(t.tc):''});
+
+
+
 function laporanForm(items,base){if(!items.length)return;const one=items.length===1;
   const row=(t,i)=>`<div class="row" style="padding:8px 10px;margin-bottom:6px;flex-wrap:nowrap"><div style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${esc(t.klausul||'-')}</b> &middot; ${esc(String(t.uraian||'').replace(/\s+/g,' ').slice(0,70))}</div>
     <input data-ni="${i}" type="number" min="1" value="${t.nomor}" title="No. urut (Internal Audit Log)" style="width:62px;margin:0;padding:7px 8px"><select data-ji="${i}" style="width:auto;margin:0;padding:7px 8px">${KAT.map(k=>`<option value="${k}"${k===t.kategori?' selected':''}>${JENIS_LAP[k]}</option>`).join('')}</select></div>`;
@@ -719,13 +777,98 @@ function laporanForm(items,base){if(!items.length)return;const one=items.length=
   async()=>{RPTF.waktu=$('#rw').value.trim();const fm=$('#rf').value,tl=one?$('#rt').value.trim():'',tg=base.tgl||J.tanggal;
     if(!tg)throw new Error('Tanggal audit belum diisi');
     const list=items.map((t,i)=>({no:RPT_NO(tg,+$(`[data-ni="${i}"]`).value||t.nomor),lembarKe:t.ke,lembarDari:t.dari,area:base.area,tgl:RPT_TGL(tg),lingkup:$('#rl').value.trim(),waktu:RPTF.waktu,auditee:$('#ra').value.trim(),auditor:base.auditor,
-      jenis:JENIS_LAP[$(`[data-ji="${i}"]`).value],uraian:t.uraian,bukti:t.bukti,klausul:t.klausul,tindak:tl,fotoUrl:t.foto||null}));
+      jenis:JENIS_LAP[$(`[data-ji="${i}"]`).value],uraian:t.uraian,bukti:t.bukti,klausul:t.klausul,tindak:tl,fotoUrl:t.foto||null,...rptExtra(t)}));
     for(const x of list)if(x.fotoUrl)x.foto=await fotoJpg(x.fotoUrl).catch(()=>null);
     const nm='Laporan-Temuan_'+String([base.area,tg].join('_')).replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'');
     toast('Menyiapkan laporan...');
     if(fm!=='pdf'){await lib('https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js',()=>window.docx);dl(await laporanDocx(list),nm+'.docx')}
     if(fm!=='docx'){await lib('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',()=>window.PDFLib);if(fm==='both')await new Promise(r=>setTimeout(r,600));dl(await laporanPdf(list),nm+'.pdf')}
     toast('Laporan diunduh')},'Unduh')}
+
+// ---------- pratinjau layar penuh + cetak (halaman F4 mengikuti KIM-FM-QAD-019) ----------
+function rptHtml(list){
+  const e=esc,bxs=s=>[...s].map(c=>`<b class="bx">${c}</b>`).join(''),
+  sg=(name,lbl,w)=>`<div class="sg">${lbl?`<span class="sl">${lbl}</span>`:''}<div class="sb" style="width:${w}mm"><div class="a"><i>(</i><i>)</i><small>*${name}</small></div><div class="b"><i>(</i><i>)</i><small>*tgl</small></div></div></div>`,
+  txt=s=>s?`<div class="tx">${e(s)}</div>`:'',
+  notes=`*Pengisian No. Laporan : KIM/INT/YYYY/MM/No.urut (3 digit).<br>** Referensi no. urut dari : Internal Audit Log (KIM-FM-QAD-020)`,
+  css=`@page{size:215.9mm 330.2mm;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0}
+body{background:#d9dde5;font-family:'Times New Roman',Times,'Liberation Serif',serif;color:#000}
+.pg{position:relative;width:215.9mm;height:330.2mm;margin:8px auto;background:#fff;overflow:hidden;padding:5mm 15.9mm 0 13.2mm;box-shadow:0 2px 14px rgba(0,0,0,.3);--fs:12pt;--k:1;page-break-after:always;break-after:page}
+.wm{position:absolute;left:50%;top:50%;width:186.8mm;height:178.4mm;margin:-89.2mm 0 0 -93.4mm;background:url(data:image/png;base64,${RPT_IMG.wm}) center/contain no-repeat}
+.bd{position:relative;font-size:var(--fs);line-height:1.15}
+table{border-collapse:collapse;width:100%;table-layout:fixed}
+.hd td{border:.75pt solid #000;padding:0}
+.hd .lg{border-right:0;height:17mm}.hd .fm{border-left:0;text-align:center;font:bold 8.5pt Arial,Helvetica,sans-serif;width:28%}
+.logo{width:75mm;height:11.2mm;margin-left:1.2mm;background:url(data:image/png;base64,${RPT_IMG.hdr}) left center/contain no-repeat}
+.hd .ti{background:#bfbfbf;text-align:center;font:bold 10pt Arial,Helvetica,sans-serif;padding:1mm}
+.in{margin-top:1mm}.in td{border:.75pt solid #000;width:50%;height:6.2mm;padding:0 1.2mm;font-size:var(--fs)}
+.k{display:inline-block;width:25.5mm}
+.nt{font-size:7.5pt;font-style:italic;line-height:1.25;margin:1mm 0 1.6mm}
+.mn td{border:.75pt solid #000;padding:1mm 1.8mm;vertical-align:top;font-size:var(--fs)}
+.mn .t1{border-bottom:0}.mn .s1{border-top:0;vertical-align:bottom}
+.mn .r{width:19.8%}.mn .r .jn{text-align:center;font-size:14pt;margin-top:calc(12mm*var(--k,1))}
+.mn .r .fn{text-align:center;font-size:6.5pt;margin-top:calc(20mm*var(--k,1))}
+.tx{white-space:pre-wrap;text-align:justify;margin-top:.6mm}
+.ph{display:block;margin:2mm 0 0;max-width:100%;max-height:40mm;border:.5pt solid #888}
+.sg{display:flex;align-items:flex-start}.sg .sl{margin:calc(6.4mm*var(--k,1)) 2mm 0 0;white-space:nowrap}
+.sb{padding-top:calc(11mm*var(--k,1));font-size:10pt;line-height:1.1}
+.sb .a,.sb .b{display:flex;justify-content:space-between;position:relative}
+.sb .a{border-bottom:.75pt solid #000}.sb .b{margin:1.3mm 5mm 0 4.5mm}
+.sb i{font-style:normal}.sb small{position:absolute;left:100%;bottom:0;margin-left:.6mm;font-size:6.5pt;white-space:nowrap}
+.sgs{display:flex}.sgs .sg{flex:1}
+.pj{padding-right:0}.pj .sg{justify-content:flex-start}
+.tgd{display:flex;justify-content:space-between;align-items:flex-end}.tgd .sg{width:52%}
+.vf .lg2{text-align:right;margin:2.2mm 17mm 0 0}.vf .vs{display:flex;justify-content:flex-end;padding-right:12mm}
+.cb{display:inline-block;width:4mm;height:4mm;border:.75pt solid #000;vertical-align:middle;margin:0 1.5mm 0 7mm}
+.h44{height:calc(44mm*var(--k,1))}.h20{height:calc(20mm*var(--k,1))}.h16{height:calc(16mm*var(--k,1))}.h11{height:calc(11mm*var(--k,1))}.h30{height:calc(30mm*var(--k,1))}.h7{height:7mm}
+.ft{position:absolute;left:13.2mm;right:15.9mm;bottom:8mm;font:7.5pt Arial,Helvetica,sans-serif;color:#404040}
+.fr{display:flex;align-items:center;height:6mm;gap:.8mm}.fr .c1{width:24mm;margin-left:3mm}.fr .gap{flex:1}.fr .c2{width:13mm}
+.bx{display:inline-block;min-width:5.2mm;height:4.7mm;border:.6pt solid #808080;text-align:center;font-weight:normal;line-height:4.4mm;padding:0 .4mm}
+@media print{html,body{background:#fff}.pg{margin:0;box-shadow:none}.pg:last-child{page-break-after:auto;break-after:auto}}`;
+  const pages=list.map((r,n)=>{
+    const body=rptLines(r).map(x=>x.i?`<i>${e(x.t)}</i>`:e(x.t)).join('\n');
+    return `<section class="pg"><div class="wm"></div><div class="bd">
+<table class="hd"><tr><td class="lg"><div class="logo"></div></td><td class="fm">FORMULIR<br>DOKUMEN LEVEL IV</td></tr><tr><td colspan="2" class="ti">LAPORAN TEMUAN INTERNAL AUDIT</td></tr></table>
+<table class="in"><tr><td><span class="k">No. Laporan</span>:&nbsp; ${e(r.no)}</td><td>Lembar ke ( &nbsp;${e(r.lembarKe)}&nbsp; ) dari ( &nbsp;${e(r.lembarDari)}&nbsp; )</td></tr>
+<tr><td><span class="k">Area Audit</span>:&nbsp; ${e(r.area)}</td><td><span class="k">Tanggal Audit</span>:&nbsp; ${e(r.tgl)}</td></tr>
+<tr><td><span class="k">Lingkup</span>:&nbsp; ${e(r.lingkup)}</td><td><span class="k">Waktu Audit</span>:&nbsp; ${e(r.waktu)}</td></tr>
+<tr><td><span class="k">Auditee</span>:&nbsp; ${e(r.auditee)}</td><td><span class="k">Auditor</span>:&nbsp; ${e(r.auditor)}</td></tr></table>
+<div class="nt">${notes}<br>*** Lembar ke (urutan laporan temuan yang diterima oleh departemen terkait) dari (total laporan temuan yang diterima oleh departemen terkait)</div>
+<table class="mn"><colgroup><col style="width:80.2%"><col style="width:19.8%"></colgroup>
+<tr><td class="t1 h44"><b>Temuan Ketidaksesuaian :</b><div class="tx">${body}</div>${r.fotoUrl?`<img class="ph" src="${e(r.fotoUrl)}" alt="foto bukti">`:''}</td>
+<td class="r" rowspan="2"><b>Jenis Ketidaksesuaian</b><div class="jn">${e(r.jenis)}</div><div class="fn">*observasi/mayor/minor</div></td></tr>
+<tr><td class="s1 h20"><div class="sgs">${sg('Auditee','Diketahui',40)}${sg('Kabag./Mng','Disetujui',40)}</div></td></tr>
+<tr><td colspan="2" class="h20"><b>Investigasi Akar Permasalahan:</b>${txt(r.akar)}</td></tr>
+<tr><td class="t1 h16"><b>Tindakan Perbaikan:</b>${txt(r.perb)}</td><td class="pj t1"><b>Penanggung Jawab</b></td></tr>
+<tr><td class="s1 h11"><b>Tanggal Penyelesaian:</b> ${e(r.tp)}</td><td class="pj s1">${sg('nama','',22)}</td></tr>
+<tr><td class="t1 h16"><b>Tindakan Pencegahan:</b>${txt(r.cegah)}</td><td class="pj t1"><b>Penanggung Jawab</b></td></tr>
+<tr><td class="s1 h20"><div class="tgd"><span><b>Tanggal Penyelesaian:</b> ${e(r.tc)}</span>${sg('Kabag./Mng','Disetujui',40)}</div></td><td class="pj s1">${sg('nama','',22)}</td></tr>
+<tr><td colspan="2" class="vf h30"><div>Verifikasi Tindakan Perbaikan dan Pencegahan:</div><div class="lg2"><span class="cb"></span>Lulus<span class="cb"></span>Gagal</div><div class="vs">${sg('Auditor','Verifikator',50)}</div></td></tr>
+<tr><td colspan="2" class="h7"><b>Tindak Lanjut ke Nomor Laporan</b> : <span style="white-space:pre">${e(r.tindak||'KIM/INT/      /      /')}</span></td></tr></table>
+<div class="nt" style="margin-top:1mm">${notes}</div></div>
+<div class="ft"><div class="fr"><span class="c1">No. Dokumen</span>:${bxs('KIM')}-${bxs('FM')}-${bxs('QAD')}-${bxs('019')}<span class="gap"></span><span class="c2">Revisi</span>:${bxs('00')}</div>
+<div class="fr"><span class="c1">Tgl. Berlaku</span>:${bxs('01')}/${bxs('04')}/${bxs('2018')}<span class="gap"></span><span class="c2">Halaman</span>: <b>${n+1}</b> dari <b>${list.length}</b></div></div></section>`}).join('\n');
+  const js=`function fit(){document.querySelectorAll('.pg').forEach(function(p){var fs=12,b=p.querySelector('.bd'),f=p.querySelector('.ft');var sc=function(){p.style.setProperty('--fs',fs+'pt');p.style.setProperty('--k',Math.max(.6,fs/12))};sc();while(fs>6.5&&b.getBoundingClientRect().bottom>f.getBoundingClientRect().top-4){fs-=.5;sc()}})}
+function zm(){var p=document.querySelector('.pg'),w=document.documentElement.clientWidth;document.body.style.zoom=Math.min(1,(w-8)/p.offsetWidth)}
+addEventListener('load',function(){fit();zm()});addEventListener('resize',zm);
+addEventListener('beforeprint',function(){document.body.style.zoom=1});addEventListener('afterprint',zm);
+addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){e.preventDefault();print()}});`;
+  return `<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Laporan Temuan Internal Audit</title><style>${css}</style></head><body>${pages}<script>${js}<\/script></body></html>`}
+function rptView(items,base,title){
+  const tg=base.tgl||J.tanggal;if(!tg)return toast('Tanggal audit belum diisi');
+  const list=items.map(t=>({no:RPT_NO(tg,t.nomor),lembarKe:t.ke,lembarDari:t.dari,area:base.area,tgl:RPT_TGL(tg),lingkup:base.lingkup||'ISO 9001 : 2015',waktu:base.waktu||'',auditee:base.auditee||t.pic||'',auditor:base.auditor,jenis:JENIS_LAP[t.kategori]||t.kategori,uraian:t.uraian,bukti:t.bukti,klausul:t.klausul,tindak:'',fotoUrl:t.foto||null,...rptExtra(t)}));
+  const o=document.createElement('div');o.className='rd rp';
+  o.innerHTML=`<div class="rb"><button class="btn g bs" id="rpx" type="button">Tutup</button><b>${esc(title)}</b><button class="btn bs" id="rpp" type="button">Cetak</button></div><iframe class="rpf" title="Pratinjau laporan"></iframe>`;
+  document.body.append(o);const f=o.querySelector('iframe');f.srcdoc=rptHtml(list);
+  const ac=new AbortController(),close=()=>{ac.abort();o.remove()};
+  o.querySelector('#rpx').onclick=close;
+  // cetak lewat iframe: halaman utama memblokir cetak (dokumen berwatermark), laporan ini tidak
+  const pr=()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(x){toast('Gagal mencetak')}};
+  o.querySelector('#rpp').onclick=pr;
+  addEventListener('keydown',e=>{if(!o.isConnected){ac.abort();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){e.preventDefault();pr()}},{signal:ac.signal})}
+
 
 // ---------- pengaturan watermark (diatur admin di index.html > Kelola) ----------
 let WM={opacity:.07,thickness:0};
