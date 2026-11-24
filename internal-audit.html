@@ -131,6 +131,8 @@ let DOCS=[],S=null,J=null,TAB='dok',Q='',timer=null,FIND=[],JADS=[];
 const KAT=['Mayor','Minor','OFI'],STAT=['Terbuka','Dalam tindakan','Verifikasi','Ditutup'];
 // tampilan: OFI di database tetap 'OFI', tapi di layar disebut OBS (istilah yang dipakai perusahaan)
 const katL=k=>k==='OFI'?'OBS':k;
+// uraian temuan (essay) diisi auditor di tab Temuan; selama belum diisi, kolom berisi penanda ini
+const UR0='(belum diuraikan)',urT=t=>(!t||t.uraian===UR0)?'':String(t.uraian||'');
 // tindak lanjut auditee: akar -> kolom akar, due -> tgl selesai perbaikan, sisanya dibungkus JSON di kolom tindakan (tanpa ubah tabel)
 const tlParse=t=>{const o={akar:t.akar||'',perb:'',cegah:'',tp:t.due||'',tc:''},s=String(t.tindakan||'');
   if(s.startsWith('{"tl":1')){try{const j=JSON.parse(s);o.perb=j.perb||'';o.cegah=j.cegah||'';o.tc=j.tc||''}catch(e){o.perb=s}}else o.perb=s;return o};
@@ -238,26 +240,34 @@ function docsTab(){const sc=DOCS.filter(d=>inScope(d,J));
 async function findTab(){const ct=$('#ct');ct.innerHTML='<div class="empty">Memuat temuan...</div>';await clFlush();
   const r=await sb.from('ia_temuan').select('*').eq('jadwal_id',J.id).order('nomor');if(r.error){ct.innerHTML='<div class="empty">Gagal memuat temuan: '+esc(r.error.message)+'</div>';return}FIND=r.data;
   const dk=id=>{const d=DOCS.find(x=>String(x.id)===String(id));return d?esc(d.kode):''};
-  ct.innerHTML=`<div class="bh"><h3>Temuan (${FIND.length})</h3><div class="bt">${FIND.length?'<button class="btn g bs" id="up">Layar Penuh &amp; Cetak</button><button class="btn g bs" id="ua">Unduh Laporan</button>':''}<button class="btn bs" id="nt">+ Catat Temuan</button></div></div>`+(FIND.map(t=>`<div class="tm"><button class="fsb" data-pv="${t.id}" type="button" title="Layar penuh" aria-label="Layar penuh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="h"><b>${tnm(t)}</b><span class="tag k-${esc(t.kategori)}">${esc(katL(t.kategori))}</span><span class="tag o">${esc(t.status)}</span>${t.klausul?`<span class="m">Klausul ${esc(t.klausul)}</span>`:''}${t.dokumen_id?`<span class="m">&middot; ${dk(t.dokumen_id)}</span>`:''}</div><p>${esc(t.uraian)}</p>${t.bukti?`<p class="m"><b>Bukti:</b> ${esc(t.bukti)}</p>`:''}${t.foto?`<img class="fimg" src="${esc(t.foto)}" alt="foto bukti">`:''}<p class="m">PIC: ${esc(t.pic||'-')} &middot; dicatat ${esc(t.dibuat_oleh||'-')}</p>${tlHtml(t)}<div class="hr"><button class="btn g bs" data-r="${t.id}">Unduh Laporan</button>${S.mode==='email'?`<button class="btn g bs" data-f="${t.id}">Tindak Lanjut</button>${S.admin?`<button class="btn r bs" data-d="${t.id}">Hapus</button>`:''}`:''}</div></div>`).join('')||'<div class="empty">Belum ada temuan untuk audit ini.</div>');
+  let clr=[];if(CL&&CL.jid===J.id)clr=CL.rows||[];else{try{const q=await sb.from('ia_checklist').select('butir').eq('jadwal_id',J.id).maybeSingle();clr=(q.data&&q.data.butir)||[]}catch(e){}}
+  const refOf=t=>{const r=clr.find(x=>x.tid===t.id);return r?{doc:r.doc||'',q:r.q||'',kl:clKl(r),f:r.f}:null};
+  const refHtml=t=>{const r=refOf(t);return r?`<div class="note" style="margin:6px 0;font-size:12px"><b>Acuan checklist</b>${r.doc?'<br>Dokumen: '+esc(r.doc):''}${r.q?'<br>Butir diperiksa: '+esc(r.q):''}${r.kl?'<br>Clause: '+esc(r.kl):''}</div>`:''};
+  ct.innerHTML=`<div class="bh"><h3>Temuan (${FIND.length})</h3><div class="bt">${FIND.length?'<button class="btn g bs" id="up">Layar Penuh &amp; Cetak</button><button class="btn g bs" id="ua">Unduh Laporan</button>':''}<button class="btn bs" id="nt">+ Catat Temuan</button></div></div>`+(FIND.map(t=>`<div class="tm"><button class="fsb" data-pv="${t.id}" type="button" title="Layar penuh" aria-label="Layar penuh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><div class="h"><b>${tnm(t)}</b><span class="tag k-${esc(t.kategori)}">${esc(katL(t.kategori))}</span><span class="tag o">${esc(t.status)}</span>${t.klausul?`<span class="m">Klausul ${esc(t.klausul)}</span>`:''}${t.dokumen_id?`<span class="m">&middot; ${dk(t.dokumen_id)}</span>`:''}</div>${refHtml(t)}${urT(t)?`<p>${esc(urT(t))}</p>`:'<p class="m"><i>Uraian temuan belum diisi auditor.</i></p>'}${t.bukti?`<p class="m"><b>Bukti:</b> ${esc(t.bukti)}</p>`:''}${t.foto?`<img class="fimg" src="${esc(t.foto)}" alt="foto bukti">`:''}<p class="m">PIC: ${esc(t.pic||'-')} &middot; dicatat ${esc(t.dibuat_oleh||'-')}</p>${tlHtml(t)}<div class="hr"><button class="btn bs" data-u="${t.id}">${urT(t)?'Ubah Uraian':'Isi Uraian'}</button><button class="btn g bs" data-r="${t.id}">Unduh Laporan</button>${S.mode==='email'?`<button class="btn g bs" data-f="${t.id}">Tindak Lanjut</button>${S.admin?`<button class="btn r bs" data-d="${t.id}">Hapus</button>`:''}`:''}</div></div>`).join('')||'<div class="empty">Belum ada temuan untuk audit ini.</div>');
   $('#nt').onclick=()=>temuanForm();
-  const lapItems=ids=>FIND.map((t,i)=>({nomor:t.nomor,kategori:t.kategori,uraian:t.uraian,bukti:t.bukti,foto:t.foto||null,klausul:t.klausul,pic:t.pic,ke:i+1,dari:FIND.length,...tlExtra(t)})).filter(x=>!ids||ids.includes(FIND[x.ke-1].id));
+  const lapItems=ids=>FIND.map((t,i)=>({nomor:t.nomor,kategori:t.kategori,uraian:urT(t),bukti:t.bukti,foto:t.foto||null,klausul:t.klausul,pic:t.pic,ke:i+1,dari:FIND.length,...tlExtra(t)})).filter(x=>!ids||ids.includes(FIND[x.ke-1].id));
   const lapBase=()=>({area:areaOf(J),tgl:J.tanggal,auditee:'',auditor:J.auditor||S.nama,lingkup:J.ruang_lingkup||'',waktu:J.waktu||''});
   const lapT=ids=>laporanForm(lapItems(ids),lapBase());
   const ua=$('#ua');if(ua)ua.onclick=()=>lapT();
   const up=$('#up');if(up)up.onclick=()=>rptView(lapItems(),lapBase(),'Laporan Temuan');
   document.querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>{const t=FIND.find(x=>x.id===b.dataset.pv);rptView(lapItems([b.dataset.pv]),lapBase(),tnm(t))});
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>lapT([b.dataset.r]));
+  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{const t=FIND.find(x=>x.id===b.dataset.u);temuanForm({...t,uraian:urT(t),id:t.id,ref:refOf(t)})});
   document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>tindakForm(FIND.find(t=>t.id===b.dataset.f)));
   document.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(!confirm('Hapus temuan ini?'))return;const x=await sb.from('ia_temuan').delete().eq('id',b.dataset.d);if(x.error){toast('Gagal: '+x.error.message);return}findTab()})}
-function temuanForm(pre){pre=pre||{};let ft=pre.foto||null;const sc=DOCS.filter(d=>inScope(d,J));
-  const mm=modal(`<h2>Catat Temuan</h2><p>${where(J)}</p><label>Jenis ketidaksesuaian</label><select id="tk">${KAT.map(k=>`<option value="${k}"${k===pre.kategori?' selected':''}>${k==='OFI'?'OBS (Observasi)':k}</option>`).join('')}</select><label>Clause ISO</label><input id="tc" placeholder="Mis. 7.5 &ndash; Pengendalian Informasi Terdokumentasi" value="${esc(pre.klausul||'')}">
-  <label>Dokumen terkait (opsional)</label><select id="td"><option value="">- tidak ada -</option>${sc.map(d=>`<option value="${esc(d.id)}"${String(d.id)===String(pre.dokumen_id)?' selected':''}>${esc(d.kode)} &middot; ${esc(d.judul)}</option>`).join('')}</select>
-  <label>Uraian temuan: dokumen acuan &amp; poin persyaratan</label><textarea id="tu" placeholder="Mis. Prosedur Pengendalian Dokumen (KIM-PR-QAD-001 Rev.01) ; Point 4.12 i. ...">${esc(pre.uraian||'')}</textarea><label>Bukti objektif: kondisi yang ditemukan</label><textarea id="tb" placeholder="Mis. Memo Revisi Dokumen (KIM-FM-QAD-012 Rev01) belum ada tanda tangan persetujuan ...">${esc(pre.bukti||'')}</textarea><label>PIC / auditee</label><input id="tp" value="${esc(pre.pic||'')}"><label>Foto bukti (opsional)</label><div id="tfw"></div>`,
+function temuanForm(pre){pre=pre||{};let ft=pre.foto||null;const sc=DOCS.filter(d=>inScope(d,J)),rf=pre.ref||null,ed=!!pre.id;
+  const refBox=rf?`<div class="note" style="margin:8px 0"><b>Acuan checklist</b> (${esc(rf.f||'')})${rf.doc?'<br>Dokumen: '+esc(rf.doc):''}${rf.q?'<br>Butir diperiksa: '+esc(rf.q):''}${rf.kl?'<br>Clause: '+esc(rf.kl):''}<br><span class="m">Jenis, no. clause dan uraian clause otomatis ikut ke kolom ketidaksesuaian di laporan.</span></div>`:'';
+  const head=rf?'':`<label>Jenis ketidaksesuaian</label><select id="tk">${KAT.map(k=>`<option value="${k}"${k===pre.kategori?' selected':''}>${k==='OFI'?'OBS (Observasi)':k}</option>`).join('')}</select><label>Clause ISO</label><input id="tc" placeholder="Mis. 7.5 &ndash; Pengendalian Informasi Terdokumentasi" value="${esc(pre.klausul||'')}">
+  <label>Dokumen terkait (opsional)</label><select id="td"><option value="">- tidak ada -</option>${sc.map(d=>`<option value="${esc(d.id)}"${String(d.id)===String(pre.dokumen_id)?' selected':''}>${esc(d.kode)} &middot; ${esc(d.judul)}</option>`).join('')}</select>`;
+  const mm=modal(`<h2>${ed?'Uraian Temuan':'Catat Temuan'}</h2><p>${where(J)}</p>${refBox}${head}
+  <label>Uraian temuan (essay): jelaskan temuan secara rinci</label><textarea id="tu" rows="6" placeholder="Mis. Prosedur Pengendalian Dokumen (KIM-PR-QAD-001 Rev.01) ; Point 4.12 i. ...">${esc(pre.uraian||'')}</textarea><label>Bukti objektif: kondisi yang ditemukan (opsional)</label><textarea id="tb" placeholder="Mis. Memo Revisi Dokumen (KIM-FM-QAD-012 Rev01) belum ada tanda tangan persetujuan ...">${esc(pre.bukti||'')}</textarea><label>PIC / auditee</label><input id="tp" value="${esc(pre.pic||'')}"><label>Foto bukti (opsional)</label><div id="tfw"></div>`,
   async()=>{const u=$('#tu').value.trim();if(u.length<5)throw new Error('Uraian temuan wajib diisi');
-    const r=await tmIns0({jadwal_id:J.id,foto:ft||undefined,kategori:$('#tk').value,klausul:$('#tc').value.trim()||null,dokumen_id:$('#td').value||null,uraian:u,bukti:$('#tb').value.trim()||null,pic:$('#tp').value.trim()||null,dibuat_oleh:S.nama});
-    if(r.error)throw r.error;toast('Temuan dicatat');if(pre.cb)pre.cb();if(TAB==='tmn')findTab()},'Catat');fotoMount(mm.querySelector('#tfw'),()=>ft,v=>{ft=v},false)}
+    const v={uraian:u,bukti:$('#tb').value.trim()||null,pic:$('#tp').value.trim()||null};
+    if(!rf){v.kategori=$('#tk').value;v.klausul=$('#tc').value.trim()||null;v.dokumen_id=$('#td').value||null}
+    const r=ed?await tmUpd({...v,foto:ft||null},pre.id):await tmIns0({jadwal_id:J.id,foto:ft||undefined,...v,dibuat_oleh:S.nama});
+    if(r.error)throw r.error;toast(ed?'Uraian temuan disimpan':'Temuan dicatat');if(pre.cb)pre.cb();if(TAB==='tmn')findTab()},ed?'Simpan':'Catat');fotoMount(mm.querySelector('#tfw'),()=>ft,v=>{ft=v},false)}
 function tindakForm(t){const o=tlParse(t);
-  modal(`<h2>Tindak Lanjut ${tnm(t)}</h2><p>${esc(t.uraian)}</p><p><b>Diisi oleh auditee.</b> Isian ini otomatis masuk ke Laporan Temuan (kolom yang harus diisi auditee). Tanda tangan diisi manual setelah dicetak.</p>
+  modal(`<h2>Tindak Lanjut ${tnm(t)}</h2><p>${esc(urT(t))}</p><p><b>Diisi oleh auditee.</b> Isian ini otomatis masuk ke Laporan Temuan (kolom yang harus diisi auditee). Tanda tangan diisi manual setelah dicetak.</p>
   <label>Investigasi akar permasalahan</label><textarea id="fa">${esc(o.akar)}</textarea>
   <label>Tindakan perbaikan</label><textarea id="fb">${esc(o.perb)}</textarea><label>Tanggal penyelesaian perbaikan</label><input id="fbd" type="date" value="${esc(o.tp)}">
   <label>Tindakan pencegahan</label><textarea id="fc">${esc(o.cegah)}</textarea><label>Tanggal penyelesaian pencegahan</label><input id="fcd" type="date" value="${esc(o.tc)}">
@@ -349,14 +359,15 @@ async function clSync(){
     const nc=r.f==='NC'||r.f==='OBS';
     if(!nc){r.tgone=false;if(r.tid){CL.del.push(r.tid);r.tid=null;r.th=null;r.tf=null}continue}
     if((r.tm===true&&!r.tid)||r.tgone)continue;
+    if(!r.tid&&!CL.final)continue; // belum final: belum masuk tab Temuan
     try{
-      const ur=clUr(r).trim(),d=sc.find(x=>x.kode===r.doc);
-      const pl={klausul:clKl(r)||null,dokumen_id:d?d.id:null,uraian:ur||'(belum diuraikan)',bukti:(r.q?r.note:'')||null,pic:String(CL.header.auditee||'').trim()||null,...(NOFOTO?{}:{foto:r.foto||null})};
-      const kat=r.f==='NC'?'Minor':'OFI',h=JSON.stringify([pl,r.f]);
-      if(!r.tid){if(!ur)continue;
-        const x=await tmIns({jadwal_id:CL.jid,kategori:kat,...pl,dibuat_oleh:S?S.nama:null});
+      const d=sc.find(x=>x.kode===r.doc);
+      const base={klausul:clKl(r)||null,dokumen_id:d?d.id:null};
+      const kat=r.f==='NC'?'Minor':'OFI',h=JSON.stringify([base,r.f]);
+      if(!r.tid){
+        const x=await tmIns({jadwal_id:CL.jid,kategori:kat,...base,uraian:UR0,pic:String(CL.header.auditee||'').trim()||null,dibuat_oleh:S?S.nama:null});
         if(x.error)throw x.error;r.tid=x.data.id;r.th=h;r.tf=r.f}
-      else if(r.th!==h){const u={...pl};if(r.tf!==r.f)u.kategori=kat;
+      else if(r.th!==h){const u={...base};if(r.tf!==r.f)u.kategori=kat;
         const x=await tmUpd(u,r.tid);if(x.error)throw x.error;r.th=h;r.tf=r.f}
     }catch(e){}
   }
@@ -382,15 +393,14 @@ const rowsHtml=()=>CL.rows.length?CL.rows.map(rowHtml).join(''):'<div class="emp
 function rowMount(c,i){if(!c)return;const b=c.querySelector('.fb');if(b)fotoMount(b,()=>CL.rows[i].foto,v=>{CL.rows[i].foto=v||null;clDirty()},CL.final)}
 const mountAll=()=>document.querySelectorAll('#crows .cr').forEach(c=>rowMount(c,+c.dataset.i));
 const rowRe=(c,i)=>{c.outerHTML=rowHtml(CL.rows[i],i);rowMount(document.querySelector('#crows .cr[data-i="'+i+'"]'),i)};
-function rowHtml(r,i){const ro=CL.final?' disabled':'',f=r.f,showN=f==='NC'||f==='OBS'||r.note;
+function rowHtml(r,i){const ro=CL.final?' disabled':'',f=r.f;
   return `<div class="cr ${fnm[f]||''}" data-i="${i}"><div class="cn">${i+1}</div><div class="cf">
   <label>Relevant Document</label><input data-k="doc" list="cdocs" value="${esc(r.doc)}"${ro} placeholder="Kode / nama dokumen terkait">
   <label>Item Audited / Question</label><div class="ta"><textarea data-k="q" rows="2"${ro} placeholder="Butir atau pertanyaan yang diperiksa">${esc(r.q)}</textarea><i class="gr" data-gr title="Tarik untuk memperbesar"></i></div>
   <div class="c2"><div><label>Reff. Clause</label><input data-k="ref" value="${esc(r.ref)}"${ro} placeholder="Mis. 7.5.3"></div>
   <div><label>Finding</label><div class="seg">${['C','NC','OBS'].map(v=>`<button type="button" data-v="${v}" class="${f===v?'on':''}"${ro}>${v}</button>`).join('')}</div></div></div>
   <label>Uraian Clause (ikut ke Laporan Temuan)</label><input data-k="cu" value="${esc(r.cu)}"${ro} placeholder="Mis. Informasi terdokumentasi">
-  ${showN?`<label>Keterangan temuan / bukti objektif</label><div class="ta"><textarea data-k="note" rows="2"${ro} placeholder="Uraikan temuan dan bukti objektif">${esc(r.note)}</textarea><i class="gr" data-gr title="Tarik untuk memperbesar"></i></div><label>Foto bukti (opsional)</label><div class="fb"></div>`:''}
-  ${(f==='NC'||f==='OBS')?((r.tgone||(r.tm===true&&!r.tid))?'<button type="button" class="btn bs" data-tm style="margin-top:8px;background:#c2255c">Temuan terhapus: tambahkan lagi ke tab Temuan</button>':'<span class="tag o" style="margin-top:8px">Otomatis masuk tab Temuan</span>'):''}
+  ${(f==='NC'||f==='OBS')?((r.tgone||(r.tm===true&&!r.tid))?'<button type="button" class="btn bs" data-tm style="margin-top:8px;background:#c2255c">Temuan terhapus: tambahkan lagi ke tab Temuan</button>':(CL.final?'<span class="tag o" style="margin-top:8px">Sudah masuk tab Temuan</span>':'<span class="tag o" style="margin-top:8px">Masuk tab Temuan setelah checklist difinalkan</span>')):''}
   </div>${CL.final?'':'<button type="button" class="cx" data-del title="Hapus butir">&times;</button>'}</div>`}
 function clCnt(){const n={C:0,NC:0,OBS:0,x:0};CL.rows.forEach(r=>{if(r.f)n[r.f]++;else if(clFilled(r))n.x++});const e=$('#ccn');if(e)e.innerHTML=`C <b>${n.C}</b> &middot; NC <b>${n.NC}</b> &middot; OBS <b>${n.OBS}</b>${n.x?` &middot; belum dinilai <b>${n.x}</b>`:''}`}
 function clRender(){const ct=$('#ct'),h=CL.header,ro=CL.final?' disabled':'';
@@ -555,8 +565,8 @@ const RPT_IMG={wm:'iVBORw0KGgoAAAANSUhEUgAAATYAAAEoCAIAAABdAkoVAAAKMGlDQ1BJQ0MgU
 const RPT_B64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const RPT_TGL=d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
 const RPT_NO=(tanggal,n)=>'KIM/INT/'+tanggal.slice(0,4)+'/'+tanggal.slice(5,7)+'/'+String(n).padStart(3,'0');
-const rptLines=r=>{const o=[];String(r.uraian||'').split('\n').forEach(l=>o.push({t:l}));
-  if(r.bukti){o.push({t:''});String(r.bukti).split('\n').forEach(l=>o.push({t:l}))}
+const rptLines=r=>{const o=[];String(r.uraian===UR0?'':(r.uraian||'')).split('\n').forEach(l=>o.push({t:l}));
+  if(r.bukti){if(o.some(x=>x.t))o.push({t:''});String(r.bukti).split('\n').forEach(l=>o.push({t:l}))}
   if(r.klausul){o.push({t:/^clause/i.test(r.klausul)?r.klausul:'Clause '+r.klausul,i:true})}return o};
 const rptDari=(r)=>[r.tindak||'KIM/INT/      /      /'];
 
@@ -758,9 +768,11 @@ const JENIS_LAP={Mayor:'Mayor',Minor:'Minor',OFI:'Observasi'};
 const areaOf=j=>j.dept+(j.bagian?' - '+j.bagian:'');
 async function clLaporan(){const h=CL.header,fl=CL.rows.filter(r=>r.f==='NC'||r.f==='OBS');
   if(!fl.length)return toast('Belum ada butir NC / OBS di checklist');
-  const ids=fl.map(r=>r.tid).filter(Boolean),tm={};
-  if(ids.length){try{const q=await sb.from('ia_temuan').select('id,akar,tindakan,due').in('id',ids);(q.data||[]).forEach(x=>tm[x.id]=tlExtra(x))}catch(e){}}
-  laporanForm(fl.map((r,i)=>({nomor:i+1,kategori:r.f==='NC'?'Minor':'OFI',uraian:(r.doc&&r.q?r.doc+' ; ':'')+(r.q||r.note||''),bukti:r.q?r.note:'',foto:r.foto||null,klausul:clKl(r),pic:h.auditee,ke:i+1,dari:fl.length,...(r.tid&&tm[r.tid]||{})})),
+  if(!CL.final)return toast('Finalkan checklist dulu: temuan baru masuk tab Temuan setelah itu');
+  const ids=fl.map(r=>r.tid).filter(Boolean);if(!ids.length)return toast('Temuan belum terbentuk, buka tab Temuan');
+  const q=await sb.from('ia_temuan').select('*').in('id',ids).order('nomor');
+  if(q.error||!(q.data||[]).length)return toast('Gagal memuat temuan');const T=q.data;
+  laporanForm(T.map((t,i)=>({nomor:t.nomor||i+1,kategori:t.kategori,uraian:urT(t),bukti:t.bukti,foto:t.foto||null,klausul:t.klausul,pic:t.pic||h.auditee,ke:i+1,dari:T.length,...tlExtra(t)})),
     {area:String(h.dept||J.dept).replace(/\s*>\s*/g,' - '),tgl:h.tgl||J.tanggal,auditee:h.auditee,auditor:h.auditor||J.auditor||S.nama,lingkup:J.ruang_lingkup||'',waktu:J.waktu||''})}
 const rptExtra=t=>({akar:t.akar||'',perb:t.perb||'',cegah:t.cegah||'',tp:t.tp?tgl(t.tp):'',tc:t.tc?tgl(t.tc):''});
 
