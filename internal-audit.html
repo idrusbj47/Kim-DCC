@@ -149,6 +149,7 @@ let PERS=[],persOff=false,VT=null;
 const nikList=x=>String(x||'').split(',').map(v=>v.trim()).filter(Boolean);
 const pNik=n=>PERS.find(p=>p.nik===n);
 const isMe=(j,k)=>!!(S&&S.nik)&&nikList(j[k]).includes(S.nik);
+const mineOf=j=>isMe(j,'auditor_nik')||isMe(j,'auditee_nik')||(S.mode==='kode'&&j.id===S.jid);
 const tNo=(nik,n)=>'T'+(nik||'')+'-'+String(n).padStart(2,'0');
 const sq=t=>{const m=String(t.no_temuan||'').match(/-(\d+)$/);return m?+m[1]:1e9};
 const PERAN={auditor:'Auditor',auditee:'Auditee',keduanya:'Auditor & Auditee'};
@@ -160,7 +161,8 @@ async function rptOffset(j){try{const y=+j.tanggal.slice(0,4),m=+j.tanggal.slice
   const prev=(r.data||[]).filter(x=>x.id!==j.id&&key(x)<key(j)).map(x=>x.id);if(!prev.length)return 0;
   const c=await sb.from('ia_checklist').select('butir').in('jadwal_id',prev);let n=0;
   (c.data||[]).forEach(x=>(x.butir||[]).forEach(q=>{if(q.f==='NC'||q.f==='OBS')n++}));return n}catch(e){return 0}}
-const inScope=(d,j)=>d.dept==='Semua'||(d.dept===j.dept&&(!d.bagian||!j.bagian||d.bagian===j.bagian));
+const nz=x=>String(x==null?'':x).trim().toLowerCase().replace(/\s+/g,' ');
+const inScope=(d,j)=>nz(d.dept)==='semua'||(nz(d.dept)===nz(j.dept)&&(!nz(d.bagian)||!nz(j.bagian)||nz(d.bagian)===nz(j.bagian)));
 const where=j=>esc(j.dept)+(j.bagian?' &rsaquo; '+esc(j.bagian):'');
 function modal(h,ok,label){const m=document.createElement('div');m.className='mdl';m.innerHTML=`<div class="lc">${h}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn g" id="mx">Batal</button><button class="btn" id="mo">${label||'Simpan'}</button></div></div>`;document.body.append(m);
   m.querySelector('#mx').onclick=()=>m.remove();m.querySelector('#mo').onclick=async()=>{try{await ok(m);m.remove()}catch(e){toast('Gagal: '+(e.message||e))}};return m}
@@ -193,7 +195,7 @@ function gateView(msg,tab){VIEW='gate';tab=tab||'kode';clearInterval(timer);S=nu
     $('#go').onclick=go;['#em','#pw'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}));$('#em').focus()}}
 async function enterKode(d,nik){if(!nik){try{nik=localStorage.getItem('kim-ia-nik')}catch(_){}}
   const r=await sb.from('ia_jadwal').select('*').eq('id',d.jadwal_id).maybeSingle();if(r.error||!r.data)throw new Error('Jadwal tidak ditemukan');
-  S={mode:'kode',nik:nik||null,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false};J=r.data;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);jadwalView()}
+  S={mode:'kode',jid:d.jadwal_id,nik:nik||null,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false};J=r.data;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;listView()}
 async function enterStaff(){
   const {data:{session}}=await sb.auth.getSession();
   const p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle();
@@ -209,10 +211,10 @@ function bindHdr(){const lo=$('#lo');lo.onclick=async()=>{if(confirm('Keluar dar
 // ---------- beranda (login email): jadwal saya, temuan saya, semua jadwal, personel ----------
 const jcard=(j,adm)=>{const ra=isMe(j,'auditor_nik'),re=isMe(j,'auditee_nik');
   return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b>${ra?' <span class="tag o">Saya auditor</span>':''}${re?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)}${j.waktu?' &middot; '+esc(j.waktu):''} &middot; Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</span>${adm&&j.kode?`<br><span>Kode: <b class="cdl">${esc(j.kode)}</b> sampai ${fmt(j.kode_exp)}</span>`:''}</div><div class="bt"><button class="btn bs" data-o="${j.id}">Buka</button>${adm?`<button class="btn g bs" data-k="${j.id}">Kode</button><button class="btn g bs" data-e="${j.id}">Ubah</button><button class="btn r bs" data-x="${j.id}">Hapus</button>`:''}</div></div>`};
-async function listView(){VIEW='list';armBack();clearInterval(timer);await clFlush();J=null;TAB='dok';
+async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInterval(timer);await clFlush();J=null;TAB='dok';
   await loadPers();
   const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
-  const lk=!!S.nik,tb=[...(lk?[['me','Jadwal Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.admin||!lk)?[['all','Semua Jadwal']]:[]),...(S.admin?[['psn','Personel']]:[])];
+  const lk=!!S.nik||S.mode==='kode',tb=[...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.admin||!lk)?[['all','Semua Jadwal']]:[]),...(S.admin?[['psn','Personel']]:[])];
   if(!tb.some(x=>x[0]===VT))VT=tb[0][0];
   $('#app').innerHTML=hdr('Audit Internal')+`<main class="wrap"><div class="tabs" style="margin:0 0 12px;flex-wrap:wrap">${tb.map(x=>`<button class="jb${x[0]===VT?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><div class="box" id="lv"></div></main>`;bindHdr();
   document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{VT=b.dataset.v;listView()});
@@ -226,7 +228,7 @@ async function listView(){VIEW='list';armBack();clearInterval(timer);await clFlu
       const x=await sb.from('ia_jadwal').delete().eq('id',b.dataset.x);if(x.error){toast('Gagal: '+x.error.message);return}toast('Jadwal dihapus');listView()})};
   if(VT==='all'){lv.innerHTML=`<div class="bh"><h3>Semua Jadwal</h3>${S.admin?'<button class="btn bs" id="nj">+ Jadwal Baru</button>':''}</div>${!lk&&!S.admin?'<div class="note" style="margin-bottom:8px">Akun Anda belum ditautkan ke NIK. Hubungi admin agar jadwal dan temuan Anda tampil di beranda.</div>':''}${JADS.map(j=>jcard(j,S.admin)).join('')||'<div class="empty">Belum ada jadwal audit.</div>'}`;
     const nj=$('#nj');if(nj)nj.onclick=()=>jadwalForm(null);wire()}
-  else if(VT==='me'){const td=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),mine=JADS.filter(j=>isMe(j,'auditor_nik')||isMe(j,'auditee_nik')),
+  else if(VT==='me'){const td=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),mine=JADS.filter(mineOf),
       up=mine.filter(j=>j.tanggal>=td).sort((x,y)=>x.tanggal.localeCompare(y.tanggal)),pa=mine.filter(j=>j.tanggal<td);
     lv.innerHTML=`<div class="bh"><h3>Jadwal Saya (${mine.length})</h3></div>`+(up.length?`<p class="inf"><b>Mendatang / hari ini</b></p>${up.map(j=>jcard(j,false)).join('')}`:'')+(pa.length?`<p class="inf" style="margin-top:10px"><b>Sebelumnya</b></p>${pa.map(j=>jcard(j,false)).join('')}`:'')+(mine.length?'':'<div class="empty">Belum ada jadwal untuk Anda sebagai auditor maupun auditee.</div>');wire()}
   else if(VT==='ta'||VT==='te'){const role=VT,k=role==='ta'?'auditor_nik':'auditee_nik',js=JADS.filter(j=>isMe(j,k));
@@ -235,6 +237,11 @@ async function listView(){VIEW='list';armBack();clearInterval(timer);await clFlu
     const body=js.map(j=>{const ts=T.filter(t=>t.jadwal_id===j.id).sort((x,y)=>sq(x)-sq(y)||x.nomor-y.nomor);if(!ts.length)return'';
       return `<div class="bh" style="margin-top:12px"><h3 style="font-size:15px">${where(j)}</h3><span>${tgl(j.tanggal)}</span></div>`+ts.map(t=>{const u=urT(t);return `<div class="tm"><div class="h"><b>${esc(tnm(t))}</b><span class="tag k-${esc(t.kategori)}">${esc(katL(t.kategori))}</span><span class="tag o">${esc(t.status)}</span>${t.klausul?`<span class="m">Klausul ${esc(t.klausul)}</span>`:''}</div>${u?`<p>${esc(u.slice(0,200))}${u.length>200?'...':''}</p>`:'<p class="m"><i>Uraian belum diisi auditor.</i></p>'}<div class="hr"><button class="btn bs" data-tj="${j.id}">Buka</button></div></div>`}).join('')}).join('');
     lv.innerHTML=`<div class="bh"><h3>Temuan sebagai ${role==='ta'?'Auditor':'Auditee'} (${T.length})</h3></div>`+(body||'<div class="empty">Belum ada temuan.</div>');wire()}
+  else if(VT==='cl'){const mine=JADS.filter(mineOf);lv.innerHTML='<div class="empty">Memuat checklist...</div>';let C=[];
+    if(mine.length){const q=await sb.from('ia_checklist').select('jadwal_id,header,butir,final,updated_by').in('jadwal_id',mine.map(j=>j.id));C=q.data||[]}
+    lv.innerHTML=`<div class="bh"><h3>Daftar Checklist (${mine.length})</h3></div>`+(mine.map(j=>{const c=C.find(x=>x.jadwal_id===j.id),rows=(c&&c.butir)||[],nt=rows.filter(r=>r.f==='NC'||r.f==='OBS').length,st=!c?'Belum dibuat':c.final?'Final':'Draft';
+      return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b> <span class="tag o">${st}</span>${isMe(j,'auditor_nik')?' <span class="tag o">Saya auditor</span>':''}${isMe(j,'auditee_nik')?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)} &middot; ${rows.length} butir &middot; ${nt} temuan (NC/OBS)${c&&c.updated_by?' &middot; terakhir: '+esc(c.updated_by):''}</span></div><div class="bt"><button class="btn bs" data-cj="${j.id}">Buka</button></div></div>`}).join('')||'<div class="empty">Belum ada checklist.</div>');
+    lv.querySelectorAll('[data-cj]').forEach(b=>b.onclick=()=>{J=by(b.dataset.cj);TAB='cl';jadwalView()});wire()}
   else if(VT==='psn')persView()}
 
 // ---------- daftar personel (admin) ----------
@@ -260,6 +267,8 @@ function persForm(p){const v=p||{},ed=!!p,dep=[...new Set([...DOCS.map(d=>d.dept
 function parseWaktu(t){const z=n=>String(n).padStart(2,'0'),a=String(t||''),m=a.match(/(\d{1,2})[.:](\d{2})\s*[-~\u2013]\s*(\d{1,2})[.:](\d{2})/);
   if(m)return[z(m[1])+':'+m[2],z(m[3])+':'+m[4]];const o=a.match(/^\s*(\d{1,2})[.:](\d{2})\s*$/);return o?[z(o[1])+':'+o[2],'']:['','']}
 function jadwalForm(j){const v=j||{};const [w1,w2]=parseWaktu(v.waktu);const dl=a=>`<datalist id="${a[0]}">${[...new Set(a[1].filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+  const depts=[...new Set(DOCS.map(d=>d.dept).filter(x=>x&&x!=='Semua'))].sort();if(v.dept&&!depts.includes(v.dept))depts.unshift(v.dept);
+  const bagOpts=(d,cur)=>{const l=[...new Set(DOCS.filter(x=>nz(x.dept)===nz(d)).map(x=>x.bagian).filter(Boolean))].sort();if(cur&&!l.includes(cur))l.unshift(cur);return '<option value="">- Semua bagian -</option>'+l.map(b=>`<option value="${esc(b)}"${b===cur?' selected':''}>${esc(b)}</option>`).join('')};
   const up=!persOff&&PERS.length>0,sa=nikList(v.auditor_nik).filter(pNik),se=nikList(v.auditee_nik).filter(pNik);
   const act=PERS.filter(p=>p.aktif!==false),oA=act.filter(p=>p.peran!=='auditee'),oE=act.filter(p=>p.peran!=='auditor');
   const sel=(id,l)=>`<select id="${id}"><option value="">+ Pilih dari daftar...</option>${l.map(p=>`<option value="${esc(p.nik)}">${esc(p.nama)} (${esc(p.nik)})${p.dept?' &middot; '+esc(p.dept):''}</option>`).join('')}</select>`;
@@ -267,7 +276,7 @@ function jadwalForm(j){const v=j||{};const [w1,w2]=parseWaktu(v.waktu);const dl=
     :`<label>Auditor</label><input id="ja" value="${esc(v.auditor||'')}" placeholder="Nama auditor / tim">${persOff?'<div class="note" style="margin-bottom:8px">Daftar personel belum aktif (jalankan <b>ia_personel.sql</b>), jadi nama masih diketik manual.</div>':'<div class="note" style="margin-bottom:8px">Daftar personel masih kosong. Isi dulu di tab <b>Personel</b>.</div>'}`;
   const chips=(el,arr)=>{el.innerHTML=arr.map(n=>{const p=pNik(n);return `<span class="tag o" style="margin:0 6px 6px 0">${esc(p?p.nama:n)} <a data-rm="${esc(n)}" style="cursor:pointer;margin-left:4px">&times;</a></span>`}).join('')||'<span class="m">Belum dipilih</span>'};
   const m=modal(`<h2>${j?'Ubah':'Jadwal'} Audit</h2><p>Tentukan departemen dan bagian yang diaudit. Dokumen yang terbuka menyesuaikan otomatis.</p>
-  <label>Tanggal audit</label><input id="jt" type="date" value="${esc(v.tanggal||'')}"><label>Waktu audit (mulai &ndash; selesai)</label><div style="display:flex;gap:8px;align-items:center"><input id="jw1" type="time" value="${w1}" style="margin:0 0 10px"><span style="margin-bottom:10px">s/d</span><input id="jw2" type="time" value="${w2}" style="margin:0 0 10px"></div><label>Departemen</label><input id="jd" list="l1" value="${esc(v.dept||'')}" placeholder="Mis. Pre-Press"><label>Bagian (kosong = semua bagian)</label><input id="jb" list="l2" value="${esc(v.bagian||'')}" placeholder="Mis. Mounting">
+  <label>Tanggal audit</label><input id="jt" type="date" value="${esc(v.tanggal||'')}"><label>Waktu audit (mulai &ndash; selesai)</label><div style="display:flex;gap:8px;align-items:center"><input id="jw1" type="time" value="${w1}" style="margin:0 0 10px"><span style="margin-bottom:10px">s/d</span><input id="jw2" type="time" value="${w2}" style="margin:0 0 10px"></div><label>Departemen (sesuai dokumen)</label><select id="jd"><option value="">- Pilih departemen -</option>${depts.map(d=>`<option value="${esc(d)}"${d===v.dept?' selected':''}>${esc(d)}</option>`).join('')}</select><label>Bagian (kosong = semua bagian)</label><select id="jb">${bagOpts(v.dept,v.bagian)}</select>
   ${who}<label>Ruang lingkup / klausul</label><textarea id="jr">${esc(v.ruang_lingkup||'')}</textarea>${dl(['l1',DOCS.map(d=>d.dept)])}${dl(['l2',DOCS.map(d=>d.bagian)])}`,
   async()=>{const o={tanggal:$('#jt').value,dept:$('#jd').value.trim(),bagian:$('#jb').value.trim()||null,ruang_lingkup:$('#jr').value.trim()||null};const a1=$('#jw1').value,a2=$('#jw2').value;if(a2&&!a1)throw new Error('Isi jam mulai audit');o.waktu=a1?a1.replace(':','.')+(a2?' - '+a2.replace(':','.'):''):null;
     if(!o.tanggal||!o.dept)throw new Error('Tanggal dan departemen wajib diisi');
@@ -278,6 +287,7 @@ function jadwalForm(j){const v=j||{};const [w1,w2]=parseWaktu(v.waktu);const dl=
     let r=await wr(o);const lost=[];
     for(let g=0;g<5&&r.error;g++){const c=['waktu','auditor_nik','auditee_nik','auditee'].find(c=>c in o&&new RegExp('\\b'+c+'\\b','i').test(r.error.message||''));if(!c)break;if(o[c])lost.push(c);delete o[c];r=await wr(o)}
     if(r.error)throw r.error;toast(lost.length?'Jadwal disimpan, tapi '+lost.join(', ')+' belum tersimpan: jalankan ia_personel.sql / ia_jadwal_waktu.sql di Supabase':'Jadwal disimpan');listView()});
+  {const jd=m.querySelector('#jd'),jb=m.querySelector('#jb');jd.onchange=()=>{jb.innerHTML=bagOpts(jd.value,'')}}
   if(up){const wire=(cid,sid,arr)=>{const c=m.querySelector(cid),sl=m.querySelector(sid),draw=()=>chips(c,arr);draw();
       sl.onchange=()=>{if(sl.value&&!arr.includes(sl.value))arr.push(sl.value);sl.value='';draw()};
       c.onclick=e=>{const a=e.target.closest('[data-rm]');if(a){const i=arr.indexOf(a.dataset.rm);if(i>=0)arr.splice(i,1);draw()}}};
@@ -297,7 +307,7 @@ function kodeForm(j){const def=j.kode_exp?new Date(j.kode_exp):new Date(new Date
 
 // ---------- satu jadwal: dokumen dan temuan ----------
 function jadwalView(){const j=J;VIEW='jadwal';armBack();
-  $('#app').innerHTML=hdr('Audit Internal',S.mode==='email')+`<main class="wrap"><div class="box"><div class="bh"><h3>${where(j)}</h3><span>${tgl(j.tanggal)}${j.waktu?' &middot; '+esc(j.waktu):''}${S.mode==='kode'?' &middot; <b id="sl"></b>':''}</span></div><p class="inf"><b>Auditor:</b> ${esc(j.auditor||'-')}<br>${j.auditee?'<b>Auditee:</b> '+esc(j.auditee)+'<br>':''}<b>Ruang lingkup:</b> ${esc(j.ruang_lingkup||'-')}</p></div>
+  $('#app').innerHTML=hdr('Audit Internal',true)+`<main class="wrap"><div class="box"><div class="bh"><h3>${where(j)}</h3><span>${tgl(j.tanggal)}${j.waktu?' &middot; '+esc(j.waktu):''}${S.mode==='kode'?' &middot; <b id="sl"></b>':''}</span></div><p class="inf"><b>Auditor:</b> ${esc(j.auditor||'-')}<br>${j.auditee?'<b>Auditee:</b> '+esc(j.auditee)+'<br>':''}<b>Ruang lingkup:</b> ${esc(j.ruang_lingkup||'-')}</p></div>
   <div class="tabs" style="margin:12px 0"><button class="jb" data-t="dok">Dokumen</button><button class="jb" data-t="cl">Checklist</button><button class="jb" data-t="tmn">Temuan</button></div><div class="box" id="ct"></div></main>`;bindHdr();
   const sl=$('#sl');if(sl){const f=()=>{const m=Math.max(0,Math.round((S.exp-Date.now())/60000));sl.textContent='Sisa '+(m>=60?Math.floor(m/60)+' jam '+m%60+' menit':m+' menit')};f();setInterval(f,30000)}
   const tabs=()=>{document.querySelectorAll('.tabs .jb').forEach(b=>{b.classList.toggle('on',b.dataset.t===TAB);b.onclick=()=>{TAB=b.dataset.t;tabs()}});TAB==='dok'?docsTab():TAB==='cl'?checklistTab():findTab()};tabs()}
@@ -305,7 +315,7 @@ const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jOf(d)}</div>
 function docsTab(){const sc=DOCS.filter(d=>inScope(d,J));
   $('#ct').innerHTML=`<div class="bh"><h3>Dokumen Audit</h3><span>Hanya baca &middot; berwatermark</span></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"></div><div id="ls"></div>`;
   const draw=()=>{const f=sc.filter(d=>(d.kode+' '+d.judul).toLowerCase().includes(Q.toLowerCase())),pin=f.filter(d=>/audit|temuan/i.test(d.kode+' '+d.judul)),rest=f.filter(d=>!pin.includes(d));
-    $('#ls').innerHTML=(pin.length?`<div class="grp">Jadwal &amp; Panduan Audit<i>${pin.length}</i></div>${pin.map(item).join('')}`:'')+(rest.length?`<div class="grp">Dokumen yang diaudit<i>${rest.length}</i></div>${rest.map(item).join('')}`:'')||`<div class="empty">${sc.length?'Dokumen tidak ditemukan.':'Belum ada dokumen untuk departemen/bagian ini.'}</div>`;
+    $('#ls').innerHTML=(pin.length?`<div class="grp">Jadwal &amp; Panduan Audit<i>${pin.length}</i></div>${pin.map(item).join('')}`:'')+(rest.length?`<div class="grp">Dokumen yang diaudit<i>${rest.length}</i></div>${rest.map(item).join('')}`:'')||`<div class="empty">${sc.length?'Dokumen tidak ditemukan.':!DOCS.length?'Daftar dokumen tidak dapat dimuat dari server. Jika masuk dengan kode akses, minta admin memeriksa hak akses tabel dokumen untuk sesi kode.':'Belum ada dokumen untuk departemen/bagian ini.'+(S.admin?' Pastikan penulisan departemen/bagian di jadwal sama dengan di dokumen. Departemen pada dokumen: '+esc([...new Set(DOCS.map(d=>d.dept).filter(Boolean))].sort().join(', '))+'.':'')}</div>`;
     document.querySelectorAll('.it').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)))};
   $('#q').oninput=e=>{Q=e.target.value;draw()};draw()}
 async function findTab(){const ct=$('#ct');ct.innerHTML='<div class="empty">Memuat temuan...</div>';await clFlush();
