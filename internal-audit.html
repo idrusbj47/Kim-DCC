@@ -541,7 +541,8 @@ async function laporanDocx(list){
   const TN='Times New Roman',AR='Arial',SZ=24,W=10590;
   const ln={style:BorderStyle.SINGLE,size:6,color:'000000'},no={style:BorderStyle.NONE,size:0,color:'FFFFFF'};
   const all={top:ln,bottom:ln,left:ln,right:ln},none={top:no,bottom:no,left:no,right:no};
-  const R=(t,o={})=>new TextRun({text:t,font:TN,size:SZ,...o});
+  const K={ts:1,sz:24,tf:24},Z=n=>Math.max(8,Math.round(n*K.ts)),H=n=>Math.round(n*K.ts); // K: skala otomatis agar 1 halaman
+  const R=(t,o={})=>new TextRun({text:t,font:TN,size:K.sz,...o});
   const P=(ch,o={})=>new Paragraph({children:Array.isArray(ch)?ch:[ch],spacing:{before:0,after:0,line:240},...o});
   const sp=n=>' '.repeat(n);
   const cell=(ch,w,o={})=>new TableCell({children:ch,width:{size:w,type:WidthType.DXA},borders:o.b||all,verticalAlign:o.v||VerticalAlign.TOP,columnSpan:o.span,shading:o.fill?{type:ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,margins:o.m||{top:30,bottom:30,left:100,right:100}});
@@ -557,14 +558,22 @@ async function laporanDocx(list){
     if(tgl)rows.push(row(mk((it,w)=>cell([P([R('('+sp(it.sp?it.sp-6:14)+')',{size:20}),R('*tgl',{size:14})],{alignment:AlignmentType.CENTER})],w,{b:none,m:cm}))));
     return tbl(cols,rows,{borders:NB})};
   // blok tanda tangan versi baru: label (Diketahui/Disetujui/Verifikator) di SAMPING KIRI garis, kolom nama & tgl lebar
+  const fzOf=(r)=>r.foto?(()=>{const q=Math.min(280/r.foto.w,140/r.foto.h,1);return{w:Math.round(r.foto.w*q),h:Math.round(r.foto.h*q)}})():null;
+  // skala otomatis: uraian panjang -> font uraian mengecil (min 7pt) dan tabel/foto mengecil sedikit supaya tetap 1 halaman F4
+  const fitK=(r)=>{const fzb=fzOf(r);let best={fs:12,ts:1};
+    for(let fs=12;fs>=7;fs-=.5){const ts=1-(12-fs)/5*.22;
+      const n=rptLines(r).reduce((a,x)=>a+Math.max(1,Math.ceil(String(x.t||'').length*.46*fs/414)),0);
+      const ph=fzb?fzb.h*15*ts:0,row1=Math.max(3750*ts,ts*1822+n*fs*23+(ph?ph+60:0)),tot=ts*9814+row1;
+      best={fs,ts};if(tot<=13500)break}
+    K.ts=best.ts;K.tf=Math.round(best.fs*2);K.sz=Math.round(24*best.ts)};
   const sg3=(groups,gap,tgl=true)=>{const cm={top:0,bottom:0,left:40,right:40},BT={top:no,bottom:ln,left:no,right:no};
-    const E=(w)=>cell([P(R('',{size:20}))],w,{b:none,m:cm});
+    const E=(w)=>cell([P(R('',{size:Z(20)}))],w,{b:none,m:cm});
     const mk=(f)=>groups.flatMap(g=>g.sp?[E(g.sp)]:[...(g.label?[f('lw',g)]:[]),f('line',g),f('lab',g)]);
     const cols=groups.flatMap(g=>g.sp?[g.sp]:[...(g.label?[g.lw]:[]),g.lineW,g.labW]);
     const rows=[];
     if(gap)rows.push(row(mk((k,g)=>k==='lw'?cell([P(R(g.label))],g.lw,{b:none,m:cm,v:VerticalAlign.BOTTOM}):E(k==='line'?g.lineW:g.labW)),gap));
-    rows.push(row(mk((k,g)=>k==='lw'?E(g.lw):k==='line'?cell([P([R('(',{size:20}),R('\t',{size:20}),R(')',{size:20})],{tabStops:[{type:TabStopType.RIGHT,position:g.lineW-90}]})],g.lineW,{b:BT,m:cm}):cell([P(R('*'+g.name,{size:14}))],g.labW,{b:none,m:cm,v:VerticalAlign.BOTTOM}))));
-    if(tgl)rows.push(row(mk((k,g)=>k==='lw'?E(g.lw):k==='line'?cell([P([R('(',{size:20}),R('\t',{size:20}),R(')',{size:20})],{indent:{left:250},tabStops:[{type:TabStopType.RIGHT,position:g.lineW-330}]})],g.lineW,{b:none,m:cm}):cell([P(R('*tgl',{size:14}))],g.labW,{b:none,m:cm,v:VerticalAlign.BOTTOM}))));
+    rows.push(row(mk((k,g)=>k==='lw'?E(g.lw):k==='line'?cell([P([R('(',{size:Z(20)}),R('\t',{size:Z(20)}),R(')',{size:Z(20)})],{tabStops:[{type:TabStopType.RIGHT,position:g.lineW-90}]})],g.lineW,{b:BT,m:cm}):cell([P(R('*'+g.name,{size:Z(14)}))],g.labW,{b:none,m:cm,v:VerticalAlign.BOTTOM}))));
+    if(tgl)rows.push(row(mk((k,g)=>k==='lw'?E(g.lw):k==='line'?cell([P([R('(',{size:Z(20)}),R('\t',{size:Z(20)}),R(')',{size:Z(20)})],{indent:{left:250},tabStops:[{type:TabStopType.RIGHT,position:g.lineW-330}]})],g.lineW,{b:none,m:cm}):cell([P(R('*tgl',{size:Z(14)}))],g.labW,{b:none,m:cm,v:VerticalAlign.BOTTOM}))));
     return tbl(cols,rows,{borders:NB})};
   const sm=(t)=>P(R(t,{size:15,italics:true}));
   const notes=[sm('*Pengisian No. Laporan : KIM/INT/YYYY/MM/No.urut (3 digit).'),sm('** Referensi no. urut dari : Internal Audit Log (KIM-FM-QAD-020)'),sm('*** Lembar ke (urutan laporan temuan yang diterima oleh departemen terkait) dari (total laporan temuan yang diterima oleh departemen terkait)')];
@@ -575,7 +584,7 @@ async function laporanDocx(list){
     tbl([7600,2990],[
       row([cell([new Paragraph({spacing:{before:0,after:0},children:[new ImageRun({type:'png',data:hdImg,transformation:{width:284,height:42}})]})],7600,{b:{top:ln,left:ln,bottom:ln,right:no},v:VerticalAlign.CENTER}),
            cell([P(R('FORMULIR',{font:AR,size:17,bold:true}),{alignment:AlignmentType.CENTER}),P(R('DOKUMEN LEVEL IV',{font:AR,size:17,bold:true}),{alignment:AlignmentType.CENTER})],2990,{b:{top:ln,right:ln,bottom:ln,left:no},v:VerticalAlign.CENTER})],900),
-      row([cell([P(R('LAPORAN TEMUAN INTERNAL AUDIT',{font:AR,size:20,bold:true}),{alignment:AlignmentType.CENTER})],10590,{span:2,fill:'BFBFBF'})])]),
+      row([cell([P(R('LAPORAN TEMUAN INTERNAL AUDIT',{font:AR,size:Z(20),bold:true}),{alignment:AlignmentType.CENTER})],10590,{span:2,fill:'BFBFBF'})])]),
     P(R('',{size:2}))]});
   // footer: No. Dokumen, revisi, tanggal berlaku, halaman
   const bx=(s)=>[...s].flatMap(c=>[new TextRun({text:c,font:AR,size:15,border:{style:BorderStyle.SINGLE,size:4,color:'000000',space:1}}),new TextRun({text:' ',font:AR,size:12})]);
@@ -589,36 +598,36 @@ async function laporanDocx(list){
   const r1=[[300,''],[1400,'No. Dokumen',0,L_],[300,':',0,AlignmentType.CENTER],...[...'KIM'].map(c=>bx1(370,c)),[280,'-'],...[...'FM'].map(c=>bx1(370,c)),[280,'-'],...[...'QAD'].map(c=>bx1(370,c)),[280,'-'],...[...'019'].map(c=>bx1(370,c)),[1260,''],[800,'Revisi',0,L_],[350,':'],[860,'00',1]];
   const r2=[[300,''],[1400,'Tgl. Berlaku',0,L_],[300,':'],...[...'01'].map(c=>bx1(370,c)),[280,'/'],...[...'04'].map(c=>bx1(370,c)),[280,'/'],...[...'2018'].map(c=>bx1(370,c)),[2650,''],[800,'Halaman',0,L_],[350,':'],[1200,[FT('',{}),new TextRun({children:[PageNumber.CURRENT],font:AR,size:19,bold:true,color:FG}),FT(' dari '),new TextRun({children:[PageNumber.TOTAL_PAGES],font:AR,size:19,bold:true,color:FG})],0,L_]];
   const footer=new Footer({children:[ftab(r1),new Paragraph({spacing:{before:0,after:0,line:60},children:[FT('',{size:4})]}),ftab(r2),new Paragraph({spacing:{before:0,after:0},children:[FT('',{size:4})]})]});
-  const info=(r)=>{const ic=[5340,5250],c2=(a,b)=>row([cell([a],ic[0]),cell([b],ic[1])],290);
+  const info=(r)=>{const ic=[5340,5250],c2=(a,b)=>row([cell([a],ic[0]),cell([b],ic[1])],H(290));
     const L=(k,v)=>P([R(k),R('\t:  '+v)],{tabStops:[{type:TabStopType.LEFT,position:1500}]});
     return tbl(ic,[c2(L('No. Laporan',r.no),P(R('Lembar ke (  '+r.lembarKe+'  ) dari (  '+r.lembarDari+'  )'))),c2(L('Area Audit',r.area),L('Tanggal Audit',r.tgl)),c2(L('Lingkup',r.lingkup),L('Waktu Audit',r.waktu)),c2(L('Auditee',r.auditee),L('Auditor',r.auditor))])};
   const body=(r)=>{const cw=[8490,2100];
     const TOPB={top:ln,left:ln,right:ln,bottom:no},BOTB={top:no,left:ln,right:ln,bottom:ln},tiny=()=>P(R('',{size:2}));
     const pjT=()=>cell([P(R('Penanggung Jawab',{bold:true})),tiny()],cw[1],{b:TOPB});
     const pjS=()=>cell([sg3([{lineW:1400,labW:480,name:'nama'}],0,true),tiny()],cw[1],{b:BOTB,v:VerticalAlign.BOTTOM});
-    const fl=rptLines(r).map(x=>P(x.t?R(x.t,{italics:!!x.i}):R(''),{alignment:AlignmentType.JUSTIFIED}));
-    const fz=r.foto?(()=>{const q=Math.min(280/r.foto.w,140/r.foto.h,1);return{w:Math.round(r.foto.w*q),h:Math.round(r.foto.h*q)}})():null;
+    const fl=rptLines(r).map(x=>P(x.t?R(x.t,{italics:!!x.i,size:K.tf}):R('',{size:K.tf}),{alignment:AlignmentType.JUSTIFIED}));
+    const fz0=fzOf(r),fz=fz0?{w:Math.max(20,Math.round(fz0.w*K.ts)),h:Math.max(20,Math.round(fz0.h*K.ts))}:null;
     const row1=row([cell([P(R('Temuan Ketidaksesuaian :',{bold:true})),...fl,...(fz?[new Paragraph({spacing:{before:60,after:0},children:[new ImageRun({type:'jpg',data:r.foto.d,transformation:{width:fz.w,height:fz.h}})]})]:[]),P(R('')),
-        sg3([{label:'Diketahui',lw:1100,lineW:2000,labW:900,name:'Auditee'},{sp:250},{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],600,true),tiny()],cw[0]),
-      cell([P(R('Jenis Ketidaksesuaian',{bold:true})),P(R(''),{spacing:{before:300,after:0}}),P(R(r.jenis,{size:28}),{alignment:AlignmentType.CENTER,spacing:{before:0,after:700}}),P(R('*observasi/mayor/minor',{size:13}),{spacing:{before:700,after:0}})],cw[1])],3750);
-    const row2=row([cell([P(R('Investigasi Akar Permasalahan:',{bold:true}))],10590,{span:2})],1300);
+        sg3([{label:'Diketahui',lw:1100,lineW:2000,labW:900,name:'Auditee'},{sp:250},{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],H(600),true),tiny()],cw[0]),
+      cell([P(R('Jenis Ketidaksesuaian',{bold:true})),P(R(''),{spacing:{before:H(300),after:0}}),P(R(r.jenis,{size:Z(28)}),{alignment:AlignmentType.CENTER,spacing:{before:0,after:H(700)}}),P(R('*observasi/mayor/minor',{size:Z(13)}),{spacing:{before:H(700),after:0}})],cw[1])],H(3750));
+    const row2=row([cell([P(R('Investigasi Akar Permasalahan:',{bold:true}))],10590,{span:2})],H(1300));
     // Tindakan Perbaikan: isi + "Tanggal Penyelesaian" di baris sendiri, menempel garis bawah
-    const row3a=row([cell([P(R('Tindakan Perbaikan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],1100);
-    const row3b=row([cell([P(R('Tanggal Penyelesaian:',{bold:true}))],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],640);
-    const row4a=row([cell([P(R('Tindakan Pencegahan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],1100);
+    const row3a=row([cell([P(R('Tindakan Perbaikan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],H(1100));
+    const row3b=row([cell([P(R('Tanggal Penyelesaian:',{bold:true}))],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],H(640));
+    const row4a=row([cell([P(R('Tindakan Pencegahan:',{bold:true}))],cw[0],{b:TOPB}),pjT()],H(1100));
     const nb0={top:no,bottom:no,left:no,right:no},nm0={top:0,bottom:0,left:0,right:0};
     const row4b=row([cell([tbl([4250,4000],[row([cell([P(R('Tanggal Penyelesaian:',{bold:true}))],4250,{b:nb0,m:{top:0,bottom:30,left:0,right:0},v:VerticalAlign.BOTTOM}),
-        cell([sg3([{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],400,true),tiny()],4000,{b:nb0,m:nm0,v:VerticalAlign.BOTTOM})])],{borders:NB}),tiny()],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],1000);
-    const ck=(w)=>cell([P(R('',{size:20}))],w,{b:all,m:nm0});
+        cell([sg3([{label:'Disetujui',lw:1100,lineW:2000,labW:900,name:'Kabag./Mng'}],H(400),true),tiny()],4000,{b:nb0,m:nm0,v:VerticalAlign.BOTTOM})])],{borders:NB}),tiny()],cw[0],{b:BOTB,v:VerticalAlign.BOTTOM}),pjS()],H(1000));
+    const ck=(w)=>cell([P(R('',{size:Z(20)}))],w,{b:all,m:nm0});
     const ckl=(w,t)=>cell([P(R(t),{indent:{left:60}})],w,{b:nb0,m:nm0,v:VerticalAlign.CENTER});
-    const spc=(w)=>cell([P(R('',{size:20}))],w,{b:nb0,m:nm0});
+    const spc=(w)=>cell([P(R('',{size:Z(20)}))],w,{b:nb0,m:nm0});
     const lg=tbl([6900,340,850,300,340,900],[row([spc(6900),ck(340),ckl(850,'Lulus'),spc(300),ck(340),ckl(900,'Gagal')],340)],{borders:NB});
     const row5=row([cell([P(R('Verifikasi Tindakan Perbaikan dan Pencegahan:')),P(R('',{size:8})),lg,P(R('',{size:8})),
-        sg3([{sp:5400},{label:'Verifikator',lw:1300,lineW:2800,labW:850,name:'Auditor'}],700,true),tiny()],10590,{span:2})],1700);
-    const row6=row([cell([P([R('Tindak Lanjut ke Nomor Laporan',{bold:true}),R(' : '+rptDari(r)[0])])],10590,{span:2})],340);
+        sg3([{sp:5400},{label:'Verifikator',lw:1300,lineW:2800,labW:850,name:'Auditor'}],H(700),true),tiny()],10590,{span:2})],H(1700));
+    const row6=row([cell([P([R('Tindak Lanjut ke Nomor Laporan',{bold:true}),R(' : '+rptDari(r)[0])])],10590,{span:2})],H(340));
     return tbl([8490,2100],[row1,row2,row3a,row3b,row4a,row4b,row5,row6],{borders:NB})};
-  const sections=list.map(r=>({properties:{page:{size:{width:12240,height:18720},margin:{top:1620,bottom:1300,left:748,right:902,header:283,footer:283}}},headers:{default:header},footers:{default:footer},
-    children:[info(r),...notes,body(r),...notes.slice(0,2)]}));
+  const sections=list.map(r=>{fitK(r);return {properties:{page:{size:{width:12240,height:18720},margin:{top:1620,bottom:1300,left:748,right:902,header:283,footer:283}}},headers:{default:header},footers:{default:footer},
+    children:[info(r),...notes,body(r),...notes.slice(0,2)]}});
   const doc=new Document({creator:'PT Karya Indah Multiguna',title:'Laporan Temuan Internal Audit',styles:{default:{document:{run:{font:TN,size:SZ}}}},sections});
   return Packer.toBlob?await Packer.toBlob(doc):await Packer.toBuffer(doc)}
 
@@ -629,7 +638,7 @@ async function laporanPdf(list){
   const wm=await pdf.embedPng(RPT_B64(RPT_IMG.wm)),hd=await pdf.embedPng(RPT_B64(RPT_IMG.hdr));
   const PW=612,PH=936,L=37.4,W=529.5,k=rgb(0,0,0),cl=s=>String(s==null?'':s).replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[^\x20-\x7E\xA0-\xFF\u2013\u2014\u2022\u2026]/g,'?');
   for(let n=0;n<list.length;n++){const r=list[n],pg=pdf.addPage([PW,PH]);
-    const T=y=>PH-y,tx=(s,x,y,sz,ft,o={})=>{s=cl(s);let X=x;if(o.c)X=x-ft.widthOfTextAtSize(s,sz)/2;if(o.rt)X=x-ft.widthOfTextAtSize(s,sz);pg.drawText(s,{x:X,y:T(y),size:sz,font:ft,color:k})};
+    const T=y=>PH-y,tx=(s,x,y,sz,ft,o={})=>{s=cl(s);let X=x;if(o.c)X=x-ft.widthOfTextAtSize(s,sz)/2;if(o.rt)X=x-ft.widthOfTextAtSize(s,sz);pg.drawText(s,{x:X,y:T(y),size:sz,font:ft,color:o.col||k})};
     const rect=(x,y,w,h,fill)=>pg.drawRectangle({x,y:T(y+h),width:w,height:h,borderColor:k,borderWidth:.7,color:fill});
     const line=(x1,y1,x2,y2)=>pg.drawLine({start:{x:x1,y:T(y1)},end:{x:x2,y:T(y2)},thickness:.7,color:k});
     const wrap=(t,ft,sz,mw)=>{t=cl(t);if(!t)return[''];const o=[];let cur='';for(const w of t.split(/\s+/)){const a=cur?cur+' '+w:w;if(ft.widthOfTextAtSize(a,sz)<=mw)cur=a;else{if(cur)o.push(cur);cur=w}}o.push(cur);return o};
@@ -649,38 +658,46 @@ async function laporanPdf(list){
     note('*** Lembar ke (urutan laporan temuan yang diterima oleh departemen terkait) dari (total laporan temuan yang diterima oleh departemen terkait)',y+27);
     // tabel utama
     const LW=440,RW=W-LW,y0=y+42,lx=L+LW;let Y=y0;
-    const sg=(cx,yy,name,tgl=true,w=96)=>{line(cx-w/2,yy,cx+w/2,yy);tx('(',cx-w/2,yy+10,9.5,f.r);tx(')',cx+w/2-4,yy+10,9.5,f.r,{});tx('*'+name,cx+w/2,yy+10,6.5,f.r);if(tgl){tx('(',cx-w/2+10,yy+20,9.5,f.r);tx(')',cx+w/2-14,yy+20,9.5,f.r);tx('*tgl',cx+w/2-10,yy+20,6.5,f.r)}};
+    const sg=(cx,yy,name,tgl=true,w=96)=>{line(cx-w/2,yy,cx+w/2,yy);tx('(',cx-w/2,yy-2,9.5,f.r);tx(')',cx+w/2-4,yy-2,9.5,f.r);tx('*'+name,cx+w/2,yy-2,6.5,f.r);if(tgl){tx('(',cx-w/2+10,yy+10,9.5,f.r);tx(')',cx+w/2-14,yy+10,9.5,f.r);tx('*tgl',cx+w/2-10,yy+10,6.5,f.r)}};
     // baris 1
     tx('Temuan Ketidaksesuaian :',L+3,Y+13,12,f.b);
-    let fs=12,lh=14.1;const lay=()=>{const o=[];rptLines(r).forEach(x=>{const ft=x.i?f.i:f.r;wrap(x.t,ft,fs,LW-8).forEach(q=>o.push([q,ft]))});return o};let ls=lay();const hasF=!!r.foto,H2=hasF?44:62,H3=hasF?74:88,H4=hasF?86:96,H5=hasF?94:102,hmax=810-y0-(H2+H3+H4+H5+20),ps=hasF?Math.min(220/r.foto.w,90/r.foto.h):0,pw=hasF?ps*r.foto.w:0,ph=hasF?ps*r.foto.h:0;
-    while(fs>8&&27+ls.length*lh+(hasF?ph+8:0)+8+78>hmax){fs-=.5;lh=fs*1.17;ls=lay()}
+    let fs=12,lh=14.1;const lay=()=>{const o=[];rptLines(r).forEach(x=>{const ft=x.i?f.i:f.r;wrap(x.t,ft,fs,LW-8).forEach(q=>o.push([q,ft]))});return o};let ls=lay();const hasF=!!r.foto;let hs=1,H2,H3,H4,H5,hmax,ps,pw,ph;
+    const setH=()=>{H2=Math.round((hasF?44:62)*hs);H3=Math.round((hasF?74:88)*hs);H4=Math.round((hasF?86:96)*hs);H5=Math.round((hasF?94:102)*hs);hmax=810-y0-(H2+H3+H4+H5+20);ps=hasF?Math.min(220/r.foto.w,90/r.foto.h)*hs:0;pw=hasF?ps*r.foto.w:0;ph=hasF?ps*r.foto.h:0};
+    setH();
+    // uraian panjang: font uraian mengecil (min 7) dan tabel mengecil sedikit supaya tetap 1 halaman
+    while(fs>7&&27+ls.length*lh+(hasF?ph+8:0)+8+78>hmax){fs-=.5;lh=fs*1.17;hs=Math.max(.85,1-(12-fs)/5*.15);setH();ls=lay()}
     let ty=Y+27;ls.forEach(([q,ft])=>{tx(q,L+3,ty,fs,ft);ty+=lh});if(hasF){const fimg=await pdf.embedJpg(r.foto.d),top=ty-lh+6;pg.drawImage(fimg,{x:L+3,y:T(top+ph),width:pw,height:ph});pg.drawRectangle({x:L+3,y:T(top+ph),width:pw,height:ph,borderColor:k,borderWidth:.5});ty+=ph+6}
-    const sy=ty+8;tx('Diketahui',L+116,sy+11,12,f.r,{c:1});tx('Disetujui',L+346,sy+11,12,f.r,{c:1});sg(L+105,sy+50,'Auditee');sg(L+340,sy+50,'Kabag./Mng');
-    const h1=Math.max(207,sy+78-Y);rect(L,Y,W,h1);line(lx,Y,lx,Y+h1);
+    const sy=ty+8;tx('Diketahui',L+3,sy+30,12,f.r);tx('Disetujui',L+225,sy+30,12,f.r);sg(L+117,sy+44,'Auditee',true,110);sg(L+340,sy+44,'Kabag./Mng',true,100);
+    const h1=Math.max(Math.round(207*hs),sy+62-Y);rect(L,Y,W,h1);line(lx,Y,lx,Y+h1);
     tx('Jenis',lx+3,Y+13,12,f.b);tx('Ketidaksesuaian',lx+3,Y+26,12,f.b);tx(r.jenis,lx+RW/2,Y+60,14,f.r,{c:1});tx('*observasi/mayor/minor',lx+RW/2,Y+112,6.5,f.r,{c:1});Y+=h1;
     // baris 2
     rect(L,Y,W,H2);tx('Investigasi Akar Permasalahan:',L+3,Y+13,12,f.b);Y+=H2;
     // PJ
-    const pj=(yy,h)=>{tx('Penanggung',lx+3,yy+13,12,f.b);tx('Jawab',lx+3,yy+26,12,f.b);sg(lx+RW/2-4,yy+h-34,'nama',true,70)};
+    const pj=(yy,h)=>{tx('Penanggung',lx+3,yy+13,12,f.b);tx('Jawab',lx+3,yy+26,12,f.b);sg(lx+RW/2-14,yy+h-20,'nama',true,58)};
     // baris 3
-    rect(L,Y,W,H3);line(lx,Y,lx,Y+H3);tx('Tindakan Perbaikan:',L+3,Y+13,12,f.b);tx('Tanggal Penyelesaian:',L+3,Y+H3-6,12,f.b);pj(Y,H3);Y+=H3;
+    rect(L,Y,W,H3);line(lx,Y,lx,Y+H3);tx('Tindakan Perbaikan:',L+3,Y+13,12,f.b);tx('Tanggal Penyelesaian:',L+3,Y+H3-8,12,f.b);pj(Y,H3);Y+=H3;
     // baris 4
-    rect(L,Y,W,H4);line(lx,Y,lx,Y+H4);tx('Tindakan Pencegahan:',L+3,Y+13,12,f.b);tx('Disetujui',L+346,Y+H4-66,12,f.r,{c:1});sg(L+340,Y+H4-36,'Kabag./Mng');
-    tx('Tanggal Penyelesaian:',L+3,Y+H4-6,12,f.b);tx('(',L+138,Y+H4-6,9.5,f.r);tx(')',L+200,Y+H4-6,9.5,f.r);tx('*tgl',L+204,Y+H4-6,6.5,f.r);pj(Y,H4);Y+=H4;
+    rect(L,Y,W,H4);line(lx,Y,lx,Y+H4);tx('Tindakan Pencegahan:',L+3,Y+13,12,f.b);tx('Disetujui',L+225,Y+H4-34,12,f.r);sg(L+340,Y+H4-20,'Kabag./Mng',true,100);
+    tx('Tanggal Penyelesaian:',L+3,Y+H4-8,12,f.b);pj(Y,H4);Y+=H4;
     // baris 5
     rect(L,Y,W,H5);tx('Verifikasi Tindakan Perbaikan dan Pencegahan:',L+3,Y+13,12,f.r);
-    [['Lulus',L+339],['Gagal',L+405]].forEach(([t,x])=>{pg.drawRectangle({x,y:T(Y+27),width:13,height:13,borderColor:k,borderWidth:.7});tx(t,x+19,Y+24,12,f.r)});
-    tx('Verifikator',L+330,Y+H5-52,12,f.r,{c:1});sg(L+330,Y+H5-20,'Auditor');Y+=H5;
+    [['Lulus',L+345],['Gagal',L+425]].forEach(([t,x])=>{pg.drawRectangle({x,y:T(Y+33),width:15,height:15,borderColor:k,borderWidth:.7});tx(t,x+21,Y+29,12,f.r)});
+    tx('Verifikator',L+285,Y+H5-34,12,f.r);sg(L+420,Y+H5-20,'Auditor',true,130);Y+=H5;
     // baris 6
     rect(L,Y,W,20);const lab='Tindak Lanjut ke Nomor Laporan';tx(lab,L+3,Y+14,12,f.b);tx(' : '+rptDari(r)[0],L+3+f.b.widthOfTextAtSize(lab,12),Y+14,12,f.r);Y+=20;
     note('*Pengisian No. Laporan : KIM/INT/YYYY/MM/No.urut (3 digit).',Y+9);note('** Referensi no. urut dari : Internal Audit Log (KIM-FM-QAD-020).',Y+18);
     // footer
-    const box=(c,x,yy)=>{pg.drawRectangle({x,y:T(yy+9),width:11,height:12,borderColor:k,borderWidth:.6});tx(c,x+5.5,yy+7,8,f.s,{c:1})};
-    const boxes=(s,x,yy)=>{[...s].forEach((c,i)=>box(c,x+i*13,yy));return x+s.length*13};
-    let fy=834;tx('No. Dokumen',43,fy+7,8.5,f.s);tx(':',118,fy+7,8.5,f.s);let x=boxes('KIM',130,fy);tx('-',x+2,fy+7,8.5,f.s);x=boxes('FM',x+12,fy);tx('-',x+2,fy+7,8.5,f.s);x=boxes('QAD',x+12,fy);tx('-',x+2,fy+7,8.5,f.s);boxes('019',x+12,fy);
-    tx('Revisi',430,fy+7,8.5,f.s);tx(':',468,fy+7,8.5,f.s);pg.drawRectangle({x:481,y:T(fy+9),width:34,height:12,borderColor:k,borderWidth:.6});tx('00',498,fy+7,8,f.s,{c:1});
-    fy=852;tx('Tgl. Berlaku',50,fy+7,8.5,f.s);tx(':',118,fy+7,8.5,f.s);x=boxes('01',130,fy);tx('/',x+3,fy+7,8.5,f.s);x=boxes('04',x+12,fy);tx('/',x+3,fy+7,8.5,f.s);boxes('2018',x+12,fy);
-    tx('Halaman',430,fy+7,8.5,f.s);tx(':',468,fy+7,8.5,f.s);tx(String(n+1),481,fy+7,8.5,f.h);tx('dari',493,fy+7,8.5,f.s);tx(String(list.length),515,fy+7,8.5,f.h)}
+    const gr=rgb(.25,.25,.25),gb=rgb(.5,.5,.5),BW=18.5,BH=16.5;
+    const fbox=(c,x,yy,w=BW)=>{pg.drawRectangle({x,y:T(yy+BH),width:w,height:BH,borderColor:gb,borderWidth:.6});tx(c,x+w/2,yy+BH/2+3.4,9.5,f.s,{c:1,col:gr})};
+    const fboxes=(t,x,yy)=>{[...t].forEach((c,i)=>fbox(c,x+i*BW,yy));return x+t.length*BW};
+    const ft=(t,x,yy,o={})=>tx(t,x,yy+BH/2+3.4,9.5,o.b?f.h:f.s,{col:gr,...o});
+    const sep=(c,x,yy)=>tx(c,x+7,yy+BH/2+3.4,9.5,f.s,{c:1,col:gr});
+    let fy=830,X0=L+100,fx;
+    ft('No. Dokumen',L+15,fy);ft(':',L+92,fy,{c:1});fx=fboxes('KIM',X0,fy);sep('-',fx,fy);fx=fboxes('FM',fx+14,fy);sep('-',fx,fy);fx=fboxes('QAD',fx+14,fy);sep('-',fx,fy);fboxes('019',fx+14,fy);
+    ft('Revisi',L+408.5,fy);ft(':',L+448,fy,{c:1});fbox('00',L+466,fy,43);
+    fy=850;
+    ft('Tgl. Berlaku',L+15,fy);ft(':',L+92,fy,{c:1});fx=fboxes('01',X0,fy);sep('/',fx,fy);fx=fboxes('04',fx+14,fy);sep('/',fx,fy);fboxes('2018',fx+14,fy);
+    ft('Halaman',L+408.5,fy);ft(':',L+448,fy,{c:1});ft(String(n+1),L+466,fy,{b:1});ft('dari',L+478,fy);ft(String(list.length),L+500,fy,{b:1})}
   return new Blob([await pdf.save()],{type:'application/pdf'})}
 
 // ---------- Laporan Temuan Internal Audit (KIM-FM-QAD-019): unduh Word & PDF, isian saja, tanda tangan manual ----------
