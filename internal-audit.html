@@ -383,7 +383,7 @@ async function findTab(){const ct=$('#ct');ct.innerHTML='<div class="empty">Memu
   document.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(!confirm('Hapus temuan ini?'))return;const x=await sb.from('ia_temuan').delete().eq('id',b.dataset.d);if(x.error){toast('Gagal: '+x.error.message);return}findTab()})}
 function temuanForm(pre){pre=pre||{};let ft=pre.foto||null;const sc=DOCS.filter(d=>inScope(d,J)),rf=pre.ref||null,ed=!!pre.id;
   const refBox=rf?`<div class="note" style="margin:8px 0"><b>Acuan checklist</b> (${esc(rf.f||'')})${rf.doc?'<br>Dokumen: '+esc(rf.doc):''}${rf.q?'<br>Butir diperiksa: '+esc(rf.q):''}${rf.kl?'<br>Clause: '+esc(rf.kl):''}<br><span class="m">Jenis, no. clause dan uraian clause otomatis ikut ke kolom ketidaksesuaian di laporan.</span></div>`:'';
-  const head=rf?'':`<label>Jenis ketidaksesuaian</label><select id="tk">${KAT.map(k=>`<option value="${k}"${k===pre.kategori?' selected':''}>${k==='OFI'?'OBS (Observasi)':k}</option>`).join('')}</select><label>Clause ISO</label><input id="tc" placeholder="Mis. 7.5 &ndash; Pengendalian Informasi Terdokumentasi" value="${esc(pre.klausul||'')}">
+  const head=rf?'':`<label>Jenis ketidaksesuaian</label><select id="tk">${KAT.map(k=>`<option value="${k}"${k===pre.kategori?' selected':''}>${k==='OFI'?'OBS (Observasi)':k}</option>`).join('')}</select><label>Clause ISO</label><datalist id="tcl">${CLAUSES.map(c=>`<option value="${esc(c[0]+' \u2013 '+c[1])}">`).join('')}</datalist><input id="tc" list="tcl" autocomplete="off" placeholder="Mis. 7.5 &ndash; Pengendalian Informasi Terdokumentasi" value="${esc(pre.klausul||'')}">
   <label>Dokumen terkait (opsional)</label><select id="td"><option value="">- tidak ada -</option>${sc.map(d=>`<option value="${esc(d.id)}"${String(d.id)===String(pre.dokumen_id)?' selected':''}>${esc(d.kode)} &middot; ${esc(d.judul)}</option>`).join('')}</select>`;
   const mm=modal(`<h2>${ed?'Uraian Temuan':'Catat Temuan'}</h2><p>${where(J)}</p>${refBox}${head}
   <label>Uraian temuan (essay): jelaskan temuan secara rinci</label><textarea id="tu" rows="6" placeholder="Mis. Prosedur Pengendalian Dokumen (KIM-PR-QAD-001 Rev.01) ; Point 4.12 i. ...">${esc(pre.uraian||'')}</textarea><label>Bukti objektif: kondisi yang ditemukan (opsional)</label><textarea id="tb" placeholder="Mis. Memo Revisi Dokumen (KIM-FM-QAD-012 Rev01) belum ada tanda tangan persetujuan ...">${esc(pre.bukti||'')}</textarea><label>PIC / auditee</label><input id="tp" value="${esc(pre.pic||'')}"><label>Foto bukti (opsional)</label><div id="tfw"></div>`,
@@ -452,6 +452,59 @@ const FORM_NO='KIM-FM-QAD-018',FORM_REV='02',FORM_TGL='01-01-2021';
 const libs={};
 const lib=(src,ok)=>libs[src]||(libs[src]=new Promise((res,rej)=>{if(ok())return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>{delete libs[src];rej(new Error('Pustaka ekspor gagal dimuat, cek koneksi internet'))};document.head.append(s)}));
 let CL=null,clTimer=null,clOff=false;
+const CLAUSES=[
+["4.1", "Memahami organisasi dan konteksnya", "Understanding the organization and its context"],
+ ["4.2", "Memahami kebutuhan dan harapan pihak berkepentingan", "Understanding the needs and expectations of interested parties"],
+ ["4.3", "Menentukan lingkup sistem manajemen mutu", "Determining the scope of the QMS"],
+ ["4.4", "Sistem manajemen mutu dan prosesnya", "QMS and its processes"],
+ ["5.1", "Kepemimpinan dan komitmen", "Leadership and commitment"],
+ ["5.1.2", "Fokus pada pelanggan", "Customer focus"],
+ ["5.2", "Kebijakan", "Policy"],
+ ["5.2.1", "Kebijakan mutu", "Establishing the quality policy"],
+ ["5.2.2", "Komunikasi kebijakan mutu", "Communicating the quality policy"],
+ ["5.3", "Peran, tanggung jawab dan wewenang organisasi", "Organizational roles, responsibilities and authorities"],
+ ["6.1", "Tindakan untuk menangani risiko dan peluang", "Actions to address risks and opportunities"],
+ ["6.2", "Sasaran mutu dan perencanaan untuk mencapainya", "Quality objectives and planning to achieve them"],
+ ["6.3", "Perencanaan perubahan", "Planning of changes"],
+ ["7.1", "Sumber daya", "Resources"],
+ ["7.1.2", "Orang", "People"],
+ ["7.1.3", "Infrastruktur", "Infrastructure"],
+ ["7.1.4", "Lingkungan untuk operasi proses", "Environment for the operation of processes"],
+ ["7.1.5", "Sumber daya pemantauan dan pengukuran", "Monitoring and measuring resources"],
+ ["7.1.5.2", "Mampu telusur pengukuran", "Measurement traceability"],
+ ["7.1.6", "Pengetahuan organisasi", "Organizational knowledge"],
+ ["7.2", "Kompetensi", "Competence"],
+ ["7.3", "Kepedulian", "Awareness"],
+ ["7.4", "Komunikasi", "Communication"],
+ ["7.5", "Informasi terdokumentasi", "Documented information"],
+ ["7.5.2", "Membuat dan memperbarui", "Creating and updating"],
+ ["7.5.3", "Pengendalian informasi terdokumentasi", "Control of documented information"],
+ ["8.1", "Perencanaan dan pengendalian operasi", "Operational planning and control"],
+ ["8.2", "Persyaratan produk dan jasa", "Requirements for products and services"],
+ ["8.2.1", "Komunikasi pelanggan", "Customer communication"],
+ ["8.2.2", "Penentuan persyaratan produk dan jasa", "Determining the requirements"],
+ ["8.2.3", "Tinjauan persyaratan produk dan jasa", "Review of the requirements"],
+ ["8.3", "Desain dan pengembangan produk dan jasa", "Design and development of products and services"],
+ ["8.4", "Pengendalian proses, produk dan jasa yang disediakan eksternal", "Control of externally provided processes, products and services"],
+ ["8.5", "Produksi dan penyediaan jasa", "Production and service provision"],
+ ["8.5.1", "Pengendalian produksi dan penyediaan jasa", "Control of production and service provision"],
+ ["8.5.2", "Identifikasi dan mampu telusur", "Identification and traceability"],
+ ["8.5.3", "Properti milik pelanggan atau penyedia eksternal", "Property belonging to customers or external providers"],
+ ["8.5.4", "Preservasi", "Preservation"],
+ ["8.5.5", "Kegiatan pasca penyerahan", "Post-delivery activities"],
+ ["8.5.6", "Pengendalian perubahan", "Control of changes"],
+ ["8.6", "Pelepasan produk dan jasa", "Release of products and services"],
+ ["8.7", "Pengendalian keluaran yang tidak sesuai", "Control of nonconforming outputs"],
+ ["9.1", "Pemantauan, pengukuran, analisis dan evaluasi", "Monitoring, measurement, analysis and evaluation"],
+ ["9.1.2", "Kepuasan pelanggan", "Customer satisfaction"],
+ ["9.1.3", "Analisis dan evaluasi", "Analysis and evaluation"],
+ ["9.2", "Audit internal", "Internal audit"],
+ ["9.3", "Tinjauan manajemen", "Management review"],
+ ["10.1", "Peningkatan: umum", "Improvement: general"],
+ ["10.2", "Ketidaksesuaian dan tindakan korektif", "Nonconformity and corrective action"],
+ ["10.3", "Peningkatan berkelanjutan", "Continual improvement"]];
+const clOpt=()=>CLAUSES.map(c=>`<option value="${esc(c[0])}">${esc(c[1])} (${esc(c[2])})</option>`).join('');
+const clFind=v=>{v=String(v||'').trim().replace(/\.$/,'');return CLAUSES.find(c=>c[0]===v)};
 const clBlank=n=>Array.from({length:n},()=>({doc:'',q:'',ref:'',cu:'',f:'',note:''}));
 // nama auditor pada checklist = akun auditor yang sedang login (bukan semua auditor di jadwal)
 const clAud=()=>{const l=nikList(J&&J.auditor_nik);
@@ -553,7 +606,7 @@ function rowHtml(r,i){const ro=CL.final?' disabled':'',f=r.f;
   ${(f==='NC'||f==='OBS')?`<div style="margin-bottom:6px"><b>No. Temuan:</b> <span class="tag k-${f==='NC'?'Minor':'OFI'} nbd">${esc(tParts(r.no).n)}</span> <span class="m nfl" style="font-size:11px">${esc(tParts(r.no).aud?r.no:'')}</span></div>`:''}
   <label>Relevant Document</label><input data-k="doc" list="cdocs" value="${esc(r.doc)}"${ro} placeholder="Kode / nama dokumen terkait">
   <label>Item Audited / Question</label><div class="ta"><textarea data-k="q" rows="2"${ro} placeholder="Butir atau pertanyaan yang diperiksa">${esc(r.q)}</textarea><i class="gr" data-gr title="Tarik untuk memperbesar"></i></div>
-  <div class="c2"><div><label>Reff. Clause</label><input data-k="ref" value="${esc(r.ref)}"${ro} placeholder="Mis. 7.5.3"></div>
+  <div class="c2"><div><label>Reff. Clause</label><input data-k="ref" list="ccl" value="${esc(r.ref)}"${ro} placeholder="Pilih / ketik no. clause, mis. 7.5.3" autocomplete="off"></div>
   <div><label>Finding</label><div class="seg">${['C','NC','OBS'].map(v=>`<button type="button" data-v="${v}" class="${f===v?'on':''}"${ro}>${v}</button>`).join('')}</div></div></div>
   <label>Uraian Clause (ikut ke Laporan Temuan)</label><input data-k="cu" value="${esc(r.cu)}"${ro} placeholder="Mis. Informasi terdokumentasi">
   ${(f==='NC'||f==='OBS')?((r.tgone||(r.tm===true&&!r.tid))?'<button type="button" class="btn bs" data-tm style="margin-top:8px;background:#c2255c">Temuan terhapus: tambahkan lagi ke tab Temuan</button>':(CL.final?'<span class="tag o" style="margin-top:8px">Sudah masuk tab Temuan</span>':'<span class="tag o" style="margin-top:8px">Masuk tab Temuan setelah checklist difinalkan</span>')):''}
@@ -571,10 +624,15 @@ function clRender(){const ct=$('#ct'),h=CL.header,ro=CL.final?' disabled':'';
   <div class="bh" style="margin-top:18px"><h3 style="font-size:15px">Tanda Tangan</h3></div><div class="sgg" id="csg"></div><div class="note" id="csw" style="display:none;margin-top:8px"></div>
   <div class="bh" style="margin-top:18px;margin-bottom:6px"><h3 style="font-size:15px">Ekspor</h3></div>
   <div class="hr" style="margin-top:0"><button class="btn g bs" data-cfs type="button">Layar Penuh &amp; Cetak</button><button class="btn bs" id="cxl" type="button">Unduh Excel</button><button class="btn bs" id="cpd" type="button">Unduh PDF</button><button class="btn bs" id="clp" type="button">Laporan Temuan (Word/PDF)</button>${CL.final?'':'<button class="btn g bs" id="cfn" type="button">Finalkan &amp; Kunci</button>'}</div>
+  <datalist id="ccl">${clOpt()}</datalist>
   <datalist id="cdocs">${DOCS.filter(d=>!isDF(d)&&inScope(d,J)).map(d=>`<option value="${esc(d.kode)}">${esc(d.judul)}</option>`).join('')}</datalist>`;
   ct.querySelectorAll('[data-h]').forEach(i=>i.oninput=()=>{CL.header[i.dataset.h]=i.value;clDirty()});
   const rw=$('#crows');
-  rw.oninput=e=>{const c=e.target.closest('.cr');if(!c||!e.target.dataset.k)return;CL.rows[+c.dataset.i][e.target.dataset.k]=e.target.value;clDirty();clCnt()};
+  rw.oninput=e=>{const c=e.target.closest('.cr');if(!c||!e.target.dataset.k)return;const r=CL.rows[+c.dataset.i];r[e.target.dataset.k]=e.target.value;
+    if(e.target.dataset.k==='ref'){const m=clFind(e.target.value),cu=c.querySelector('[data-k="cu"]');
+      // uraian terisi otomatis hanya jika kosong / sebelumnya hasil isian otomatis; ketikan manual tidak ditimpa
+      if(m&&cu&&(!String(r.cu||'').trim()||CLAUSES.some(x=>x[1]===String(r.cu).trim()))){r.cu=m[1];cu.value=m[1]}}
+    clDirty();clCnt()};
   rw.onclick=e=>{const c=e.target.closest('.cr');if(!c)return;const i=+c.dataset.i,r=CL.rows[i],b=e.target.closest('[data-v]');
     if(b&&!CL.final){r.f=r.f===b.dataset.v?'':b.dataset.v;r.tgone=false;clDirty();rowRe(c,i);clCnt();return}
     if(e.target.closest('[data-del]')){if(clFilled(r)&&!confirm('Hapus butir '+(i+1)+'?'))return;if(r.tid)(CL.del=CL.del||[]).push(r.tid);CL.rows.splice(i,1);clDirty();rw.innerHTML=rowsHtml();mountAll();clCnt();return}
