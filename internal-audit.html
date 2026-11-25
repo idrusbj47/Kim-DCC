@@ -237,15 +237,81 @@ async function loadDocs(){const r=await sb.from('iso_documents').select('*').ord
 const hdr=(t,back)=>`<header class="tb"><div><b>${t}</b><small>${esc(S.nama)}${S.nik?' ('+esc(S.nik)+')':''} &middot; ${S.mode==='kode'?'Akses kode':S.admin?'Admin':'Karyawan'}</small></div><div class="tr" style="display:flex;gap:8px;align-items:center">${back?'<button class="btn g bs" id="bk">&larr; Beranda</button>':''}<button class="btn g bs" id="lo">Keluar</button></div></header>`;
 function bindHdr(){const lo=$('#lo');lo.onclick=async()=>{if(confirm('Keluar dari audit internal?'))await doLogout()};const bk=$('#bk');if(bk)bk.onclick=listView}
 
+// ---------- Jadwal & Panduan Audit (PDF diunggah admin -> disimpan sebagai WebP, bisa dilihat / diunduh PDF / dicetak) ----------
+let GD=null,GC=null,guideOff=false;
+async function loadGuide(){try{const r=await sb.from('ia_panduan').select('*').eq('id',1).maybeSingle();if(r.error){guideOff=true;GD=null}else{guideOff=false;GD=(r.data&&r.data.pages>0&&r.data.ver)?r.data:null}}catch{guideOff=true;GD=null}}
+const gDir=v=>'ia-panduan/'+v,gPath=(v,i)=>`${gDir(v)}/${String(i+1).padStart(3,'0')}.webp`;
+const guideCard=()=>{if(!GD&&!S.admin)return'';
+  return `<div class="box" id="gd" style="margin-bottom:12px"><div class="bh"><h3>Jadwal &amp; Panduan Audit</h3></div>${GD
+    ?`<div class="row"><div style="flex:1;min-width:0"><b>${esc(GD.judul||'Schedule & Guide')}</b><br><span>${GD.pages} halaman${GD.updated_at?' &middot; diperbarui '+fmt(Date.parse(GD.updated_at)):''}</span></div><div class="bt"><button class="btn bs" data-gview type="button">Lihat</button><button class="btn g bs" data-gdl type="button">Unduh PDF</button><button class="btn g bs" data-gprint type="button">Cetak</button></div></div>`
+    :`<div class="empty">${guideOff?'Tabel panduan belum dibuat di server. Jalankan ia_panduan.sql di Supabase SQL Editor.':'Belum ada dokumen. Unggah PDF jadwal dan panduan audit.'}</div>`}${S.admin?`<div class="hr"><button class="btn bs" data-gup type="button">${GD?'Ganti PDF':'Unggah PDF'}</button>${GD?'<button class="btn r bs" data-gdel type="button">Hapus</button>':''}<input type="file" id="gf" accept="application/pdf,.pdf" hidden></div>`:''}</div>`};
+function guideWire(){
+  const q=a=>document.querySelector(a);
+  const v=q('[data-gview]');if(v)v.onclick=()=>openDoc({id:'guide',prefix:gDir(GD.ver),kode:'Panduan Audit',judul:GD.judul||'Schedule & Guide',pages:GD.pages,dl:true});
+  const d=q('[data-gdl]');if(d)d.onclick=guideDownload;
+  const pr=q('[data-gprint]');if(pr)pr.onclick=guidePrint;
+  const up=q('[data-gup]'),gf=q('#gf');if(up&&gf){up.onclick=()=>{gf.value='';gf.click()};gf.onchange=()=>{if(gf.files[0])guideUpload(gf.files[0])}}
+  const dl=q('[data-gdel]');if(dl)dl.onclick=guideRemove}
+async function guideCanvases(){const g=GD;if(!g)throw new Error('Belum ada dokumen');if(GC&&GC.ver===g.ver)return GC.cvs;
+  const s=await sb.storage.from(BUCKET).createSignedUrls(Array.from({length:g.pages},(_,i)=>gPath(g.ver,i)),300);
+  if(s.error)throw new Error('Akses ditolak. Kode mungkin sudah berakhir.');
+  const cvs=[];for(const x of s.data){if(!x.signedUrl)throw new Error('Halaman dokumen tidak ditemukan');const bm=await createImageBitmap(await (await fetch(x.signedUrl)).blob());const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);cvs.push(c)}
+  GC={ver:g.ver,cvs};return cvs}
+async function guideDownload(){toast('Menyiapkan PDF...');
+  try{await lib('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',()=>window.jspdf);const cvs=await guideCanvases(),{jsPDF}=window.jspdf;let d=null;
+    cvs.forEach(c=>{const land=c.width>c.height,w=land?841.89:595.28,h=w*c.height/c.width,o=land?'l':'p';if(!d)d=new jsPDF({unit:'pt',format:[w,h],orientation:o,compress:true});else d.addPage([w,h],o);
+      d.addImage(c.toDataURL('image/jpeg',.92),'JPEG',0,0,w,h,undefined,'FAST')});
+    d.save((String(GD.judul||'Schedule-Guide-Audit').replace(/[^\w\-. ]+/g,'').trim()||'Schedule-Guide-Audit')+'.pdf');toast('PDF diunduh')}
+  catch(e){toast('Gagal: '+(e.message||e))}}
+async function guidePrint(){toast('Menyiapkan cetak...');
+  try{const cvs=await guideCanvases(),land=cvs[0].width>cvs[0].height,f=document.createElement('iframe');
+    f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.append(f);
+    const doc=f.contentDocument;doc.open();
+    doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(GD.judul||'Panduan Audit')}</title><style>@page{size:A4 ${land?'landscape':'portrait'};margin:0}html,body{margin:0;padding:0}img{display:block;width:100%;max-height:100vh;object-fit:contain;page-break-after:always;break-after:page}img:last-child{page-break-after:auto;break-after:auto}</style></head><body>${cvs.map(c=>`<img src="${c.toDataURL('image/jpeg',.92)}" alt="">`).join('')}</body></html>`);doc.close();
+    await Promise.all([...doc.images].map(i=>i.decode().catch(()=>{})));
+    f.contentWindow.focus();f.contentWindow.print();setTimeout(()=>f.remove(),120000)}
+  catch(e){toast('Gagal: '+(e.message||e))}}
+async function guideUpload(file){
+  if(!/\.pdf$/i.test(file.name)&&file.type!=='application/pdf')return toast('Pilih file PDF');
+  if(GD&&!confirm('Dokumen yang ada akan diganti dengan file baru. Lanjutkan?'))return;
+  const ov=document.createElement('div');ov.className='mdl';ov.innerHTML='<div class="lc"><h2>Mengunggah dokumen</h2><p id="gpm">Menyiapkan...</p><div style="height:8px;background:var(--soft);border-radius:6px;overflow:hidden"><div id="gpb" style="height:100%;width:0;background:var(--nav);transition:width .2s"></div></div></div>';document.body.append(ov);
+  const msg=(t,pc)=>{const a=ov.querySelector('#gpm'),b=ov.querySelector('#gpb');if(a)a.textContent=t;if(b&&pc!=null)b.style.width=pc+'%'};
+  const ver=Date.now().toString(36),done=[];
+  try{
+    const PV='3.11.174';await lib(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${PV}/build/pdf.min.js`,()=>window.pdfjsLib);
+    pdfjsLib.GlobalWorkerOptions.workerSrc=`https://cdn.jsdelivr.net/npm/pdfjs-dist@${PV}/build/pdf.worker.min.js`;
+    const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,n=pdf.numPages;
+    for(let i=0;i<n;i++){
+      msg(`Memproses halaman ${i+1} dari ${n}...`,i/n*100);
+      const pg=await pdf.getPage(i+1),v0=pg.getViewport({scale:1}),sc=Math.min(3,1700/v0.width),vp=pg.getViewport({scale:sc}),c=document.createElement('canvas');
+      c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+      await pg.render({canvasContext:x,viewport:vp}).promise;
+      const blob=await new Promise(r=>c.toBlob(r,'image/webp',.88));
+      if(!blob||blob.type!=='image/webp')throw new Error('Browser ini tidak bisa membuat WebP. Gunakan Chrome atau Edge.');
+      const path=gPath(ver,i),u=await sb.storage.from(BUCKET).upload(path,blob,{contentType:'image/webp',upsert:true});
+      if(u.error)throw new Error('Gagal mengunggah halaman '+(i+1)+': '+u.error.message+' (cek hak akses storage, lihat ia_panduan.sql)');
+      done.push(path);c.width=c.height=0}
+    msg('Menyimpan data...',100);
+    const old=GD,judul=file.name.replace(/\.pdf$/i,'').replace(/[+_]+/g,' ').trim()||'Schedule & Guide',
+      w=await sb.from('ia_panduan').upsert({id:1,judul,pages:n,ver,updated_by:S.nama,updated_at:new Date().toISOString()},{onConflict:'id'});
+    if(w.error)throw new Error(w.error.message+' (tabel ia_panduan belum dibuat? jalankan ia_panduan.sql)');
+    if(old&&old.ver&&old.ver!==ver)try{await sb.storage.from(BUCKET).remove(Array.from({length:old.pages},(_,i)=>gPath(old.ver,i)))}catch{}
+    GC=null;ov.remove();toast('Dokumen terunggah ('+n+' halaman)');listView()}
+  catch(e){if(done.length)try{await sb.storage.from(BUCKET).remove(done)}catch{}ov.remove();toast('Gagal: '+(e.message||e))}}
+async function guideRemove(){if(!GD||!confirm('Hapus dokumen Jadwal & Panduan Audit?'))return;
+  try{try{await sb.storage.from(BUCKET).remove(Array.from({length:GD.pages},(_,i)=>gPath(GD.ver,i)))}catch{}
+    const r=await sb.from('ia_panduan').delete().eq('id',1);if(r.error)throw r.error;GC=null;toast('Dokumen dihapus');listView()}
+  catch(e){toast('Gagal: '+(e.message||e))}}
+
 // ---------- beranda (login email): jadwal saya, temuan saya, semua jadwal, personel ----------
 const jcard=(j,adm)=>{const ra=isMe(j,'auditor_nik'),re=isMe(j,'auditee_nik');
   return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b>${ra?' <span class="tag o">Saya auditor</span>':''}${re?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)}${j.waktu?' &middot; '+esc(j.waktu):''} &middot; Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</span></div><div class="bt"><button class="btn bs" data-o="${j.id}">Buka</button>${adm?`<button class="btn g bs" data-e="${j.id}">Ubah</button><button class="btn r bs" data-x="${j.id}">Hapus</button>`:''}</div></div>`};
 async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInterval(timer);await clFlush();J=null;TAB='dok';
-  await loadPers();
+  await loadPers();await loadGuide();
   const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
   const lk=!!S.nik,tb=[...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.admin||!lk)?[['all','Semua Jadwal']]:[]),...(S.admin?[['psn','Personel']]:[])];
   if(!tb.some(x=>x[0]===VT))VT=tb[0][0];
-  $('#app').innerHTML=hdr('Audit Internal')+`<main class="wrap"><div class="tabs" style="margin:0 0 12px;flex-wrap:wrap">${tb.map(x=>`<button class="jb${x[0]===VT?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><div class="box" id="lv"></div></main>`;bindHdr();
+  $('#app').innerHTML=hdr('Audit Internal')+`<main class="wrap">${guideCard()}<div class="tabs" style="margin:0 0 12px;flex-wrap:wrap">${tb.map(x=>`<button class="jb${x[0]===VT?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><div class="box" id="lv"></div></main>`;bindHdr();guideWire();
   document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{VT=b.dataset.v;listView()});
   const by=id=>JADS.find(j=>j.id===id),lv=$('#lv');
   const wire=()=>{lv.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{J=by(b.dataset.o);jadwalView()});
@@ -1174,7 +1240,7 @@ function mark(c){const x=c.getContext('2d'),o=WM;x.save();x.globalAlpha=o.opacit
   for(let y=-c.height;y<c.height*1.5;y+=c.width/6)for(let xx=-c.width;xx<c.width*1.5;xx+=c.width/1.6)put(xx+(y/(c.width/6)%2)*c.width/4,y);x.restore()}
 async function openDoc(d){
   if(!d)return;const r=document.createElement('div');r.className='rd';
-  r.innerHTML=`<div class="rb"><button class="btn g bs" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span class="zc"><button class="zb" id="zo" title="Perkecil (A)">&minus;</button><span class="zl" id="zp">100%</span><button class="zb" id="zi" title="Perbesar (Z)">+</button><button class="zb" id="lz" title="Laser / pointer (L)">Laser</button></span><span class="pgs" style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div><canvas class="lz" id="lzc"></canvas>`;
+  r.innerHTML=`<div class="rb"><button class="btn g bs" id="cl">Tutup</button><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><span class="zc"><button class="zb" id="zo" title="Perkecil (A)">&minus;</button><span class="zl" id="zp">100%</span><button class="zb" id="zi" title="Perbesar (Z)">+</button><button class="zb" id="lz" title="Laser / pointer (L)">Laser</button></span>${d.dl?'<button class="btn g bs" id="vdl" type="button">Unduh PDF</button><button class="btn g bs" id="vpr" type="button">Cetak</button>':''}<span class="pgs" style="font-size:12px">${d.pages} hal.</span></div><div class="rs" id="rs"><div class="empty" style="color:#9db8ea">Memuat halaman...</div></div><canvas class="lz" id="lzc"></canvas>`;
   document.body.append(r);
   const rs=$('#rs'),zp=$('#zp'),lzc=$('#lzc'),ac=new AbortController(),sg={signal:ac.signal};
   let Z=1,TZ=1,fx=0,fy=0,raf=0,raf2=0,cs=[],lzOn=false,drawing=false,mx=-1,my=-1;
@@ -1219,15 +1285,16 @@ async function openDoc(d){
   addEventListener('resize',()=>{[fx,fy]=zc();apply(Z);fitLz()},sg);
   fitLz();
   // ----- halaman -----
-  await loadWM();
-  const paths=Array.from({length:d.pages},(_,i)=>`${d.id}/${String(i+1).padStart(3,'0')}.webp`);
+  if(d.dl){$('#vdl').onclick=guideDownload;$('#vpr').onclick=guidePrint;addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){e.preventDefault();guidePrint()}},sg)}
+  if(!d.dl)await loadWM();
+  const paths=Array.from({length:d.pages},(_,i)=>`${d.prefix||d.id}/${String(i+1).padStart(3,'0')}.webp`);
   const s=await sb.storage.from(BUCKET).createSignedUrls(paths,90);
   if(s.error){close();toast('Akses ditolak. Kode mungkin sudah berakhir.');tick();return}
   const urls=(s.data||[]).map(x=>x.signedUrl);rs.innerHTML='';
   for(let i=0;i<d.pages;i++){
     const c=document.createElement('canvas');c.style.width=base()*Z+'px';rs.append(c);const x=c.getContext('2d');
     try{const bm=await createImageBitmap(await (await fetch(urls[i])).blob());c.width=bm.width;c.height=bm.height;x.drawImage(bm,0,0)}catch{c.width=820;c.height=200;x.fillText('Gagal memuat halaman',20,100)}
-    mark(c)}}
+    if(!d.dl)mark(c)}}
 
 // ---------- penghalang (pencegah awam, bukan pengaman mutlak) ----------
 addEventListener('contextmenu',e=>e.preventDefault());
