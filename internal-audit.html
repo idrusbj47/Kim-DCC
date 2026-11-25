@@ -62,6 +62,48 @@ textarea{resize:vertical;min-height:70px}
 .tm{border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:14px;padding:12px 14px;margin-bottom:8px;background:var(--card);font-size:13px;line-height:1.55}
 .tm .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}.tm p{margin:4px 0}.tm .m{color:var(--mut);font-size:12px}
 .hr{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+/* ringkasan audit */
+.sm{display:flex;flex-direction:column;gap:14px}
+.sm-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sm-top h3{margin:0;font-size:18px}.sm-top p{margin:2px 0 0;font-size:12px;color:var(--mut)}
+.sm-chips{display:flex;gap:6px;overflow-x:auto;max-width:100%;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.sm-chip{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.sm-chip.on{background:var(--nav);color:#fff;border-color:var(--nav)}
+.sm-kpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:760px){.sm-kpi{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.sm-k{border-radius:18px;padding:14px 16px 13px;color:#fff;position:relative;overflow:hidden;min-height:96px;display:flex;flex-direction:column;justify-content:space-between}
+.sm-k:after{content:"";position:absolute;right:-26px;top:-26px;width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,.12)}
+.sm-k span{font-size:12px;font-weight:700;opacity:.92;letter-spacing:.2px}
+.sm-k b{display:block;font-size:32px;line-height:1.05;font-weight:800;margin-top:6px}
+.sm-k small{font-size:11.5px;opacity:.88;margin-top:4px}
+.sm-k1{background:linear-gradient(135deg,#0b1f4d,#0a5bd6)}.sm-k2{background:linear-gradient(135deg,#0a7a4b,#22b573)}.sm-k3{background:linear-gradient(135deg,#e8890c,#f5b041)}.sm-k4{background:linear-gradient(135deg,#a3123f,#e0457b)}
+.sm-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media(min-width:880px){.sm-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sm-w{grid-column:1/-1}}
+.sm-c{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 1px 2px rgba(15,31,61,.04);min-width:0}
+.sm-c h4{margin:0 0 3px;font-size:14px}.sm-c>p{margin:0 0 12px;font-size:12px;color:var(--mut)}
+.sm-dn{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.sm-dn svg{width:140px;height:140px;flex:none;transform:rotate(-90deg)}
+.sm-dn .ct{position:relative;width:140px;height:140px;flex:none}
+.sm-dn .ct div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sm-dn .ct b{font-size:26px;line-height:1}.sm-dn .ct small{font-size:11px;color:var(--mut)}
+.sm-lg{flex:1;min-width:150px;display:flex;flex-direction:column;gap:8px}
+.sm-lg div{display:flex;align-items:center;gap:8px;font-size:13px}.sm-lg i{width:10px;height:10px;border-radius:3px;flex:none}.sm-lg em{margin-left:auto;font-style:normal;font-weight:800}
+.sm-r{display:grid;grid-template-columns:minmax(70px,26%) 1fr auto;align-items:center;gap:10px;margin:9px 0;font-size:13px}
+.sm-r>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sm-r>b{font-size:13px;min-width:22px;text-align:right}
+.sm-tr{height:10px;background:var(--soft);border-radius:99px;overflow:hidden;display:flex}
+.sm-tr u{display:block;height:100%;min-width:0;transition:width .5s}
+.sm-big{font-size:34px;font-weight:800;line-height:1}
+.sm-pb{height:12px;border-radius:99px;overflow:hidden;display:flex;background:var(--soft);margin:10px 0 8px}
+.sm-pb u{display:block;height:100%}
+.sm-cols{display:flex;align-items:flex-end;gap:5px;height:130px;margin-top:6px}
+.sm-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+.sm-col div{width:100%;display:flex;align-items:flex-end;gap:2px;flex:1}
+.sm-col u{display:block;flex:1;border-radius:5px 5px 0 0;min-height:2px}
+.sm-col span{font-size:10.5px;color:var(--mut)}
+.sm-lst .row{align-items:center}
+.sm-empty{color:var(--mut);font-size:13px;padding:6px 0}
+
 .mdl .lc .btn{width:auto;margin:0}.mdl #mo,.mdl #mx{min-width:90px}
 
 /* ---- checklist audit ---- */
@@ -303,13 +345,66 @@ async function guideRemove(){if(!GD||!confirm('Hapus dokumen Jadwal & Panduan Au
     const r=await sb.from('ia_panduan').delete().eq('id',1);if(r.error)throw r.error;GC=null;toast('Dokumen dihapus');listView()}
   catch(e){toast('Gagal: '+(e.message||e))}}
 
+// ---------- ringkasan hasil audit (dashboard) ----------
+let SUMY='all';
+async function sumView(){const lv=$('#lv');lv.innerHTML='<div class="empty">Memuat ringkasan...</div>';
+  let T=[],C=[],err='';
+  try{const [t,c]=await Promise.all([sb.from('ia_temuan').select('*'),sb.from('ia_checklist').select('jadwal_id,butir,final')]);if(t.error)err=t.error.message;T=t.data||[];C=c.data||[]}catch(e){err=e.message||String(e)}
+  if(err){lv.innerHTML='<div class="empty">Gagal memuat ringkasan: '+esc(err)+'</div>';return}
+  const yrs=[...new Set(JADS.map(j=>String(j.tanggal).slice(0,4)))].sort().reverse();
+  if(SUMY!=='all'&&!yrs.includes(SUMY))SUMY='all';
+  const MC={Mayor:'#c2255c',Minor:'#e8890c',OFI:'#0a7a4b'},SC={'Terbuka':'#c2255c','Dalam tindakan':'#e8890c','Verifikasi':'#0a5bd6','Ditutup':'#0a7a4b'};
+  const draw=()=>{
+    const Y=SUMY,js=JADS.filter(j=>Y==='all'||String(j.tanggal).slice(0,4)===Y),ids=new Set(js.map(j=>j.id)),jm=new Map(js.map(j=>[j.id,j]));
+    const tt=T.filter(x=>ids.has(x.jadwal_id)),cc=C.filter(x=>ids.has(x.jadwal_id)),today=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+    const nk=k=>tt.filter(x=>x.kategori===k).length,ns=k=>tt.filter(x=>x.status===k).length,closed=ns('Ditutup'),over=tt.filter(x=>x.due&&x.due<today&&x.status!=='Ditutup'),fin=cc.filter(x=>x.final).length;
+    let c0=0,n0=0,o0=0;cc.forEach(x=>(x.butir||[]).forEach(r=>{if(r.f==='C')c0++;else if(r.f==='NC')n0++;else if(r.f==='OBS')o0++}));const ct=c0+n0+o0;
+    const pc=(a,b)=>b?Math.round(a/b*100):0,done=js.filter(j=>j.tanggal<today).length;
+    // donut kategori
+    const dn=(items,tot,label)=>{let off=0;const arc=items.filter(x=>x[1]>0).map(x=>{const p=x[1]/tot*100,e=`<circle cx="21" cy="21" r="15.9155" fill="none" stroke="${x[2]}" stroke-width="5.2" stroke-dasharray="${Math.max(0,p-.6)} ${100-Math.max(0,p-.6)}" stroke-dashoffset="${-off}"/>`;off+=p;return e}).join('');
+      return `<div class="sm-dn"><div class="ct"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.9155" fill="none" stroke="#eaf1fd" stroke-width="5.2"/>${arc}</svg><div><b>${tot}</b><small>${label}</small></div></div><div class="sm-lg">${items.map(x=>`<div><i style="background:${x[2]}"></i>${x[0]}<em>${x[1]}</em></div>`).join('')}</div></div>`};
+    // per departemen
+    const dm={};js.forEach(j=>{const k=j.dept||'-';(dm[k]=dm[k]||{a:0,Mayor:0,Minor:0,OFI:0,t:0}).a++});
+    tt.forEach(x=>{const j=jm.get(x.jadwal_id),k=(j&&j.dept)||'-',d=dm[k]=dm[k]||{a:0,Mayor:0,Minor:0,OFI:0,t:0};d.t++;if(d[x.kategori]!=null)d[x.kategori]++});
+    const dl=Object.entries(dm).sort((a,b)=>b[1].t-a[1].t||b[1].a-a[1].a).slice(0,8),dmx=Math.max(1,...dl.map(x=>x[1].t));
+    // klausul
+    const km={};tt.forEach(x=>{const m=String(x.klausul||'').trim().match(/^\d+(?:\.\d+)*/),k=m?m[0]:'Lainnya';km[k]=(km[k]||0)+1});
+    const kl=Object.entries(km).sort((a,b)=>b[1]-a[1]).slice(0,6),kmx=Math.max(1,...kl.map(x=>x[1]));
+    // tren bulanan
+    const BL=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],mo=[];
+    if(Y==='all'){const d=new Date();for(let i=11;i>=0;i--){const x=new Date(d.getFullYear(),d.getMonth()-i,1);mo.push([x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'),BL[x.getMonth()]])}}
+    else BL.forEach((b,i)=>mo.push([Y+'-'+String(i+1).padStart(2,'0'),b]));
+    const ma={},mt={};js.forEach(j=>{const k=String(j.tanggal).slice(0,7);ma[k]=(ma[k]||0)+1});tt.forEach(x=>{const j=jm.get(x.jadwal_id);if(j){const k=String(j.tanggal).slice(0,7);mt[k]=(mt[k]||0)+1}});
+    const mmx=Math.max(1,...mo.map(m=>Math.max(ma[m[0]]||0,mt[m[0]]||0)));
+    lv.innerHTML=`<div class="sm"><div class="sm-top"><div><h3>Ringkasan Hasil Audit</h3><p>${S.admin?'Seluruh data audit':'Data audit yang dapat Anda akses'}</p></div>
+      <div class="sm-chips"><button class="sm-chip${Y==='all'?' on':''}" data-y="all" type="button">Semua</button>${yrs.map(y=>`<button class="sm-chip${Y===y?' on':''}" data-y="${y}" type="button">${y}</button>`).join('')}</div></div>
+      <div class="sm-kpi">
+        <div class="sm-k sm-k1"><span>Jadwal Audit</span><b>${js.length}</b><small>${done} sudah lewat &middot; ${fin} checklist final</small></div>
+        <div class="sm-k sm-k3"><span>Total Temuan</span><b>${tt.length}</b><small>${nk('Mayor')} Mayor &middot; ${nk('Minor')} Minor &middot; ${nk('OFI')} OFI</small></div>
+        <div class="sm-k sm-k2"><span>Temuan Ditutup</span><b>${pc(closed,tt.length)}%</b><small>${closed} dari ${tt.length} temuan</small></div>
+        <div class="sm-k sm-k4"><span>Melewati Target</span><b>${over.length}</b><small>${tt.length-closed} temuan belum ditutup</small></div></div>
+      <div class="sm-grid">
+        <div class="sm-c"><h4>Temuan per Kategori</h4><p>Sebaran Mayor, Minor dan OFI</p>${tt.length?dn(KAT.map(k=>[k==='OFI'?'OFI (Observasi)':k,nk(k),MC[k]]),tt.length,'temuan'):'<div class="sm-empty">Belum ada temuan.</div>'}</div>
+        <div class="sm-c"><h4>Status Tindak Lanjut</h4><p>Progres penutupan temuan</p>${tt.length?`<div class="sm-pb">${STAT.map(k=>`<u style="width:${ns(k)/tt.length*100}%;background:${SC[k]}" title="${k}"></u>`).join('')}</div>${STAT.map(k=>`<div class="sm-r"><span><i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${SC[k]};margin-right:7px"></i>${k}</span><div class="sm-tr"><u style="width:${pc(ns(k),tt.length)}%;background:${SC[k]}"></u></div><b>${ns(k)}</b></div>`).join('')}`:'<div class="sm-empty">Belum ada temuan.</div>'}</div>
+        <div class="sm-c"><h4>Hasil Pemeriksaan Checklist</h4><p>Dari ${ct} butir yang dinilai</p>${ct?`<div style="display:flex;align-items:baseline;gap:8px"><span class="sm-big" style="color:#0a7a4b">${pc(c0,ct)}%</span><span style="color:var(--mut);font-size:13px">tingkat kesesuaian (C)</span></div><div class="sm-pb"><u style="width:${c0/ct*100}%;background:#0a7a4b"></u><u style="width:${n0/ct*100}%;background:#c2255c"></u><u style="width:${o0/ct*100}%;background:#e8890c"></u></div>
+          <div class="sm-lg" style="flex-direction:row;flex-wrap:wrap;gap:6px 18px"><div><i style="background:#0a7a4b"></i>C (Sesuai)<em style="margin-left:6px">${c0}</em></div><div><i style="background:#c2255c"></i>NC<em style="margin-left:6px">${n0}</em></div><div><i style="background:#e8890c"></i>OBS<em style="margin-left:6px">${o0}</em></div></div>`:'<div class="sm-empty">Belum ada butir checklist yang dinilai.</div>'}</div>
+        <div class="sm-c"><h4>Clause Paling Sering Temuan</h4><p>Enam teratas</p>${kl.length?kl.map(x=>{const f=clFind(x[0]);return `<div class="sm-r"><span title="${esc(f?f[1]:'')}"><b>${esc(x[0])}</b>${f?' <span style="color:var(--mut)">'+esc(f[1])+'</span>':''}</span><div class="sm-tr"><u style="width:${x[1]/kmx*100}%;background:#0a5bd6"></u></div><b>${x[1]}</b></div>`}).join(''):'<div class="sm-empty">Belum ada temuan.</div>'}</div>
+        <div class="sm-c sm-w"><h4>Temuan per Departemen</h4><p>Delapan teratas, dibagi menurut kategori</p>${dl.length?dl.map(x=>`<div class="sm-r"><span title="${esc(x[0])}">${esc(x[0])}</span><div class="sm-tr">${KAT.map(k=>`<u style="width:${x[1][k]/dmx*100}%;background:${MC[k]}" title="${k}: ${x[1][k]}"></u>`).join('')}</div><b>${x[1].t}</b></div>`).join('')+`<div class="sm-lg" style="flex-direction:row;gap:6px 16px;margin-top:10px">${KAT.map(k=>`<div><i style="background:${MC[k]}"></i>${k}</div>`).join('')}</div>`:'<div class="sm-empty">Belum ada data.</div>'}</div>
+        <div class="sm-c sm-w"><h4>Tren Bulanan</h4><p>${Y==='all'?'12 bulan terakhir':'Tahun '+Y} &middot; jumlah audit dan temuan</p><div class="sm-cols">${mo.map(m=>`<div class="sm-col"><div><u style="height:${(ma[m[0]]||0)/mmx*100}%;background:#9db8ea" title="Audit: ${ma[m[0]]||0}"></u><u style="height:${(mt[m[0]]||0)/mmx*100}%;background:#0b1f4d" title="Temuan: ${mt[m[0]]||0}"></u></div><span>${m[1]}</span></div>`).join('')}</div>
+          <div class="sm-lg" style="flex-direction:row;gap:6px 16px;margin-top:10px"><div><i style="background:#9db8ea"></i>Audit</div><div><i style="background:#0b1f4d"></i>Temuan</div></div></div>
+        <div class="sm-c sm-w sm-lst"><h4>Perlu Perhatian</h4><p>Temuan yang melewati target perbaikan dan belum ditutup</p>${over.length?over.sort((a,b)=>String(a.due).localeCompare(String(b.due))).slice(0,6).map(x=>{const j=jm.get(x.jadwal_id);return `<div class="row"><div style="flex:1;min-width:0"><b>${esc(x.nomor||'-')}</b> <span class="tag k-${esc(x.kategori)}">${esc(x.kategori==='OFI'?'OFI':x.kategori)}</span> <span class="tag o">${esc(x.status||'')}</span><br><span>${j?where(j):'-'} &middot; target ${tgl(x.due)}</span></div><div class="bt"><button class="btn bs" data-sj="${x.jadwal_id}" type="button">Buka</button></div></div>`}).join('')+(over.length>6?`<div class="sm-empty">+ ${over.length-6} temuan lain</div>`:''):'<div class="sm-empty">Tidak ada temuan yang terlambat.</div>'}</div>
+      </div></div>`;
+    lv.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{SUMY=b.dataset.y;draw()});
+    lv.querySelectorAll('[data-sj]').forEach(b=>b.onclick=()=>{J=JADS.find(j=>j.id===b.dataset.sj);if(J){TAB='tmn';jadwalView()}})};
+  draw()}
+
 // ---------- beranda (login email): jadwal saya, temuan saya, semua jadwal, personel ----------
 const jcard=(j,adm)=>{const ra=isMe(j,'auditor_nik'),re=isMe(j,'auditee_nik');
   return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b>${ra?' <span class="tag o">Saya auditor</span>':''}${re?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)}${j.waktu?' &middot; '+esc(j.waktu):''} &middot; Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</span></div><div class="bt"><button class="btn bs" data-o="${j.id}">Buka</button>${adm?`<button class="btn g bs" data-e="${j.id}">Ubah</button><button class="btn r bs" data-x="${j.id}">Hapus</button>`:''}</div></div>`};
 async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInterval(timer);await clFlush();J=null;TAB='dok';
   await loadPers();await loadGuide();
   const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
-  const lk=!!S.nik,tb=[...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.admin||!lk)?[['all','Semua Jadwal']]:[]),...(S.admin?[['psn','Personel']]:[])];
+  const lk=!!S.nik,tb=[...(S.admin?[['sum','Ringkasan']]:[]),...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.admin||!lk)?[['all','Semua Jadwal']]:[]),...((!S.admin&&S.mode==='email')?[['sum','Ringkasan']]:[]),...(S.admin?[['psn','Personel']]:[])];
   if(!tb.some(x=>x[0]===VT))VT=tb[0][0];
   $('#app').innerHTML=hdr('Audit Internal')+`<main class="wrap">${guideCard()}<div class="tabs" style="margin:0 0 12px;flex-wrap:wrap">${tb.map(x=>`<button class="jb${x[0]===VT?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><div class="box" id="lv"></div></main>`;bindHdr();guideWire();
   document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{VT=b.dataset.v;listView()});
@@ -337,6 +432,7 @@ async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInte
     lv.innerHTML=`<div class="bh"><h3>Daftar Checklist (${mine.length})</h3></div>`+(mine.map(j=>{const c=C.find(x=>x.jadwal_id===j.id),rows=(c&&c.butir)||[],nt=rows.filter(r=>r.f==='NC'||r.f==='OBS').length,st=!c?'Belum dibuat':c.final?'Final':'Draft';
       return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b> <span class="tag o">${st}</span>${isMe(j,'auditor_nik')?' <span class="tag o">Saya auditor</span>':''}${isMe(j,'auditee_nik')?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)} &middot; ${rows.length} butir &middot; ${nt} temuan (NC/OBS)${c&&c.updated_by?' &middot; terakhir: '+esc(c.updated_by):''}</span></div><div class="bt"><button class="btn bs" data-cj="${j.id}">Buka</button></div></div>`}).join('')||'<div class="empty">Belum ada checklist.</div>');
     lv.querySelectorAll('[data-cj]').forEach(b=>b.onclick=()=>{J=by(b.dataset.cj);TAB='cl';jadwalView()});wire()}
+  else if(VT==='sum')sumView();
   else if(VT==='psn')persView()}
 
 // ---------- daftar personel (admin) ----------
