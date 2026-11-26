@@ -148,6 +148,9 @@ input,textarea,select{-webkit-user-select:text;user-select:text}
 .seg button.on[data-v=C]{background:#0a7a4b;color:#fff;border-color:transparent}
 .seg button.on[data-v=NC]{background:#c2255c;color:#fff;border-color:transparent}
 .seg button.on[data-v=OBS]{background:#e8890c;color:#fff;border-color:transparent}
+.seg button.on[data-kat=Minor]{background:#e8890c;color:#fff;border-color:transparent}
+.seg button.on[data-kat=Mayor]{background:#c2255c;color:#fff;border-color:transparent}
+.seg button.on[data-sc],.seg button.on[data-tr]{background:#0a5bd6;color:#fff;border-color:transparent}
 .seg button:disabled{opacity:.7}
 .cx{position:absolute;top:6px;right:8px;border:0;background:none;color:var(--mut);font-size:22px;cursor:pointer;line-height:1;padding:4px 6px}
 #ccn,#cst{font-size:12px;color:var(--mut)}
@@ -235,7 +238,7 @@ const lt=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(
 const gen=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>a[x%a.length]).join('')};
 const tnm=t=>t.no_temuan||'TMN-'+String(t.nomor).padStart(3,'0');
 // ---- personel (daftar auditor / auditee) & penomoran ----
-let PERS=[],persOff=false,VT=null;
+let PERS=[],persOff=false,VT=null,SC=null,TR='all';
 const nikList=x=>String(x||'').split(',').map(v=>v.trim()).filter(Boolean);
 const pNik=n=>PERS.find(p=>p.nik===n);
 const isMe=(j,k)=>!!(S&&S.nik)&&nikList(j[k]).includes(S.nik);
@@ -469,7 +472,7 @@ const jcard=(j,adm)=>{const ra=isMe(j,'auditor_nik'),re=isMe(j,'auditee_nik');
 async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInterval(timer);await clFlush();J=null;TAB='dok';
   await loadPers();await loadGuide();
   const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
-  const lk=!!S.nik,tb=[...(S.admin?[['sum','Ringkasan']]:[]),...(S.all?[['acl','Semua Checklist']]:[]),...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.all||!lk)?[['all','Semua Jadwal']]:[]),...((!S.admin&&S.mode==='email')?[['sum','Ringkasan']]:[]),...(S.admin?[['psn','Personel']]:[])];
+  const lk=!!S.nik,tb=[...(S.all?[['sum','Ringkasan']]:[]),['jd','Jadwal'],...((lk||S.all)?[['cl','Checklist'],['tm','Temuan']]:[]),...((!S.all&&S.mode==='email')?[['sum','Ringkasan']]:[]),...(S.admin?[['psn','Personel']]:[])];
   if(!tb.some(x=>x[0]===VT))VT=tb[0][0];
   $('#app').innerHTML=hdr('Audit Internal')+`<main class="wrap">${guideCard()}<div class="tabs" style="margin:0 0 12px;flex-wrap:wrap">${tb.map(x=>`<button class="jb${x[0]===VT?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><div class="box" id="lv"></div></main>`;bindHdr();guideWire();
   document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{VT=b.dataset.v;listView()});
@@ -481,32 +484,40 @@ async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInte
     lv.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>kodeForm(by(b.dataset.k)));
     lv.querySelectorAll('[data-x]').forEach(b=>b.onclick=async()=>{if(!await secure('Hapus jadwal audit ini beserta semua temuannya?'))return;
       const x=await sb.from('ia_jadwal').delete().eq('id',b.dataset.x);if(x.error){toast('Gagal: '+x.error.message);return}toast('Jadwal dihapus');listView()})};
-  if(VT==='all'){lv.innerHTML=`<div class="bh"><h3>Semua Jadwal</h3>${S.admin?'<button class="btn bs" id="nj">+ Jadwal Baru</button>':''}</div>${!lk&&!S.admin?'<div class="note" style="margin-bottom:8px">Akun Anda belum ditautkan ke NIK. Hubungi admin agar jadwal dan temuan Anda tampil di beranda.</div>':''}${JADS.map(j=>jcard(j,S.admin)).join('')||'<div class="empty">Belum ada jadwal audit.</div>'}`;
-    const nj=$('#nj');if(nj)nj.onclick=()=>jadwalForm(null);wire()}
-  else if(VT==='me'){const td=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),mine=JADS.filter(mineOf),
-      up=mine.filter(j=>j.tanggal>=td).sort((x,y)=>x.tanggal.localeCompare(y.tanggal)),pa=mine.filter(j=>j.tanggal<td);
-    lv.innerHTML=`<div class="bh"><h3>Jadwal Saya (${mine.length})</h3></div>`+(up.length?`<p class="inf"><b>Mendatang / hari ini</b></p>${up.map(j=>jcard(j,false)).join('')}`:'')+(pa.length?`<p class="inf" style="margin-top:10px"><b>Sebelumnya</b></p>${pa.map(j=>jcard(j,false)).join('')}`:'')+(mine.length?'':'<div class="empty">Belum ada jadwal untuk Anda sebagai auditor maupun auditee.</div>');wire()}
-  else if(VT==='ta'||VT==='te'){const role=VT,k=role==='ta'?'auditor_nik':'auditee_nik',js=JADS.filter(j=>isMe(j,k));
-    lv.innerHTML='<div class="empty">Memuat temuan...</div>';let T=[];
-    if(js.length){const q=await sb.from('ia_temuan').select('*').in('jadwal_id',js.map(j=>j.id));T=q.data||[]}
-    const body=js.map(j=>{const ts=T.filter(t=>t.jadwal_id===j.id).sort((x,y)=>sq(x)-sq(y)||x.nomor-y.nomor);if(!ts.length)return'';
-      return `<div class="bh" style="margin-top:12px"><h3 style="font-size:15px">${where(j)}</h3><span>${tgl(j.tanggal)}</span></div>`+ts.map(t=>{const u=urT(t);return `<div class="tm"><div class="h">${tHd(t)}<span class="tag k-${esc(t.kategori)}">${esc(katL(t.kategori))}</span><span class="tag o">${esc(stL(t.status))}</span>${t.klausul?`<span class="m">Klausul ${esc(t.klausul)}</span>`:''}</div>${u?`<p>${esc(u.slice(0,200))}${u.length>200?'...':''}</p>`:'<p class="m"><i>Uraian belum diisi auditor.</i></p>'}<div class="hr"><button class="btn bs" data-tj="${j.id}">Buka</button></div></div>`}).join('')}).join('');
-    lv.innerHTML=`<div class="bh"><h3>Temuan sebagai ${role==='ta'?'Auditor':'Auditee'} (${T.length})</h3></div>`+(body||'<div class="empty">Belum ada temuan.</div>');wire()}
-  else if(VT==='cl'){const mine=JADS.filter(mineOf);lv.innerHTML='<div class="empty">Memuat checklist...</div>';let C=[];
-    if(mine.length){const q=await sb.from('ia_checklist').select('jadwal_id,header,butir,final,updated_by').in('jadwal_id',mine.map(j=>j.id));C=q.data||[]}
-    lv.innerHTML=`<div class="bh"><h3>Daftar Checklist (${mine.length})</h3></div>`+(mine.map(j=>{const c=C.find(x=>x.jadwal_id===j.id),rows=(c&&c.butir)||[],nt=rows.filter(r=>r.f==='NC'||r.f==='OBS').length,st=!c?'Belum dibuat':c.final?'Final':'Draft';
-      return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b> <span class="tag o">${st}</span>${isMe(j,'auditor_nik')?' <span class="tag o">Saya auditor</span>':''}${isMe(j,'auditee_nik')?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)} &middot; ${rows.length} butir &middot; ${nt} temuan (NC/OBS)${c&&c.updated_by?' &middot; terakhir: '+esc(c.updated_by):''}</span></div><div class="bt"><button class="btn bs" data-cj="${j.id}">Buka</button></div></div>`}).join('')||'<div class="empty">Belum ada checklist.</div>');
-    lv.querySelectorAll('[data-cj]').forEach(b=>b.onclick=()=>{J=by(b.dataset.cj);TAB='cl';jadwalView()});wire()}
-  else if(VT==='acl'&&S.all){lv.innerHTML='<div class="empty">Memuat semua checklist...</div>';let C=[];
-    {const q=await sb.from('ia_checklist').select('jadwal_id,header,butir,final,updated_by');C=q.data||[]}
-    let fq='',fs='';
-    const draw=()=>{const rows=JADS.map(j=>({j,c:C.find(x=>x.jadwal_id===j.id)})).filter(x=>{const st=!x.c?'Belum dibuat':x.c.final?'Final':'Draft';
-        if(fs&&st!==fs)return false;return !fq||[where(x.j),x.j.auditor,x.j.auditee,x.j.dept,(x.c&&x.c.header&&x.c.header.no)||''].join(' ').toLowerCase().includes(fq.toLowerCase())});
-      $('#aclL').innerHTML=rows.map(({j,c})=>{const r=(c&&c.butir)||[],st=!c?'Belum dibuat':c.final?'Final':'Draft',nm=r.filter(y=>y.f==='NC'&&y.kat==='Mayor').length,nn=r.filter(y=>y.f==='NC'&&y.kat!=='Mayor').length,no=r.filter(y=>y.f==='OBS').length;
-        return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b> <span class="tag o">${st}</span>${c&&c.header&&c.header.no?' <span class="tag o">'+esc(c.header.no)+'</span>':''}<br><span>${tgl(j.tanggal)} &middot; Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</span><br><span>${r.length} butir &middot; Mayor ${nm} &middot; Minor ${nn} &middot; OBS ${no}${c&&c.updated_by?' &middot; terakhir: '+esc(c.updated_by):''}</span></div><div class="bt"><button class="btn bs" data-cj="${j.id}">Buka</button></div></div>`}).join('')||'<div class="empty">Tidak ada checklist.</div>';
-      $('#aclL').querySelectorAll('[data-cj]').forEach(b=>b.onclick=()=>{J=by(b.dataset.cj);TAB='cl';jadwalView()})};
-    lv.innerHTML=`<div class="bh"><h3>Semua Checklist (${JADS.length})</h3></div><p class="inf">Seluruh checklist auditor dan auditee, bukan hanya milik Anda.</p><div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input class="in" id="aclQ" placeholder="Cari departemen / auditor / auditee / no. audit" style="flex:1;min-width:200px"><select id="aclS" class="in" style="width:auto"><option value="">Semua status</option><option>Draft</option><option>Final</option><option>Belum dibuat</option></select></div><div id="aclL"></div>`;
-    $('#aclQ').oninput=e=>{fq=e.target.value;draw()};$('#aclS').onchange=e=>{fs=e.target.value;draw()};draw();wire()}
+  const scope=()=>S.all?((lk&&SC==='me')?'me':'all'):(lk?'me':'all'),sc=scope();
+  const scBar=()=>(S.all&&lk)?`<div class="seg" style="max-width:280px;margin:0 0 10px"><button type="button" data-sc="me" class="${sc==='me'?'on':''}">Milik saya</button><button type="button" data-sc="all" class="${sc==='all'?'on':''}">Semua</button></div>`:'';
+  const scWire=()=>lv.querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{SC=b.dataset.sc;listView()});
+  const hay=(j,x)=>[j.dept,j.bagian,j.auditor,j.auditee,x||''].join(' ').toLowerCase();
+  if(VT==='jd'){
+    const td=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);let fq='';
+    lv.innerHTML=`<div class="bh"><h3>Jadwal Audit (<span id="jN"></span>)</h3>${S.admin?'<button class="btn bs" id="nj">+ Jadwal Baru</button>':''}</div>${scBar()}${!lk&&!S.all?'<div class="note" style="margin-bottom:8px">Akun Anda belum ditautkan ke NIK. Hubungi admin agar jadwal dan temuan Anda tampil di beranda.</div>':''}<input class="in" id="jQ" placeholder="Cari departemen / auditor / auditee" style="margin-bottom:8px"><div id="jL"></div>`;
+    const draw=()=>{const src=(sc==='me'?JADS.filter(mineOf):JADS).filter(j=>!fq||hay(j).includes(fq.toLowerCase()));$('#jN').textContent=src.length;
+      if(sc==='me'){const up=src.filter(j=>j.tanggal>=td).sort((x,y)=>x.tanggal.localeCompare(y.tanggal)),pa=src.filter(j=>j.tanggal<td);
+        $('#jL').innerHTML=(up.length?`<p class="inf"><b>Mendatang / hari ini</b></p>${up.map(j=>jcard(j,false)).join('')}`:'')+(pa.length?`<p class="inf" style="margin-top:10px"><b>Sebelumnya</b></p>${pa.map(j=>jcard(j,false)).join('')}`:'')+(src.length?'':'<div class="empty">Belum ada jadwal untuk Anda sebagai auditor maupun auditee.</div>')}
+      else $('#jL').innerHTML=src.map(j=>jcard(j,S.admin)).join('')||'<div class="empty">Belum ada jadwal audit.</div>';wire()};
+    const nj=$('#nj');if(nj)nj.onclick=()=>jadwalForm(null);
+    $('#jQ').oninput=e=>{fq=e.target.value;draw()};scWire();draw()}
+  else if(VT==='cl'){let C=[],fq='',fs='';lv.innerHTML='<div class="empty">Memuat checklist...</div>';
+    const base=sc==='me'?JADS.filter(mineOf):JADS;
+    if(base.length){const q=sc==='me'?await sb.from('ia_checklist').select('jadwal_id,header,butir,final,updated_by').in('jadwal_id',base.map(j=>j.id)):await sb.from('ia_checklist').select('jadwal_id,header,butir,final,updated_by');C=q.data||[]}
+    lv.innerHTML=`<div class="bh"><h3>Checklist (<span id="cN"></span>)</h3></div>${scBar()}<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input class="in" id="cQ" placeholder="Cari departemen / auditor / auditee / no. audit" style="flex:1;min-width:200px"><select id="cS" class="in" style="width:auto"><option value="">Semua status</option><option>Draft</option><option>Final</option><option>Belum dibuat</option></select></div><div id="cL"></div>`;
+    const draw=()=>{const rows=base.map(j=>({j,c:C.find(x=>x.jadwal_id===j.id)})).filter(({j,c})=>{const st=!c?'Belum dibuat':c.final?'Final':'Draft';if(fs&&st!==fs)return false;return !fq||hay(j,c&&c.header&&c.header.no).includes(fq.toLowerCase())});$('#cN').textContent=rows.length;
+      $('#cL').innerHTML=rows.map(({j,c})=>{const r=(c&&c.butir)||[],st=!c?'Belum dibuat':c.final?'Final':'Draft',nm=r.filter(y=>y.f==='NC'&&y.kat==='Mayor').length,nn=r.filter(y=>y.f==='NC'&&y.kat!=='Mayor').length,no=r.filter(y=>y.f==='OBS').length;
+        return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b> <span class="tag o">${st}</span>${c&&c.header&&c.header.no?' <span class="tag o">'+esc(c.header.no)+'</span>':''}${isMe(j,'auditor_nik')?' <span class="tag o">Saya auditor</span>':''}${isMe(j,'auditee_nik')?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)} &middot; Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</span><br><span>${r.length} butir &middot; Mayor ${nm} &middot; Minor ${nn} &middot; OBS ${no}${c&&c.updated_by?' &middot; terakhir: '+esc(c.updated_by):''}</span></div><div class="bt"><button class="btn bs" data-cj="${j.id}">Buka</button></div></div>`}).join('')||'<div class="empty">Belum ada checklist.</div>';
+      $('#cL').querySelectorAll('[data-cj]').forEach(b=>b.onclick=()=>{J=by(b.dataset.cj);TAB='cl';jadwalView()})};
+    $('#cQ').oninput=e=>{fq=e.target.value;draw()};$('#cS').onchange=e=>{fs=e.target.value;draw()};scWire();draw()}
+  else if(VT==='tm'){let T=[],fq='',fk='',fst='';lv.innerHTML='<div class="empty">Memuat temuan...</div>';
+    const base=sc==='me'?JADS.filter(mineOf):JADS;
+    if(base.length){const q=sc==='me'?await sb.from('ia_temuan').select('*').in('jadwal_id',base.map(j=>j.id)):await sb.from('ia_temuan').select('*');T=q.data||[]}
+    const trBar=sc==='me'?`<div class="seg" style="max-width:380px;margin:0 0 10px">${[['all','Semua'],['ta','Sebagai auditor'],['te','Sebagai auditee']].map(([v,l])=>`<button type="button" data-tr="${v}" class="${TR===v?'on':''}">${l}</button>`).join('')}</div>`:'';
+    lv.innerHTML=`<div class="bh"><h3>Temuan (<span id="tN"></span>)</h3></div>${scBar()}${trBar}<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input class="in" id="tQ" placeholder="Cari departemen / auditor / auditee / klausul / uraian" style="flex:1;min-width:200px"><select id="tK" class="in" style="width:auto"><option value="">Semua kategori</option><option value="Mayor">Mayor</option><option value="Minor">Minor</option><option value="OFI">OBS</option></select><select id="tS" class="in" style="width:auto"><option value="">Open &amp; Close</option><option value="Open">Open</option><option value="Close">Close</option></select></div><div id="tL"></div>`;
+    const draw=()=>{let js=base;if(sc==='me'&&TR==='ta')js=js.filter(j=>isMe(j,'auditor_nik'));if(sc==='me'&&TR==='te')js=js.filter(j=>isMe(j,'auditee_nik'));
+      const ok=(t,j)=>(!fk||t.kategori===fk)&&(!fst||(fst==='Close')===(t.status==='Ditutup'))&&(!fq||hay(j,[t.klausul,t.no_temuan,urT(t)].join(' ')).includes(fq.toLowerCase()));let n=0;
+      const body=js.map(j=>{const ts=T.filter(t=>t.jadwal_id===j.id&&ok(t,j)).sort((x,y)=>sq(x)-sq(y)||x.nomor-y.nomor);if(!ts.length)return'';n+=ts.length;
+        return `<div class="bh" style="margin-top:12px"><h3 style="font-size:15px">${where(j)}</h3><span>${tgl(j.tanggal)}</span></div><p class="inf" style="margin:0 0 4px">Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</p>`+ts.map(t=>{const u=urT(t);return `<div class="tm"><div class="h">${tHd(t)}<span class="tag k-${esc(t.kategori)}">${esc(katL(t.kategori))}</span><span class="tag o">${esc(stL(t.status))}</span>${t.klausul?`<span class="m">Klausul ${esc(t.klausul)}</span>`:''}</div>${u?`<p>${esc(u.slice(0,200))}${u.length>200?'...':''}</p>`:'<p class="m"><i>Uraian belum diisi auditor.</i></p>'}<div class="hr"><button class="btn bs" data-tj="${j.id}">Buka</button></div></div>`}).join('')}).join('');
+      $('#tN').textContent=n;$('#tL').innerHTML=body||'<div class="empty">Belum ada temuan.</div>';wire()};
+    lv.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{TR=b.dataset.tr;listView()});
+    $('#tQ').oninput=e=>{fq=e.target.value;draw()};$('#tK').onchange=e=>{fk=e.target.value;draw()};$('#tS').onchange=e=>{fst=e.target.value;draw()};scWire();draw()}
   else if(VT==='sum')sumView();
   else if(VT==='psn')persView()}
 
@@ -859,7 +870,7 @@ function rowHtml(r,i){const ro=CL.final?' disabled':'',f=r.f;
   <label>Relevant Document</label><input data-k="doc" list="cdocs" value="${esc(r.doc)}"${ro} placeholder="Kode / nama dokumen terkait">
   <label style="display:flex;justify-content:space-between;align-items:center">Item Audited / Question${CL.final?'':'<button type="button" data-qx title="Hapus teks ini, tulis pertanyaan sendiri" style="border:1px solid var(--line);background:var(--card);border-radius:8px;width:26px;height:22px;line-height:1;font-size:17px;color:var(--mut);cursor:pointer;padding:0">&times;</button>'}</label><div class="ta"><textarea data-k="q" rows="2"${ro} placeholder="Butir atau pertanyaan yang diperiksa">${esc(r.q)}</textarea><i class="gr" data-gr title="Tarik untuk memperbesar"></i></div>
   <div class="c2"><div><label>Reff. Clause</label><input data-k="ref" list="ccl" value="${esc(r.ref)}"${ro} placeholder="Pilih / ketik no. clause, mis. 7.5.3" autocomplete="off"></div>
-  <div><label>Finding</label><div class="seg">${['C','NC','OBS'].map(v=>`<button type="button" data-v="${v}" class="${f===v?'on':''}"${ro}>${v}</button>`).join('')}</div>${f==='NC'?`<label style="margin-top:6px">Kategori NC</label><div class="seg">${['Minor','Mayor'].map(v=>`<button type="button" data-kat="${v}" class="${(r.kat==='Mayor'?'Mayor':'Minor')===v?'on':''}"${ro}>${v}</button>`).join('')}</div>`:''}</div></div>
+  <div><label>Finding</label><div class="seg">${['C','NC','OBS'].map(v=>`<button type="button" data-v="${v}" class="${f===v?'on':''}"${ro}>${v}</button>`).join('')}</div>${f==='NC'?`<label style="margin-top:6px">Kategori NC</label><div class="seg">${['Minor','Mayor'].map(v=>`<button type="button" data-kat="${v}" class="${(r.kat==='Mayor'?'Mayor':'Minor')===v?'on':''}"${ro}>${(r.kat==='Mayor'?'Mayor':'Minor')===v?'&#10003; ':''}${v}</button>`).join('')}</div>`:''}</div></div>
   <label>Keterangan / Uraian (bukti, hasil pemeriksaan &mdash; tercetak di form)</label><div class="ta"><textarea data-k="note" rows="2"${ro} placeholder="Mis. dokumen/record yang dilihat, orang yang ditanya, kondisi di lapangan">${esc(r.note)}</textarea><i class="gr" data-gr title="Tarik untuk memperbesar"></i></div>
   <label>Uraian Clause (ikut ke Laporan Temuan)</label><input data-k="cu" value="${esc(r.cu)}"${ro} placeholder="Mis. Informasi terdokumentasi">
   ${(f==='NC'||f==='OBS')?((r.tgone||(r.tm===true&&!r.tid))?'<button type="button" class="btn bs" data-tm style="margin-top:8px;background:#c2255c">Temuan terhapus: tambahkan lagi ke tab Temuan</button>':(CL.final?'<span class="tag o" style="margin-top:8px">Sudah masuk tab Temuan</span>':'<span class="tag o" style="margin-top:8px">Masuk tab Temuan setelah checklist difinalkan</span>')):''}
