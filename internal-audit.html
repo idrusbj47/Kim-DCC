@@ -304,14 +304,14 @@ function gateView(msg,tab){VIEW='gate';tab=tab||'kode';clearInterval(timer);S=nu
         await enterStaff()}catch(e){er('Gagal: '+(e.message||e));b.disabled=false}};
     $('#go').onclick=go;['#em','#pw'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}));$('#em').focus()}}
 async function enterKode(d){
-  S={mode:'kode',nik:d.nik,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false};J=null;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;await listView()}
+  S={mode:'kode',nik:d.nik,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false,dcc:false,all:false};J=null;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;await listView()}
 async function enterStaff(){
   const {data:{session}}=await sb.auth.getSession();
   const p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle();
   if(!p.data){await sb.auth.signOut();gateView('Akun ini belum terdaftar sebagai karyawan KIM.','email');return}
   await loadPers();const em=String(session.user.email||'').toLowerCase();
   const me=PERS.find(x=>x.aktif!==false&&((p.data.nik&&String(x.nik)===String(p.data.nik))||(x.email&&x.email.toLowerCase()===em)))||null;
-  S={mode:'email',nik:me?me.nik:null,nama:me?me.nama:(p.data.nama||session.user.email),label:me?me.nama:(p.data.nama||session.user.email),admin:p.data.role==='admin'};VT=null;await loadDocs();await listView()}
+  S={mode:'email',nik:me?me.nik:null,nama:me?me.nama:(p.data.nama||session.user.email),label:me?me.nama:(p.data.nama||session.user.email),admin:p.data.role==='admin',dcc:/dcc/i.test(String(p.data.role||''))||!!(me&&/dcc/i.test(String(me.dept||'')+' '+String(me.bagian||'')))};S.all=S.admin||S.dcc;VT=null;await loadDocs();await listView()}
 const tick=()=>{if(S&&S.mode==='kode'&&Date.now()>=S.exp){toast('Kode akses sudah berakhir');gateView('Kode akses sudah berakhir. Minta kode baru ke admin.')}};
 async function loadDocs(){const r=await sb.from('iso_documents').select('*').order('kode');if(r.error)throw r.error;DOCS=r.data||[]}
 const hdr=(t,back)=>`<header class="tb"><div><b>${t}</b><small>${esc(S.nama)}${S.nik?' ('+esc(S.nik)+')':''} &middot; ${S.mode==='kode'?'Akses kode':S.admin?'Admin':'Karyawan'}</small></div><div class="tr" style="display:flex;gap:8px;align-items:center">${back?'<button class="btn g bs" id="bk">&larr; Beranda</button>':''}<button class="btn g bs" id="lo">Keluar</button></div></header>`;
@@ -469,7 +469,7 @@ const jcard=(j,adm)=>{const ra=isMe(j,'auditor_nik'),re=isMe(j,'auditee_nik');
 async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInterval(timer);await clFlush();J=null;TAB='dok';
   await loadPers();await loadGuide();
   const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
-  const lk=!!S.nik,tb=[...(S.admin?[['sum','Ringkasan']]:[]),...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.admin||!lk)?[['all','Semua Jadwal']]:[]),...((!S.admin&&S.mode==='email')?[['sum','Ringkasan']]:[]),...(S.admin?[['psn','Personel']]:[])];
+  const lk=!!S.nik,tb=[...(S.admin?[['sum','Ringkasan']]:[]),...(S.all?[['acl','Semua Checklist']]:[]),...(lk?[['me','Jadwal Saya'],['cl','Checklist Saya'],['ta','Temuan (Auditor)'],['te','Temuan (Auditee)']]:[]),...((S.all||!lk)?[['all','Semua Jadwal']]:[]),...((!S.admin&&S.mode==='email')?[['sum','Ringkasan']]:[]),...(S.admin?[['psn','Personel']]:[])];
   if(!tb.some(x=>x[0]===VT))VT=tb[0][0];
   $('#app').innerHTML=hdr('Audit Internal')+`<main class="wrap">${guideCard()}<div class="tabs" style="margin:0 0 12px;flex-wrap:wrap">${tb.map(x=>`<button class="jb${x[0]===VT?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><div class="box" id="lv"></div></main>`;bindHdr();guideWire();
   document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{VT=b.dataset.v;listView()});
@@ -497,6 +497,16 @@ async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInte
     lv.innerHTML=`<div class="bh"><h3>Daftar Checklist (${mine.length})</h3></div>`+(mine.map(j=>{const c=C.find(x=>x.jadwal_id===j.id),rows=(c&&c.butir)||[],nt=rows.filter(r=>r.f==='NC'||r.f==='OBS').length,st=!c?'Belum dibuat':c.final?'Final':'Draft';
       return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b> <span class="tag o">${st}</span>${isMe(j,'auditor_nik')?' <span class="tag o">Saya auditor</span>':''}${isMe(j,'auditee_nik')?' <span class="tag o">Saya auditee</span>':''}<br><span>${tgl(j.tanggal)} &middot; ${rows.length} butir &middot; ${nt} temuan (NC/OBS)${c&&c.updated_by?' &middot; terakhir: '+esc(c.updated_by):''}</span></div><div class="bt"><button class="btn bs" data-cj="${j.id}">Buka</button></div></div>`}).join('')||'<div class="empty">Belum ada checklist.</div>');
     lv.querySelectorAll('[data-cj]').forEach(b=>b.onclick=()=>{J=by(b.dataset.cj);TAB='cl';jadwalView()});wire()}
+  else if(VT==='acl'&&S.all){lv.innerHTML='<div class="empty">Memuat semua checklist...</div>';let C=[];
+    {const q=await sb.from('ia_checklist').select('jadwal_id,header,butir,final,updated_by');C=q.data||[]}
+    let fq='',fs='';
+    const draw=()=>{const rows=JADS.map(j=>({j,c:C.find(x=>x.jadwal_id===j.id)})).filter(x=>{const st=!x.c?'Belum dibuat':x.c.final?'Final':'Draft';
+        if(fs&&st!==fs)return false;return !fq||[where(x.j),x.j.auditor,x.j.auditee,x.j.dept,(x.c&&x.c.header&&x.c.header.no)||''].join(' ').toLowerCase().includes(fq.toLowerCase())});
+      $('#aclL').innerHTML=rows.map(({j,c})=>{const r=(c&&c.butir)||[],st=!c?'Belum dibuat':c.final?'Final':'Draft',nm=r.filter(y=>y.f==='NC'&&y.kat==='Mayor').length,nn=r.filter(y=>y.f==='NC'&&y.kat!=='Mayor').length,no=r.filter(y=>y.f==='OBS').length;
+        return `<div class="row"><div style="flex:1;min-width:0"><b>${where(j)}</b> <span class="tag o">${st}</span>${c&&c.header&&c.header.no?' <span class="tag o">'+esc(c.header.no)+'</span>':''}<br><span>${tgl(j.tanggal)} &middot; Auditor: ${esc(j.auditor||'-')}${j.auditee?' &middot; Auditee: '+esc(j.auditee):''}</span><br><span>${r.length} butir &middot; Mayor ${nm} &middot; Minor ${nn} &middot; OBS ${no}${c&&c.updated_by?' &middot; terakhir: '+esc(c.updated_by):''}</span></div><div class="bt"><button class="btn bs" data-cj="${j.id}">Buka</button></div></div>`}).join('')||'<div class="empty">Tidak ada checklist.</div>';
+      $('#aclL').querySelectorAll('[data-cj]').forEach(b=>b.onclick=()=>{J=by(b.dataset.cj);TAB='cl';jadwalView()})};
+    lv.innerHTML=`<div class="bh"><h3>Semua Checklist (${JADS.length})</h3></div><p class="inf">Seluruh checklist auditor dan auditee, bukan hanya milik Anda.</p><div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input class="in" id="aclQ" placeholder="Cari departemen / auditor / auditee / no. audit" style="flex:1;min-width:200px"><select id="aclS" class="in" style="width:auto"><option value="">Semua status</option><option>Draft</option><option>Final</option><option>Belum dibuat</option></select></div><div id="aclL"></div>`;
+    $('#aclQ').oninput=e=>{fq=e.target.value;draw()};$('#aclS').onchange=e=>{fs=e.target.value;draw()};draw();wire()}
   else if(VT==='sum')sumView();
   else if(VT==='psn')persView()}
 
@@ -811,11 +821,11 @@ async function clSync(){
     try{
       const d=sc.find(x=>x.kode===r.doc);
       const base={klausul:clKl(r)||null,dokumen_id:d?d.id:null,no_temuan:r.no||null};
-      const kat=r.f==='NC'?'Minor':'OFI',h=JSON.stringify([base,r.f]);
+      const kat=r.f==='NC'?(r.kat==='Mayor'?'Mayor':'Minor'):'OFI',h=JSON.stringify([base,r.f,kat]);
       if(!r.tid){
         const x=await tmIns({jadwal_id:CL.jid,kategori:kat,...base,uraian:UR0,pic:String(CL.header.auditee||'').trim()||null,dibuat_oleh:S?S.nama:null});
         if(x.error)throw x.error;r.tid=x.data.id;r.th=h;r.tf=r.f}
-      else if(r.th!==h){const u={...base};if(r.tf!==r.f)u.kategori=kat;
+      else if(r.th!==h){const u={...base};u.kategori=kat;
         const x=await tmUpd(u,r.tid);if(x.error)throw x.error;r.th=h;r.tf=r.f}
     }catch(e){}
   }
@@ -844,12 +854,12 @@ const mountAll=()=>document.querySelectorAll('#crows .cr').forEach(c=>rowMount(c
 const rowRe=(c,i)=>{c.outerHTML=rowHtml(CL.rows[i],i);rowMount(document.querySelector('#crows .cr[data-i="'+i+'"]'),i)};
 function rowHtml(r,i){const ro=CL.final?' disabled':'',f=r.f;
   return `<div class="cr ${fnm[f]||'fu'}" data-i="${i}"><div class="cn">${i+1}</div><div class="cf">
-  ${(f==='NC'||f==='OBS')?`<div style="margin-bottom:6px"><b>No. Temuan:</b> <span class="tag k-${f==='NC'?'Minor':'OFI'} nbd">${esc(tParts(r.no).n)}</span> <span class="m nfl" style="font-size:11px">${esc(tParts(r.no).aud?r.no:'')}</span></div>`:''}
+  ${(f==='NC'||f==='OBS')?`<div style="margin-bottom:6px"><b>No. Temuan:</b> <span class="tag k-${f==='NC'?(r.kat==='Mayor'?'Mayor':'Minor'):'OFI'} nbd">${esc(tParts(r.no).n)}</span> <span class="m nfl" style="font-size:11px">${esc(tParts(r.no).aud?r.no:'')}</span></div>`:''}
   ${r.g?`<div class="m" style="font-size:11px;margin-bottom:2px">Panduan audit &middot; klausul ${esc(r.ref)}</div>`:''}
   <label>Relevant Document</label><input data-k="doc" list="cdocs" value="${esc(r.doc)}"${ro} placeholder="Kode / nama dokumen terkait">
   <label style="display:flex;justify-content:space-between;align-items:center">Item Audited / Question${CL.final?'':'<button type="button" data-qx title="Hapus teks ini, tulis pertanyaan sendiri" style="border:1px solid var(--line);background:var(--card);border-radius:8px;width:26px;height:22px;line-height:1;font-size:17px;color:var(--mut);cursor:pointer;padding:0">&times;</button>'}</label><div class="ta"><textarea data-k="q" rows="2"${ro} placeholder="Butir atau pertanyaan yang diperiksa">${esc(r.q)}</textarea><i class="gr" data-gr title="Tarik untuk memperbesar"></i></div>
   <div class="c2"><div><label>Reff. Clause</label><input data-k="ref" list="ccl" value="${esc(r.ref)}"${ro} placeholder="Pilih / ketik no. clause, mis. 7.5.3" autocomplete="off"></div>
-  <div><label>Finding</label><div class="seg">${['C','NC','OBS'].map(v=>`<button type="button" data-v="${v}" class="${f===v?'on':''}"${ro}>${v}</button>`).join('')}</div></div></div>
+  <div><label>Finding</label><div class="seg">${['C','NC','OBS'].map(v=>`<button type="button" data-v="${v}" class="${f===v?'on':''}"${ro}>${v}</button>`).join('')}</div>${f==='NC'?`<label style="margin-top:6px">Kategori NC</label><div class="seg">${['Minor','Mayor'].map(v=>`<button type="button" data-kat="${v}" class="${(r.kat==='Mayor'?'Mayor':'Minor')===v?'on':''}"${ro}>${v}</button>`).join('')}</div>`:''}</div></div>
   <label>Keterangan / Uraian (bukti, hasil pemeriksaan &mdash; tercetak di form)</label><div class="ta"><textarea data-k="note" rows="2"${ro} placeholder="Mis. dokumen/record yang dilihat, orang yang ditanya, kondisi di lapangan">${esc(r.note)}</textarea><i class="gr" data-gr title="Tarik untuk memperbesar"></i></div>
   <label>Uraian Clause (ikut ke Laporan Temuan)</label><input data-k="cu" value="${esc(r.cu)}"${ro} placeholder="Mis. Informasi terdokumentasi">
   ${(f==='NC'||f==='OBS')?((r.tgone||(r.tm===true&&!r.tid))?'<button type="button" class="btn bs" data-tm style="margin-top:8px;background:#c2255c">Temuan terhapus: tambahkan lagi ke tab Temuan</button>':(CL.final?'<span class="tag o" style="margin-top:8px">Sudah masuk tab Temuan</span>':'<span class="tag o" style="margin-top:8px">Masuk tab Temuan setelah checklist difinalkan</span>')):''}
@@ -877,7 +887,9 @@ function clRender(){const ct=$('#ct'),h=CL.header,ro=CL.final?' disabled':'';
       if(m&&cu&&(!String(r.cu||'').trim()||CLAUSES.some(x=>x[1]===String(r.cu).trim()))){r.cu=m[1];cu.value=m[1]}}
     clDirty();clCnt()};
   rw.onclick=e=>{const c=e.target.closest('.cr');if(!c)return;const i=+c.dataset.i,r=CL.rows[i],b=e.target.closest('[data-v]');
-    if(b&&!CL.final){r.f=r.f===b.dataset.v?'':b.dataset.v;r.tgone=false;clDirty();rowRe(c,i);clCnt();return}
+    const bk=e.target.closest('[data-kat]');
+    if(bk&&!CL.final){r.kat=bk.dataset.kat;clDirty();rowRe(c,i);return}
+    if(b&&!CL.final){r.f=r.f===b.dataset.v?'':b.dataset.v;if(r.f==='NC'&&!r.kat)r.kat='Minor';r.tgone=false;clDirty();rowRe(c,i);clCnt();return}
     if(e.target.closest('[data-del]')){if(clFilled(r)&&!confirm('Hapus butir '+(i+1)+'?'))return;if(r.tid)(CL.del=CL.del||[]).push(r.tid);CL.rows.splice(i,1);clDirty();rw.innerHTML=rowsHtml();mountAll();clCnt();return}
     if(e.target.closest('[data-qx]')&&!CL.final){const t=c.querySelector('[data-k="q"]');r.q='';t.value='';clDirty();clCnt();t.focus();return}
     if(e.target.closest('[data-tm]')){r.tgone=false;r.tm=false;clDirty();rowRe(c,i);toast('Ditambahkan lagi ke tab Temuan');return}};
