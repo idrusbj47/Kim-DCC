@@ -324,6 +324,11 @@ let JF='',CODES=[],GR=[];
 // ---------- peran & akses sementara ----------
 const ROLES=[['admin','Admin'],['dcc','DCC (Pengelola Dokumen)'],['user','Pengguna']];
 const roleName=r=>(ROLES.find(x=>x[0]===r)||ROLES[2])[1];
+// semua akun dasarnya "Pengguna"; fitur tambahan diberikan admin sebagai grant per NIK (tabel ia_personel.grants)
+const GRANTS=[['dcc','DCC (Pengelola Dokumen)','Kelola dokumen & kode auditor, lihat semua data Audit Internal'],['lead','Lead Auditor','Lihat ringkasan, semua dokumen, jadwal, checklist dan temuan Audit Internal'],['auditor','Auditor','Bisa dipilih sebagai auditor di jadwal audit'],['auditee','Auditee','Bisa dipilih sebagai auditee di jadwal audit']];
+const grantName=g=>(GRANTS.find(x=>x[0]===g)||[g,g])[1];
+const gOf=p=>{const g=Array.isArray(p&&p.grants)?p.grants:({auditor:['auditor'],auditee:['auditee'],keduanya:['auditor','auditee']}[p&&p.peran]||[]);return g};
+const roleLbl=u=>{const g=[...((u&&u.grants)||[])];if(u&&u.role==='dcc'&&!g.includes('dcc'))g.unshift('dcc');return [u&&u.role==='admin'?'Admin':'Pengguna',...g.map(grantName)].join(' \u00b7 ')};
 const canDoc=()=>!!U&&['admin','dcc'].includes(U.role);
 const lt=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
 const genKode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>a[x%a.length]).join('')};
@@ -447,6 +452,7 @@ async function boot(){
     if(a&&a.data&&a.data.ok){baru=!!a.data.baru;p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle()}
     if(!p.data){const why=a&&a.data&&a.data.reason;await sb.auth.signOut();loginView(REASON[why]||'Akun ini belum terdaftar sebagai karyawan KIM. Hubungi admin.','email');return}}
   U={id:session.user.id,email:session.user.email,nama:p.data.nama||session.user.email,dept:p.data.dept||'-',role:p.data.role||'user',nik:p.data.nik||null,foto_at:p.data.foto_at};await loadAv();
+  try{U.grants=[];if(U.nik){const g=await sb.from('ia_personel').select('grants').eq('nik',U.nik).maybeSingle();U.grants=(g.data&&g.data.grants)||[]}}catch(e){U.grants=[]}
   try{await start();if(baru)setTimeout(passModal,500)}catch(e){loginView('Gagal memuat data: '+(e.message||e),'email')}
 }
 // ---------- akses sementara (NIK + kode) ----------
@@ -762,18 +768,14 @@ function drawPU(){
   let body='';
   if(PU.tab==='kar'){
     const f=PERS.filter(p=>has(p,['nik','nama','dept','bagian']));
-    body=f.map(p=>{const a=akOf(p.nik),ac=acOf(p.nik),dead=a&&new Date(a.exp)<new Date();
+    body=f.map(p=>{const a=akOf(p.nik),ac=acOf(p.nik),dead=a&&new Date(a.exp)<new Date(),adm=!!(ac&&ac.role==='admin'),gs=[...gOf(p)];if(ac&&ac.role==='dcc'&&!gs.includes('dcc'))gs.unshift('dcc');
       const kd=a?`<br><span>Kode: <b class="cdl" style="font-size:16px;letter-spacing:3px">${esc(a.kode)}</b> ${dead?'<b style="color:#c2255c">(kedaluwarsa)</b>':'sampai '+fmt(a.exp)+' ('+sisa(new Date(a.exp).getTime())+')'}</span>`:'<br><span>Belum ada kode akses</span>';
-      return `<div class="row"><div style="flex:1;min-width:0"><b>${esc(p.nama)}</b> ${ac?'<span class="tag o">Akun email</span>':'<span class="tag" style="background:#94a3b8">Belum daftar</span>'}${p.aktif===false?' <span class="tag" style="background:#c2255c">Nonaktif</span>':''}<br><span>NIK ${esc(p.nik)}${p.dept?' &middot; '+esc(p.dept):''}</span>${kd}</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn g bs" data-pk="${esc(p.nik)}" type="button">Kode</button><button class="btn g bs" data-pe="${esc(p.nik)}" type="button">Ubah</button><button class="btn r bs" data-pd="${esc(p.nik)}" type="button">Hapus</button>${a&&!dead?`<button class="btn g bs" data-ps="${esc(p.nik)}" type="button">Salin</button>`:''}</div></div>`}).join('')
+      return `<div class="row"><div style="flex:1;min-width:0"><b>${esc(p.nama)}</b> <span class="tag" style="background:#94a3b8">Pengguna</span>${adm?' <span class="tag" style="background:#c2255c">Admin</span>':''}${gs.map(g=>` <span class="tag o">${esc(grantName(g))}</span>`).join('')}${p.aktif===false?' <span class="tag" style="background:#c2255c">Nonaktif</span>':''}<br><span>NIK ${esc(p.nik)}${p.dept?' &middot; '+esc(p.dept):''}</span><br><span>${ac?'Akun: '+esc(ac.email||'-')+' &middot; terakhir masuk '+(ac.last_login?fmt(ac.last_login):'-'):'Belum daftar akun email'}</span>${kd}</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn bs" data-pg="${esc(p.nik)}" type="button">Hak Akses</button><button class="btn g bs" data-pk="${esc(p.nik)}" type="button">Kode</button><button class="btn g bs" data-pe="${esc(p.nik)}" type="button">Ubah</button><button class="btn r bs" data-pd="${esc(p.nik)}" type="button">Hapus</button>${a&&!dead?`<button class="btn g bs" data-ps="${esc(p.nik)}" type="button">Salin</button>`:''}${ac&&ac.id!==U.id?`<button class="btn r bs" data-px="${ac.id}" type="button">Cabut akun</button>`:''}</div></div>`}).join('')
       ||`<div class="empty">${PERS.length?'Tidak ditemukan.':'Belum ada data karyawan.'}</div>`;
-    body='<button class="btn bs" id="pa" type="button" style="margin:0 0 10px">+ Tambah Karyawan</button>'+body+'<p class="hint">Data karyawan dan kode akses dikelola di sini dan otomatis sama dengan Audit Internal. Satu kode per NIK berlaku untuk Dokumen ISO dan Audit Internal.</p>';
-  }else{
-    const f=AKUN.filter(a=>has(a,['nik','nama','dept','email']));
-    body='<p class="hint">Admin: semua pengaturan. DCC: kelola dokumen dan kode auditor. Pengguna: baca dokumen.</p>'+(f.map(a=>{const me=a.id===U.id;
-      return `<div class="row"><div style="flex:1;min-width:0"><b>${esc(a.nama||'-')}</b> <span class="tag o">${esc(roleName(a.role))}</span>${me?' <span class="tag" style="background:#94a3b8">Anda</span>':''}<br><span>${a.nik?'NIK '+esc(a.nik)+' &middot; ':''}${esc(a.email||'-')}${a.dept?' &middot; '+esc(a.dept):''}</span><br><span>Terakhir masuk: ${a.last_login?fmt(a.last_login):'-'}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><select data-pr="${a.id}"${me?' disabled title="Role akun sendiri tidak bisa diubah"':''}>${ROLES.map(r=>`<option value="${r[0]}"${r[0]===(a.role||'user')?' selected':''}>${r[1]}</option>`).join('')}</select>${me?'':`<button class="btn r bs" data-px="${a.id}" type="button">Cabut</button>`}</div></div>`}).join('')||`<div class="empty">${AKUN.length?'Tidak ditemukan.':'Belum ada akun terdaftar.'}</div>`);
+    body='<button class="btn bs" id="pa" type="button" style="margin:0 0 10px">+ Tambah Karyawan</button>'+body+'<p class="hint">Semua pengguna dasarnya <b>Pengguna</b>. Gunakan <b>Hak Akses</b> untuk memberi DCC, Lead Auditor, Auditor atau Auditee. Data karyawan, kode akses dan hak akses dikelola di sini dan langsung dipakai Audit Internal (tidak ada lagi menu Personel di sana).</p>';
   }
   box.innerHTML=(PUERR.length?`<div class="empty" style="padding:6px 0 12px;text-align:left;color:#c2255c">${PUERR.map(esc).join('<br>')}</div>`:'')
-    +`<div class="ptabs"><button type="button" data-pt="kar" class="${PU.tab==='kar'?'on':''}">Karyawan &amp; Kode (${PERS.length})</button><button type="button" data-pt="akun" class="${PU.tab==='akun'?'on':''}">Akun Terdaftar (${AKUN.length})</button></div>`
+    +`<div class="bh" style="margin:0 0 8px"><h3 style="font-size:15px">Pengguna (${PERS.length})</h3><span>${AKUN.length} akun email</span></div>`
     +`<input class="pq" id="pq" placeholder="Cari NIK, nama, departemen, email" value="${esc(PU.q)}">`+`<div id="pl">${body}</div>`;
   box.querySelectorAll('[data-pt]').forEach(b=>b.onclick=()=>{PU.tab=b.dataset.pt;PU.q='';drawPU()});
   const pq=$('#pq');pq.oninput=e=>{PU.q=e.target.value;const pos=e.target.selectionStart;drawPU();const n=$('#pq');n.focus();n.setSelectionRange(pos,pos)};
@@ -785,15 +787,20 @@ function drawPU(){
   box.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{const p=PERS.find(x=>x.nik===b.dataset.ps),a=akOf(p.nik);
     const t=`Dokumen ISO - PT Karya Indah Multiguna\nBuka: ${baseUrl()}\nNIK: ${p.nik}\nKode akses: ${a.kode}\nBerlaku sampai: ${fmt(a.exp)}`;
     (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Pesan disalin, tinggal tempel di WhatsApp'),()=>prompt('Salin pesan ini:',t))});
-  box.querySelectorAll('[data-pr]').forEach(sel=>sel.onchange=async()=>{const a=AKUN.find(x=>x.id===sel.dataset.pr),nr=sel.value;
-    if(!confirm(`Ubah role ${a.nama||a.email} menjadi ${roleName(nr)}?`)){sel.value=a.role||'user';return}
-    try{const r=await sb.rpc('iso_set_role',{p_id:a.id,p_role:nr});if(r.error)throw new Error(r.error.message);succ('Role diubah');await loadPU();drawPU()}
-    catch(x){toast('Gagal: '+(x.message||x));sel.value=a.role||'user'}});
+  box.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>formGrant(PERS.find(p=>p.nik===b.dataset.pg)));
   box.querySelectorAll('[data-px]').forEach(b=>b.onclick=async()=>{const a=AKUN.find(x=>x.id===b.dataset.px);
     if(!confirm(`Cabut akun ${a.nama||a.email}? Orang ini tidak bisa masuk dengan email lagi dan harus mendaftar ulang dari kode akses.`))return;
     try{const r=await sb.rpc('iso_cabut_akun',{p_id:a.id});if(r.error)throw new Error(r.error.message);succ('Akun dicabut');await loadPU();drawPU()}
     catch(x){toast('Gagal: '+(x.message||x))}});
 }
+function formGrant(p){if(!p)return;const ac=AKUN.find(x=>x.nik===p.nik),gs=[...gOf(p)];if(ac&&ac.role==='dcc'&&!gs.includes('dcc'))gs.push('dcc');const adm=!!(ac&&ac.role==='admin'),self=!!(ac&&ac.id===U.id);
+  modal(`<h2>Hak Akses</h2><p>${esc(p.nama)} (NIK ${esc(p.nik)}). Dasarnya semua orang adalah <b>Pengguna</b>. Centang fitur tambahan yang diberikan.</p>
+  ${GRANTS.map(g=>`<label style="display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-weight:500"><input type="checkbox" data-gr="${g[0]}" style="width:auto;margin-top:3px"${gs.includes(g[0])?' checked':''}><span><b>${esc(g[1])}</b><br><small>${esc(g[2])}</small></span></label>`).join('')}
+  <label style="display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-weight:500"><input type="checkbox" id="gad" style="width:auto;margin-top:3px"${adm?' checked':''}${(!ac||self)?' disabled':''}><span><b>Admin</b><br><small>${!ac?'Hanya bisa diberikan setelah orang ini punya akun email.':self?'Akun sendiri tidak bisa diubah.':'Semua pengaturan, termasuk mengelola hak akses.'}</small></span></label>`,
+  async()=>{const g=[...document.querySelectorAll('[data-gr]')].filter(x=>x.checked).map(x=>x.dataset.gr),ad=(!ac||self)?null:$('#gad').checked;
+    const r=await sb.rpc('iso_set_grants',{p_nik:p.nik,p_grants:g,p_admin:ad});
+    if(r.error)throw new Error(/iso_set_grants/i.test(r.error.message||'')&&/function|find|exist/i.test(r.error.message||'')?'Jalankan iso_grants.sql di Supabase dulu':r.error.message);
+    succ('Hak akses disimpan');await loadPU();drawPU()})}
 function formPers(p){const ed=!!p;
   modal(`<h2>${ed?'Ubah':'Tambah'} Karyawan</h2><label>NIK (5 angka)</label><input id="fn" inputmode="numeric" maxlength="5" value="${ed?esc(p.nik):''}"${ed?' disabled':''}><label>Nama</label><input id="fm" value="${ed?esc(p.nama||''):''}"><label>Departemen</label><input id="fd" value="${ed?esc(p.dept||''):''}"><label>Bagian (opsional)</label><input id="fb" value="${ed?esc(p.bagian||''):''}"><label>Status</label><select id="fa"><option value="1"${!ed||p.aktif!==false?' selected':''}>Aktif</option><option value="0"${ed&&p.aktif===false?' selected':''}>Nonaktif</option></select>`,
   async()=>{const nik=ed?p.nik:$('#fn').value.trim(),nama=$('#fm').value.trim();if(!/^\d{5}$/.test(nik))throw new Error('NIK harus 5 angka');if(!nama)throw new Error('Nama wajib diisi');
@@ -826,7 +833,7 @@ async function squash(file){const bm=await createImageBitmap(file),m=Math.min(bm
   for(let q=.8;;q-=.1){const b=await new Promise(r=>c.toBlob(r,'image/jpeg',q));if(b.size<=51200||q<.35)return b}}
 function vProf(){
   if(U.tmp)return vProfTmp();
-  $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Profil</h3><span>${esc(U.dept)} &middot; ${roleName(U.role)}${U.nik?' &middot; NIK '+esc(U.nik):''}</span></div>
+  $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Profil</h3><span>${esc(U.dept)} &middot; ${esc(roleLbl(U))}${U.nik?' &middot; NIK '+esc(U.nik):''}</span></div>
   <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div class="pa"${U.av?` style="background-image:url(${U.av})"`:''}>${U.av?'':esc(U.nama.slice(0,2).toUpperCase())}</div>
   <div><button class="btn g bs" id="pf">Ganti Foto</button> <button class="btn g bs" id="pd">Hapus Foto</button><p style="margin:6px 0 0;font-size:12px;color:var(--mut)">Foto dikecilkan otomatis menjadi di bawah 50 KB agar hemat penyimpanan.</p></div></div><input type="file" id="pi" accept="image/*" hidden>
   <div class="f"><div class="w"><label>Nama</label><input id="nm" value="${esc(U.nama)}"></div><div class="w"><button class="btn" id="sn">Simpan Nama</button></div></div></div>
