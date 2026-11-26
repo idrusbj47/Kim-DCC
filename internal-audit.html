@@ -255,7 +255,6 @@ const tNo=(auditNo,n)=>(auditNo?auditNo+'-':'')+String(n).padStart(2,'0');
 const tParts=full=>{const s=String(full||''),m=s.match(/^(IA-.+)-(\d+)$/);if(m)return{aud:m[1],n:m[2]};const o=s.match(/(\d+)$/);return{aud:'',n:o?o[1]:s}};
 const tHd=t=>{const q=tParts(t.no_temuan||tnm(t));return `<b>No. ${esc(q.n)}</b>`+(q.aud?`<span class="m">${esc(q.aud)}</span>`:'')};
 const sq=t=>{const m=String(t.no_temuan||'').match(/-(\d+)$/);return m?+m[1]:1e9};
-const PERAN={auditor:'Auditor',auditee:'Auditee',keduanya:'Auditor & Auditee'};
 async function loadPers(){try{const r=await sb.from('ia_personel').select('*').order('nama');if(r.error){persOff=true;PERS=[]}else{persOff=false;PERS=r.data||[]}}catch(e){persOff=true;PERS=[]}}
 // no. laporan: urut menurut jadwal audit dalam bulan yang sama (jadwal lebih awal diberi nomor lebih dulu)
 async function rptOffset(j){try{const y=+j.tanggal.slice(0,4),m=+j.tanggal.slice(5,7),a=j.tanggal.slice(0,7)+'-01',b=new Date(Date.UTC(y,m,1)).toISOString().slice(0,10);
@@ -307,17 +306,19 @@ function gateView(msg,tab){VIEW='gate';tab=tab||'kode';clearInterval(timer);S=nu
         await enterStaff()}catch(e){er('Gagal: '+(e.message||e));b.disabled=false}};
     $('#go').onclick=go;['#em','#pw'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}));$('#em').focus()}}
 async function enterKode(d){
-  S={mode:'kode',nik:d.nik,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false,dcc:false,all:false};J=null;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;await listView()}
+  S={mode:'kode',nik:d.nik,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false,dcc:false,lead:false,role:'user',all:false};J=null;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;await listView()}
 async function enterStaff(){
   const {data:{session}}=await sb.auth.getSession();
   const p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle();
   if(!p.data){await sb.auth.signOut();gateView('Akun ini belum terdaftar sebagai karyawan KIM.','email');return}
   await loadPers();const em=String(session.user.email||'').toLowerCase();
   const me=PERS.find(x=>x.aktif!==false&&((p.data.nik&&String(x.nik)===String(p.data.nik))||(x.email&&x.email.toLowerCase()===em)))||null;
-  S={mode:'email',nik:me?me.nik:null,nama:me?me.nama:(p.data.nama||session.user.email),label:me?me.nama:(p.data.nama||session.user.email),admin:p.data.role==='admin',dcc:/dcc/i.test(String(p.data.role||''))||!!(me&&/dcc/i.test(String(me.dept||'')+' '+String(me.bagian||'')))};S.all=S.admin||S.dcc;VT=null;await loadDocs();await listView()}
+  S={mode:'email',nik:me?me.nik:null,nama:me?me.nama:(p.data.nama||session.user.email),label:me?me.nama:(p.data.nama||session.user.email),admin:p.data.role==='admin',role:p.data.role||'user'};{const gs=[...(me?gOf(me):[])];S.grants=gs;S.dcc=p.data.role==='dcc'||gs.includes('dcc');S.lead=gs.includes('lead');S.all=S.admin||S.dcc||S.lead;S.rl=[S.admin?'Admin':'Pengguna',...(S.dcc?['DCC']:[]),...gs.filter(g=>g!=='dcc').map(g=>GRANT_LBL[g]||g)].join(' \u00b7 ')}VT=null;await loadDocs();await listView()}
 const tick=()=>{if(S&&S.mode==='kode'&&Date.now()>=S.exp){toast('Kode akses sudah berakhir');gateView('Kode akses sudah berakhir. Minta kode baru ke admin.')}};
 async function loadDocs(){const r=await sb.from('iso_documents').select('*').order('kode');if(r.error)throw r.error;DOCS=r.data||[]}
-const hdr=(t,back)=>`<header class="tb"><div><b>${t}</b><small>${esc(S.nama)}${S.nik?' ('+esc(S.nik)+')':''} &middot; ${S.mode==='kode'?'Akses kode':S.admin?'Admin':'Karyawan'}</small></div><div class="tr" style="display:flex;gap:8px;align-items:center">${back?'<button class="btn g bs" id="bk">&larr; Beranda</button>':''}<button class="btn g bs" id="lo">Keluar</button></div></header>`;
+const GRANT_LBL={dcc:'DCC',lead:'Lead Auditor',auditor:'Auditor',auditee:'Auditee'};
+const gOf=p=>Array.isArray(p&&p.grants)?p.grants:({auditor:['auditor'],auditee:['auditee'],keduanya:['auditor','auditee']}[p&&p.peran]||[]);
+const hdr=(t,back)=>`<header class="tb"><div><b>${t}</b><small>${esc(S.nama)}${S.nik?' ('+esc(S.nik)+')':''} &middot; ${S.mode==='kode'?'Akses kode':(S.rl||'Pengguna')}</small></div><div class="tr" style="display:flex;gap:8px;align-items:center">${back?'<button class="btn g bs" id="bk">&larr; Beranda</button>':''}<button class="btn g bs" id="lo">Keluar</button></div></header>`;
 function bindHdr(){const lo=$('#lo');lo.onclick=async()=>{if(confirm('Keluar dari audit internal?'))await doLogout()};const bk=$('#bk');if(bk)bk.onclick=listView}
 
 // ---------- Jadwal & Panduan Audit (PDF diunggah admin -> disimpan sebagai WebP, bisa dilihat / diunduh PDF / dicetak) ----------
@@ -419,7 +420,7 @@ async function sumView(){const lv=$('#lv');lv.innerHTML='<div class="empty">Memu
     T.forEach(x=>{const j=jall.get(x.jadwal_id);if(!j)return;const y=String(j.tanggal).slice(0,4),d=ym[y]=ym[y]||{a:0,t:0,c:0};d.t++;if(x.status==='Ditutup')d.c++});
     const yl=Object.keys(ym).sort().slice(-8),ymx=Math.max(1,...yl.map(y=>ym[y].t));
     lv.innerHTML=`<div class="sm" id="smcap"><div class="sm-cap" id="smhd"><div><small>PT KARYA INDAH MULTIGUNA</small><h2>Ringkasan Hasil Audit Internal</h2><p>${Y==='all'?'Semua periode':'Periode '+Y} &middot; per ${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</p></div></div>
-      <div class="sm-top" data-ig><div><h3>Ringkasan Hasil Audit</h3><p>${S.admin?'Seluruh data audit':'Data audit yang dapat Anda akses'}</p></div>
+      <div class="sm-top" data-ig><div><h3>Ringkasan Hasil Audit</h3><p>${S.all?'Seluruh data audit':'Data audit yang dapat Anda akses'}</p></div>
       <div class="sm-act"><button class="sm-ss" id="smss" type="button">&#128247; Simpan Gambar</button><button class="sm-ss g" id="smsh" type="button" style="display:none">Bagikan ke WA</button></div>
       <div class="sm-chips"><button class="sm-chip${Y==='all'?' on':''}" data-y="all" type="button">Semua</button>${yrs.map(y=>`<button class="sm-chip${Y===y?' on':''}" data-y="${y}" type="button">${y}</button>`).join('')}</div></div>
       <div class="sm-kpi">
@@ -472,7 +473,7 @@ const jcard=(j,adm)=>{const ra=isMe(j,'auditor_nik'),re=isMe(j,'auditee_nik');
 async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInterval(timer);await clFlush();J=null;TAB='dok';
   await loadPers();await loadGuide();
   const r=await sb.from('ia_jadwal').select('*').order('tanggal',{ascending:false});JADS=r.data||[];
-  const lk=!!S.nik,tb=[...(S.all?[['sum','Ringkasan']]:[]),['jd','Jadwal'],...((lk||S.all)?[['cl','Checklist'],['tm','Temuan']]:[]),...((!S.all&&S.mode==='email')?[['sum','Ringkasan']]:[]),...(S.admin?[['psn','Personel']]:[])];
+  const lk=!!S.nik,tb=[...(S.all?[['sum','Ringkasan']]:[]),['jd','Jadwal'],...((lk||S.all)?[['cl','Checklist'],['tm','Temuan']]:[]),...((!S.all&&S.mode==='email')?[['sum','Ringkasan']]:[])];
   if(!tb.some(x=>x[0]===VT))VT=tb[0][0];
   $('#app').innerHTML=hdr('Audit Internal')+`<main class="wrap">${guideCard()}<div class="tabs" style="margin:0 0 12px;flex-wrap:wrap">${tb.map(x=>`<button class="jb${x[0]===VT?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div><div class="box" id="lv"></div></main>`;bindHdr();guideWire();
   document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{VT=b.dataset.v;listView()});
@@ -518,52 +519,18 @@ async function listView(){VIEW='list';armBack();if(!S||S.mode!=='kode')clearInte
       $('#tN').textContent=n;$('#tL').innerHTML=body||'<div class="empty">Belum ada temuan.</div>';wire()};
     lv.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{TR=b.dataset.tr;listView()});
     $('#tQ').oninput=e=>{fq=e.target.value;draw()};$('#tK').onchange=e=>{fk=e.target.value;draw()};$('#tS').onchange=e=>{fst=e.target.value;draw()};scWire();draw()}
-  else if(VT==='sum')sumView();
-  else if(VT==='psn')persView()}
+  else if(VT==='sum')sumView()}
 
-// ---------- daftar personel (admin) ----------
-let AK=[];
-const akOf=p=>{const a=AK.find(x=>x.nik===p.nik);return a?`<br><span>Kode: <b class="cdl">${esc(a.kode)}</b> ${new Date(a.exp)<new Date()?'(kedaluwarsa)':'sampai '+fmt(a.exp)}</span>`:'<br><span class="m">Belum ada kode akses</span>'};
-async function persView(){const lv=$('#lv');let q='';{const ak=await sb.from('ia_nik_akses').select('*');AK=ak.error?[]:(ak.data||[])}
-  lv.innerHTML=`<div class="bh"><h3>Daftar Personel (${PERS.length})</h3><button class="btn bs" id="pn">+ Tambah</button></div>${persOff?'<div class="note" style="margin-bottom:8px">Tabel <b>ia_personel</b> belum ada. Jalankan <b>ia_personel.sql</b> di Supabase.</div>':''}<input class="in" id="pq" placeholder="Cari NIK / nama / departemen / email"><div id="pl"></div>`;
-  const draw=()=>{const f=PERS.filter(p=>[p.nik,p.nama,p.dept,p.bagian,p.email].join(' ').toLowerCase().includes(q.toLowerCase()));
-    $('#pl').innerHTML=f.map(p=>`<div class="row"><div style="flex:1;min-width:0"><b>${esc(p.nama)}</b> <span class="tag o">${esc(PERAN[p.peran]||p.peran)}</span>${p.aktif===false?' <span class="tag">Nonaktif</span>':''}<br><span>NIK ${esc(p.nik)}${p.dept?' &middot; '+esc(p.dept):''}${p.bagian?' &rsaquo; '+esc(p.bagian):''}${p.email?' &middot; '+esc(p.email):' &middot; belum ditautkan email'}</span>${akOf(p)}</div><div class="bt"><button class="btn bs" data-pk="${esc(p.nik)}">Kode</button><button class="btn g bs" data-pe="${esc(p.nik)}">Ubah</button><button class="btn r bs" data-pd="${esc(p.nik)}">Hapus</button></div></div>`).join('')||'<div class="empty">Belum ada personel.</div>';
-    $('#pl').querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>kodeNikForm(pNik(b.dataset.pk),AK.find(x=>x.nik===b.dataset.pk)));
-    $('#pl').querySelectorAll('[data-pe]').forEach(b=>b.onclick=()=>persForm(pNik(b.dataset.pe)));
-    $('#pl').querySelectorAll('[data-pd]').forEach(b=>b.onclick=async()=>{const p=pNik(b.dataset.pd);if(!await secure('Hapus '+esc(p.nama)+' dari daftar personel? Jadwal lama tetap menyimpan namanya.'))return;
-      const x=await sb.from('ia_personel').delete().eq('nik',p.nik);if(x.error){toast('Gagal: '+x.error.message);return}toast('Personel dihapus');await loadPers();persView()})};
-  $('#pq').oninput=e=>{q=e.target.value;draw()};$('#pn').onclick=()=>persForm(null);draw()}
-function kodeNikForm(p,a){const def=a?new Date(a.exp):new Date(Date.now()+30*864e5);
-  const m=modal(`<h2>Kode Akses</h2><p>${esc(p.nama)} (NIK ${esc(p.nik)}). Satu kode untuk semua jadwal audit orang ini, dipakai bersama NIK saat masuk.</p>
-  <label>Kode (6 karakter)</label><input class="cd" id="kk" maxlength="6" value="${esc(a?a.kode:gen())}" style="letter-spacing:8px"><button class="btn g bs" id="kr" type="button" style="margin-bottom:10px">Acak</button>
-  <label>Berlaku sampai</label><input id="ke" type="datetime-local" value="${lt(def)}">${a?'<button class="btn r bs" id="kc" type="button">Cabut Kode</button>':''}`,
-  async()=>{const k=$('#kk').value.trim().toUpperCase(),e=$('#ke').value;if(!/^[A-Z0-9]{6}$/.test(k))throw new Error('Kode harus 6 huruf/angka');if(!e)throw new Error('Isi masa berlaku');
-    const r=await sb.rpc('ia_set_kode',{p_nik:p.nik,p_kode:k,p_exp:new Date(e).toISOString()});if(r.error)throw new Error(/ia_set_kode/i.test(r.error.message||'')?'Jalankan ia_akses_nik.sql di Supabase dulu':r.error.message);toast('Kode disimpan');persView()});
-  m.querySelector('#kk').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
-  m.querySelector('#kr').onclick=()=>m.querySelector('#kk').value=gen();
-  const kc=m.querySelector('#kc');if(kc)kc.onclick=async()=>{if(!confirm('Cabut kode? '+p.nama+' yang sedang masuk langsung keluar.'))return;
-    const r=await sb.rpc('ia_cabut',{p_nik:p.nik});if(r.error){toast('Gagal: '+r.error.message);return}m.remove();toast('Kode dicabut');persView()}}
-function persForm(p){const v=p||{},ed=!!p,dep=[...new Set([...DOCS.map(d=>d.dept),...PERS.map(x=>x.dept),...JADS.map(j=>j.dept)].filter(Boolean))].sort();
-  modal(`<h2>${ed?'Ubah':'Tambah'} Personel</h2><p>Daftar ini dipakai untuk memilih auditor dan auditee saat membuat jadwal.</p>
-  <label>NIK (5 angka)</label><input id="pk" maxlength="5" inputmode="numeric" value="${esc(v.nik||'')}"${ed?' disabled':''} placeholder="Mis. 20994"><label>Nama</label><input id="pm" value="${esc(v.nama||'')}" maxlength="80">
-  <label>Departemen</label><input id="pd" list="pdl" value="${esc(v.dept||'')}"><datalist id="pdl">${dep.map(d=>`<option value="${esc(d)}">`).join('')}</datalist><label>Bagian (opsional)</label><input id="pb" value="${esc(v.bagian||'')}">
-  <label>Peran</label><select id="pr">${Object.entries(PERAN).map(([k,n])=>`<option value="${k}"${k===(v.peran||'auditor')?' selected':''}>${n}</option>`).join('')}</select>
-  <label>Email login (untuk menautkan akun email ke NIK ini)</label><input id="pe" type="email" value="${esc(v.email||'')}" placeholder="nama@perusahaan.com"><label style="display:flex;gap:8px;align-items:center"><input id="pa" type="checkbox"${v.aktif===false?'':' checked'} style="width:auto;margin:0"> Aktif</label>`,
-  async()=>{const o={nama:$('#pm').value.trim(),dept:$('#pd').value.trim()||null,bagian:$('#pb').value.trim()||null,peran:$('#pr').value,email:$('#pe').value.trim().toLowerCase()||null,aktif:$('#pa').checked};
-    if(o.nama.length<3)throw new Error('Isi nama');const nik=ed?v.nik:$('#pk').value.trim();if(!/^\d{5}$/.test(nik))throw new Error('NIK harus 5 angka');
-    const r=ed?await sb.from('ia_personel').update(o).eq('nik',nik):await sb.from('ia_personel').insert({nik,...o});
-    if(r.error)throw new Error(r.error.code==='23505'?'NIK atau email itu sudah terdaftar':r.error.message);
-    toast('Personel disimpan');await loadPers();persView()})}
 function parseWaktu(t){const z=n=>String(n).padStart(2,'0'),a=String(t||''),m=a.match(/(\d{1,2})[.:](\d{2})\s*[-~\u2013]\s*(\d{1,2})[.:](\d{2})/);
   if(m)return[z(m[1])+':'+m[2],z(m[3])+':'+m[4]];const o=a.match(/^\s*(\d{1,2})[.:](\d{2})\s*$/);return o?[z(o[1])+':'+o[2],'']:['','']}
 function jadwalForm(j){const v=j||{};const [w1,w2]=parseWaktu(v.waktu);const dl=a=>`<datalist id="${a[0]}">${[...new Set(a[1].filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
   const depts=[...new Set(DOCS.map(d=>d.dept).filter(x=>x&&x!=='Semua'))].sort();if(v.dept&&!depts.includes(v.dept))depts.unshift(v.dept);
   const bagOpts=(d,cur)=>{const l=[...new Set(DOCS.filter(x=>nz(x.dept)===nz(d)).map(x=>x.bagian).filter(Boolean))].sort();if(cur&&!l.includes(cur))l.unshift(cur);return '<option value="">- Semua bagian -</option>'+l.map(b=>`<option value="${esc(b)}"${b===cur?' selected':''}>${esc(b)}</option>`).join('')};
   const up=!persOff&&PERS.length>0,sa=nikList(v.auditor_nik).filter(pNik),se=nikList(v.auditee_nik).filter(pNik);
-  const act=PERS.filter(p=>p.aktif!==false),oA=act.filter(p=>p.peran!=='auditee'),oE=act.filter(p=>p.peran!=='auditor');
+  const act=PERS.filter(p=>p.aktif!==false),oA=act.filter(p=>gOf(p).includes('auditor')||gOf(p).includes('lead')),oE=act.filter(p=>gOf(p).includes('auditee'));
   const sel=(id,l)=>`<select id="${id}"><option value="">+ Pilih dari daftar...</option>${l.map(p=>`<option value="${esc(p.nik)}">${esc(p.nama)} (${esc(p.nik)})${p.dept?' &middot; '+esc(p.dept):''}</option>`).join('')}</select>`;
   const who=up?`<label>Auditor</label><div id="ca"></div>${sel('ja',oA)}<label>Auditee</label><div id="ce"></div>${sel('je',oE)}`
-    :`<label>Auditor</label><input id="ja" value="${esc(v.auditor||'')}" placeholder="Nama auditor / tim">${persOff?'<div class="note" style="margin-bottom:8px">Daftar personel belum aktif (jalankan <b>ia_personel.sql</b>), jadi nama masih diketik manual.</div>':'<div class="note" style="margin-bottom:8px">Daftar personel masih kosong. Isi dulu di tab <b>Personel</b>.</div>'}`;
+    :`<label>Auditor</label><input id="ja" value="${esc(v.auditor||'')}" placeholder="Nama auditor / tim">${persOff?'<div class="note" style="margin-bottom:8px">Daftar personel belum aktif (jalankan <b>ia_personel.sql</b>), jadi nama masih diketik manual.</div>':'<div class="note" style="margin-bottom:8px">Daftar personel masih kosong. Isi dulu di <b>Dokumen ISO &rsaquo; Kelola &rsaquo; Pengguna &amp; Akses</b> (beri hak Auditor / Auditee).</div>'}`;
   const chips=(el,arr)=>{el.innerHTML=arr.map(n=>{const p=pNik(n);return `<span class="tag o" style="margin:0 6px 6px 0">${esc(p?p.nama:n)} <a data-rm="${esc(n)}" style="cursor:pointer;margin-left:4px">&times;</a></span>`}).join('')||'<span class="m">Belum dipilih</span>'};
   const m=modal(`<h2>${j?'Ubah':'Jadwal'} Audit</h2><p>Tentukan departemen dan bagian yang diaudit. Dokumen yang terbuka menyesuaikan otomatis.</p>
   <label>Tanggal audit</label><input id="jt" type="date" value="${esc(v.tanggal||'')}"><label>Waktu audit (mulai &ndash; selesai)</label><div style="display:flex;gap:8px;align-items:center"><input id="jw1" type="time" value="${w1}" style="margin:0 0 10px"><span style="margin-bottom:10px">s/d</span><input id="jw2" type="time" value="${w2}" style="margin:0 0 10px"></div><label>Departemen (sesuai dokumen)</label><select id="jd"><option value="">- Pilih departemen -</option>${depts.map(d=>`<option value="${esc(d)}"${d===v.dept?' selected':''}>${esc(d)}</option>`).join('')}</select><label>Bagian (kosong = semua bagian)</label><select id="jb">${bagOpts(v.dept,v.bagian)}</select><label>Panduan checklist (isi awal checklist auditor)</label><select id="jp"><option value="">Otomatis sesuai departemen</option><option value="NONE"${v.panduan==='NONE'?' selected':''}>Tanpa panduan (checklist kosong)</option>${Object.keys(GD_LBL).map(k=>`<option value="${k}"${v.panduan===k?' selected':''}>${esc(GD_LBL[k])}</option>`).join('')}</select>
@@ -603,8 +570,8 @@ function jadwalView(){const j=J;VIEW='jadwal';armBack();
   const tabs=()=>{document.querySelectorAll('.tabs .jb').forEach(b=>{b.classList.toggle('on',b.dataset.t===TAB);b.onclick=()=>{TAB=b.dataset.t;tabs()}});TAB==='dok'?docsTab():TAB==='cl'?checklistTab():findTab()};tabs()}
 const item=d=>`<div class="it" data-id="${d.id}"><div class="th"${isDF(d)?' style="font-size:11px"':''}>${isDF(d)?'Induk':jOf(d)}</div><div style="flex:1;min-width:0"><b>${esc(d.kode)} &middot; ${esc(d.judul)}</b><p>${d.pages} halaman &middot; ${esc(d.revisi||'')}</p><span class="tag">${esc(jName(jOf(d)))}</span><span class="tag o">${esc(d.dept)}</span>${d.bagian?`<span class="tag o">${esc(d.bagian)}</span>`:''}</div></div>`;
 let CO={};
-function docsTab(){const sc=DOCS.filter(d=>isDF(d)||inScope(d,J));
-  $('#ct').innerHTML=`<div class="bh"><h3>Dokumen Audit</h3><span>Hanya baca &middot; berwatermark</span></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"></div><div id="ls"></div>`;
+function docsTab(){const sc=S.all?DOCS:DOCS.filter(d=>isDF(d)||inScope(d,J));
+  $('#ct').innerHTML=`<div class="bh"><h3>Dokumen Audit</h3><span>${S.all?'Semua dokumen &middot; ':''}Hanya baca &middot; berwatermark</span></div><div class="fl"><input id="q" placeholder="Cari kode atau judul dokumen" value="${esc(Q)}"></div><div id="ls"></div>`;
   const draw=()=>{const f=sc.filter(d=>(d.kode+' '+d.judul).toLowerCase().includes(Q.toLowerCase())),ind=sortDocs(f.filter(isDF)),g=f.filter(d=>!isDF(d)),pin=sortDocs(g.filter(d=>/audit|temuan/i.test(d.kode+' '+d.judul))),rest=sortDocs(g.filter(d=>!pin.includes(d)));
     const grp=(k,t,l)=>l.length?`<div class="grp gt${CO[k]?' cl':''}" data-g="${k}" role="button" tabindex="0" aria-expanded="${!CO[k]}"><span>${t}</span><span class="gc"><i>${l.length}</i><svg class="gv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></div><div class="gb"${CO[k]?' hidden':''}>${l.map(item).join('')}</div>`:'';
     $('#ls').innerHTML=grp('df','Daftar Induk',ind)+grp('pin','Jadwal &amp; Panduan Audit',pin)+grp('rest','Dokumen yang diaudit',rest)||`<div class="empty">${sc.length?'Dokumen tidak ditemukan.':!DOCS.length?'Daftar dokumen tidak dapat dimuat dari server. Jika masuk dengan kode akses, minta admin memeriksa hak akses tabel dokumen untuk sesi kode.':'Belum ada dokumen untuk departemen/bagian ini.'+(S.admin?' Pastikan penulisan departemen/bagian di jadwal sama dengan di dokumen. Departemen pada dokumen: '+esc([...new Set(DOCS.map(d=>d.dept).filter(Boolean))].sort().join(', '))+'.':'')}</div>`;
