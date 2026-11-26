@@ -103,6 +103,30 @@ textarea{resize:vertical;min-height:70px}
 .sm-col span{font-size:10.5px;color:var(--mut)}
 .sm-lst .row{align-items:center}
 .sm-empty{color:var(--mut);font-size:13px;padding:6px 0}
+.sm-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sm-ss{border:0;border-radius:999px;padding:8px 16px;font:inherit;font-weight:800;font-size:13px;cursor:pointer;background:linear-gradient(135deg,#0b1f4d,#0a5bd6);color:#fff;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(10,91,214,.25)}
+.sm-ss.g{background:#e7f8ef;color:#0a7a4b;box-shadow:none}.sm-ss:disabled{opacity:.6}
+.sm-cap{display:none}
+.sm-tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+.sm-tb{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.sm-tb th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);font-weight:800;text-align:center;padding:8px 6px;border-bottom:2px solid var(--line);white-space:nowrap}
+.sm-tb th:first-child,.sm-tb td:first-child{text-align:left;padding-left:8px}
+.sm-tb td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:center;font-weight:600}
+.sm-tb td:first-child{font-weight:700;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.sm-tb tbody tr:nth-child(even){background:#f8fafd}
+.sm-tb tfoot td{font-weight:800;border-top:2px solid var(--nav);border-bottom:0;background:var(--soft)}
+.sm-tb .c-m{color:#c2255c}.sm-tb .c-n{color:#e8890c}.sm-tb .c-o{color:#0a7a4b}.sm-tb .c-c{color:#0a7a4b;font-weight:800}.sm-tb .c-p{color:#c2255c;font-weight:800}
+.sm-pc{display:inline-flex;align-items:center;gap:6px;min-width:96px;justify-content:center}
+.sm-pc .sm-tr{width:48px;height:7px}.sm-pc b{font-size:12px;min-width:34px;text-align:right}
+.sm-yr{display:flex;align-items:flex-end;gap:14px;height:190px;margin-top:6px;overflow-x:auto;padding-bottom:2px}
+.sm-yc{flex:1;min-width:64px;max-width:120px;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+.sm-yc .tot{font-size:13px;font-weight:800}
+.sm-yc .bar{width:100%;max-width:64px;display:flex;flex-direction:column;justify-content:flex-end;flex:1;min-height:0}
+.sm-yc .bar u{display:block;width:100%;min-height:0}
+.sm-yc .bar u:first-child{border-radius:7px 7px 0 0}
+.sm-yc .yl{font-size:13px;font-weight:800}.sm-yc.on .yl{color:var(--pri)}
+.sm-yc small{font-size:11px;color:var(--mut);text-align:center;line-height:1.3}
+
 
 .mdl .lc .btn{width:auto;margin:0}.mdl #mo,.mdl #mx{min-width:90px}
 
@@ -377,20 +401,23 @@ async function sumView(){const lv=$('#lv');lv.innerHTML='<div class="empty">Memu
     // donut kategori
     const dn=(items,tot,label)=>{let off=0;const arc=items.filter(x=>x[1]>0).map(x=>{const p=x[1]/tot*100,e=`<circle cx="21" cy="21" r="15.9155" fill="none" stroke="${x[2]}" stroke-width="5.2" stroke-dasharray="${Math.max(0,p-.6)} ${100-Math.max(0,p-.6)}" stroke-dashoffset="${-off}"/>`;off+=p;return e}).join('');
       return `<div class="sm-dn"><div class="ct"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.9155" fill="none" stroke="#eaf1fd" stroke-width="5.2"/>${arc}</svg><div><b>${tot}</b><small>${label}</small></div></div><div class="sm-lg">${items.map(x=>`<div><i style="background:${x[2]}"></i>${x[0]}<em>${x[1]}</em></div>`).join('')}</div></div>`};
-    // per departemen
-    const dm={};js.forEach(j=>{const k=j.dept||'-';(dm[k]=dm[k]||{a:0,Mayor:0,Minor:0,OFI:0,t:0}).a++});
-    tt.forEach(x=>{const j=jm.get(x.jadwal_id),k=(j&&j.dept)||'-',d=dm[k]=dm[k]||{a:0,Mayor:0,Minor:0,OFI:0,t:0};d.t++;if(d[x.kategori]!=null)d[x.kategori]++});
-    const dl=Object.entries(dm).sort((a,b)=>b[1].t-a[1].t||b[1].a-a[1].a).slice(0,8),dmx=Math.max(1,...dl.map(x=>x[1].t));
+    // per departemen (semua departemen)
+    const dm={};js.forEach(j=>{const k=j.dept||'-';(dm[k]=dm[k]||{a:0,Mayor:0,Minor:0,OFI:0,t:0,c:0}).a++});
+    tt.forEach(x=>{const j=jm.get(x.jadwal_id),k=(j&&j.dept)||'-',d=dm[k]=dm[k]||{a:0,Mayor:0,Minor:0,OFI:0,t:0,c:0};d.t++;if(d[x.kategori]!=null)d[x.kategori]++;if(x.status==='Ditutup')d.c++});
+    const dl=Object.entries(dm).sort((a,b)=>b[1].t-a[1].t||a[0].localeCompare(b[0]));
+    const dtot=dl.reduce((r,x)=>{['a','Mayor','Minor','OFI','t','c'].forEach(k=>r[k]+=x[1][k]);return r},{a:0,Mayor:0,Minor:0,OFI:0,t:0,c:0});
+    const pbar=(c,t)=>{if(!t)return '<span style="color:var(--mut)">-</span>';const v=pc(c,t),col=v>=100?'#0a7a4b':v>=50?'#e8890c':'#c2255c';return `<span class="sm-pc"><span class="sm-tr"><u style="width:${v}%;background:${col}"></u></span><b style="color:${col}">${v}%</b></span>`};
     // klausul
     const km={};tt.forEach(x=>{const m=String(x.klausul||'').trim().match(/^\d+(?:\.\d+)*/),k=m?m[0]:'Lainnya';km[k]=(km[k]||0)+1});
     const kl=Object.entries(km).sort((a,b)=>b[1]-a[1]).slice(0,6),kmx=Math.max(1,...kl.map(x=>x[1]));
-    // tren bulanan
-    const BL=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],mo=[];
-    if(Y==='all'){const d=new Date();for(let i=11;i>=0;i--){const x=new Date(d.getFullYear(),d.getMonth()-i,1);mo.push([x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'),BL[x.getMonth()]])}}
-    else BL.forEach((b,i)=>mo.push([Y+'-'+String(i+1).padStart(2,'0'),b]));
-    const ma={},mt={};js.forEach(j=>{const k=String(j.tanggal).slice(0,7);ma[k]=(ma[k]||0)+1});tt.forEach(x=>{const j=jm.get(x.jadwal_id);if(j){const k=String(j.tanggal).slice(0,7);mt[k]=(mt[k]||0)+1}});
-    const mmx=Math.max(1,...mo.map(m=>Math.max(ma[m[0]]||0,mt[m[0]]||0)));
-    lv.innerHTML=`<div class="sm"><div class="sm-top"><div><h3>Ringkasan Hasil Audit</h3><p>${S.admin?'Seluruh data audit':'Data audit yang dapat Anda akses'}</p></div>
+    // perbandingan antar tahun (audit dilakukan setahun sekali)
+    const ym={};JADS.forEach(j=>{const y=String(j.tanggal).slice(0,4);(ym[y]=ym[y]||{a:0,t:0,c:0}).a++});
+    const jall=new Map(JADS.map(j=>[j.id,j]));
+    T.forEach(x=>{const j=jall.get(x.jadwal_id);if(!j)return;const y=String(j.tanggal).slice(0,4),d=ym[y]=ym[y]||{a:0,t:0,c:0};d.t++;if(x.status==='Ditutup')d.c++});
+    const yl=Object.keys(ym).sort().slice(-8),ymx=Math.max(1,...yl.map(y=>ym[y].t));
+    lv.innerHTML=`<div class="sm" id="smcap"><div class="sm-cap" id="smhd"><div><small>PT KARYA INDAH MULTIGUNA</small><h2>Ringkasan Hasil Audit Internal</h2><p>${Y==='all'?'Semua periode':'Periode '+Y} &middot; per ${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</p></div></div>
+      <div class="sm-top" data-ig><div><h3>Ringkasan Hasil Audit</h3><p>${S.admin?'Seluruh data audit':'Data audit yang dapat Anda akses'}</p></div>
+      <div class="sm-act"><button class="sm-ss" id="smss" type="button">&#128247; Simpan Gambar</button><button class="sm-ss g" id="smsh" type="button" style="display:none">Bagikan ke WA</button></div>
       <div class="sm-chips"><button class="sm-chip${Y==='all'?' on':''}" data-y="all" type="button">Semua</button>${yrs.map(y=>`<button class="sm-chip${Y===y?' on':''}" data-y="${y}" type="button">${y}</button>`).join('')}</div></div>
       <div class="sm-kpi">
         <div class="sm-k sm-k1"><span>Jadwal Audit</span><b>${js.length}</b><small>${done} sudah lewat &middot; ${fin} checklist final</small></div>
@@ -403,14 +430,38 @@ async function sumView(){const lv=$('#lv');lv.innerHTML='<div class="empty">Memu
         <div class="sm-c"><h4>Hasil Pemeriksaan Checklist</h4><p>Dari ${ct} butir yang dinilai</p>${ct?`<div style="display:flex;align-items:baseline;gap:8px"><span class="sm-big" style="color:#0a7a4b">${pc(c0,ct)}%</span><span style="color:var(--mut);font-size:13px">tingkat kesesuaian (C)</span></div><div class="sm-pb"><u style="width:${c0/ct*100}%;background:#0a7a4b"></u><u style="width:${n0/ct*100}%;background:#c2255c"></u><u style="width:${o0/ct*100}%;background:#e8890c"></u></div>
           <div class="sm-lg" style="flex-direction:row;flex-wrap:wrap;gap:6px 18px"><div><i style="background:#0a7a4b"></i>C (Sesuai)<em style="margin-left:6px">${c0}</em></div><div><i style="background:#c2255c"></i>NC<em style="margin-left:6px">${n0}</em></div><div><i style="background:#e8890c"></i>OBS<em style="margin-left:6px">${o0}</em></div></div>`:'<div class="sm-empty">Belum ada butir checklist yang dinilai.</div>'}</div>
         <div class="sm-c"><h4>Clause Paling Sering Temuan</h4><p>Enam teratas</p>${kl.length?kl.map(x=>{const f=clFind(x[0]);return `<div class="sm-r"><span title="${esc(f?f[1]:'')}"><b>${esc(x[0])}</b>${f?' <span style="color:var(--mut)">'+esc(f[1])+'</span>':''}</span><div class="sm-tr"><u style="width:${x[1]/kmx*100}%;background:#0a5bd6"></u></div><b>${x[1]}</b></div>`}).join(''):'<div class="sm-empty">Belum ada temuan.</div>'}</div>
-        <div class="sm-c sm-w"><h4>Temuan per Departemen</h4><p>Delapan teratas, dibagi menurut kategori</p>${dl.length?dl.map(x=>`<div class="sm-r"><span title="${esc(x[0])}">${esc(x[0])}</span><div class="sm-tr">${KAT.map(k=>`<u style="width:${x[1][k]/dmx*100}%;background:${MC[k]}" title="${katL(k)}: ${x[1][k]}"></u>`).join('')}</div><b>${x[1].t}</b></div>`).join('')+`<div class="sm-lg" style="flex-direction:row;gap:6px 16px;margin-top:10px">${KAT.map(k=>`<div><i style="background:${MC[k]}"></i>${katL(k)}</div>`).join('')}</div>`:'<div class="sm-empty">Belum ada data.</div>'}</div>
-        <div class="sm-c sm-w"><h4>Tren Bulanan</h4><p>${Y==='all'?'12 bulan terakhir':'Tahun '+Y} &middot; jumlah audit dan temuan</p><div class="sm-cols">${mo.map(m=>`<div class="sm-col"><div><u style="height:${(ma[m[0]]||0)/mmx*100}%;background:#9db8ea" title="Audit: ${ma[m[0]]||0}"></u><u style="height:${(mt[m[0]]||0)/mmx*100}%;background:#0b1f4d" title="Temuan: ${mt[m[0]]||0}"></u></div><span>${m[1]}</span></div>`).join('')}</div>
-          <div class="sm-lg" style="flex-direction:row;gap:6px 16px;margin-top:10px"><div><i style="background:#9db8ea"></i>Audit</div><div><i style="background:#0b1f4d"></i>Temuan</div></div></div>
+        <div class="sm-c sm-w"><h4>Daftar Departemen</h4><p>Jumlah temuan per kategori beserta status Close dan Open${Y==='all'?'':' &middot; tahun '+Y}</p>${dl.length?`<div class="sm-tw"><table class="sm-tb"><thead><tr><th>Departemen</th><th>Mayor</th><th>Minor</th><th>OBS</th><th>Total</th><th>Close</th><th>Open</th><th>% Close</th></tr></thead><tbody>${dl.map(x=>{const d=x[1],o=d.t-d.c;return `<tr><td title="${esc(x[0])}">${esc(x[0])}</td><td class="c-m">${d.Mayor}</td><td class="c-n">${d.Minor}</td><td class="c-o">${d.OFI}</td><td><b>${d.t}</b></td><td class="c-c">${d.c}</td><td class="${o?'c-p':''}">${o}</td><td>${pbar(d.c,d.t)}</td></tr>`}).join('')}</tbody><tfoot><tr><td>Total (${dl.length} dept)</td><td>${dtot.Mayor}</td><td>${dtot.Minor}</td><td>${dtot.OFI}</td><td>${dtot.t}</td><td>${dtot.c}</td><td>${dtot.t-dtot.c}</td><td>${pbar(dtot.c,dtot.t)}</td></tr></tfoot></table></div>`:'<div class="sm-empty">Belum ada data.</div>'}</div>
+        <div class="sm-c sm-w"><h4>Perbandingan Antar Tahun</h4><p>Total temuan setiap periode audit, dibagi Close dan Open</p>${yl.length?`<div class="sm-yr">${yl.map(y=>{const d=ym[y],o=d.t-d.c;return `<div class="sm-yc${Y===y?' on':''}"><span class="tot">${d.t}</span><div class="bar"><u style="flex:${o};background:#c2255c" title="Open: ${o}"></u><u style="flex:${d.c};background:#0a7a4b" title="Close: ${d.c}"></u></div><span class="yl">${y}</span><small>${d.a} audit<br>${pc(d.c,d.t)}% close</small></div>`}).join('')}</div><div class="sm-lg" style="flex-direction:row;gap:6px 16px;margin-top:10px"><div><i style="background:#0a7a4b"></i>Close</div><div><i style="background:#c2255c"></i>Open</div></div>`:'<div class="sm-empty">Belum ada data.</div>'}</div>
         <div class="sm-c sm-w sm-lst"><h4>Perlu Perhatian</h4><p>Temuan yang melewati target perbaikan dan belum ditutup</p>${over.length?over.sort((a,b)=>String(a.due).localeCompare(String(b.due))).slice(0,6).map(x=>{const j=jm.get(x.jadwal_id);return `<div class="row"><div style="flex:1;min-width:0"><b>${esc(x.nomor||'-')}</b> <span class="tag k-${esc(x.kategori)}">${esc(katL(x.kategori))}</span> <span class="tag o">${esc(stL(x.status))}</span><br><span>${j?where(j):'-'} &middot; target ${tgl(x.due)}</span></div><div class="bt"><button class="btn bs" data-sj="${x.jadwal_id}" type="button">Buka</button></div></div>`}).join('')+(over.length>6?`<div class="sm-empty">+ ${over.length-6} temuan lain</div>`:''):'<div class="sm-empty">Tidak ada temuan yang terlambat.</div>'}</div>
       </div></div>`;
     lv.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{SUMY=b.dataset.y;draw()});
+    smShotWire(lv,Y)
     lv.querySelectorAll('[data-sj]').forEach(b=>b.onclick=()=>{J=JADS.find(j=>j.id===b.dataset.sj);if(J){TAB='tmn';jadwalView()}})};
   draw()}
+
+
+// ---------- simpan ringkasan sebagai gambar (PNG) ----------
+function smShotWire(lv,Y){
+  const btn=lv.querySelector('#smss'),sh=lv.querySelector('#smsh'),el=lv.querySelector('#smcap');if(!btn||!el)return;
+  const fname=()=>'ringkasan-audit-'+(Y==='all'?'semua':Y)+'-'+new Date().toISOString().slice(0,10)+'.png';
+  const render=async()=>{
+    await lib('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',()=>window.html2canvas);
+    if(document.fonts&&document.fonts.ready)try{await document.fonts.ready}catch{}
+    const cv=await html2canvas(el,{scale:2,backgroundColor:'#f3f6fb',useCORS:true,logging:false,windowWidth:960,
+      ignoreElements:n=>n.classList&&(n.classList.contains('sm-act')||n.classList.contains('sm-chips')||n.classList.contains('btn')),
+      onclone:(d)=>{const c=d.getElementById('smcap');c.style.width='920px';c.style.padding='22px';c.style.background='#f3f6fb';
+        const st=d.createElement('style');st.textContent='*{transition:none!important;animation:none!important}.sm-cap{display:block!important;background:linear-gradient(135deg,#0b1f4d,#0a5bd6);color:#fff;border-radius:18px;padding:18px 22px;margin-bottom:12px}.sm-cap small{font-size:11px;font-weight:800;letter-spacing:2px;opacity:.85}.sm-cap h2{margin:4px 0 2px;font-size:24px}.sm-cap p{margin:0;font-size:13px;opacity:.9}.sm-top{display:none!important}.sm-tw{overflow:visible!important}.sm-tb{min-width:0!important}.sm-kpi{grid-template-columns:repeat(4,minmax(0,1fr))!important}.sm-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sm-w{grid-column:1/-1!important}';
+        d.head.append(st)}});
+    const blob=await new Promise(r=>cv.toBlob(r,'image/png'));if(!blob)throw new Error('Gagal membuat gambar');return blob};
+  const run=async(share)=>{const b=share?sh:btn,t=b.innerHTML;b.disabled=true;b.textContent='Membuat gambar...';
+    try{const blob=await render(),f=new File([blob],fname(),{type:'image/png'});
+      if(share&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Ringkasan Hasil Audit Internal'})}catch(e){if(e&&e.name!=='AbortError')throw e}}
+      else{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=fname();document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Gambar tersimpan')}}
+    catch(e){toast('Gagal: '+(e.message||e))}
+    b.disabled=false;b.innerHTML=t};
+  btn.onclick=()=>run(false);
+  try{const tf=new File([''],'a.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[tf]})){sh.style.display='';sh.onclick=()=>run(true)}}catch{}
+}
 
 // ---------- beranda (login email): jadwal saya, temuan saya, semua jadwal, personel ----------
 const jcard=(j,adm)=>{const ra=isMe(j,'auditor_nik'),re=isMe(j,'auditee_nik');
