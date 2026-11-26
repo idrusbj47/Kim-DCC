@@ -330,6 +330,9 @@ const grantName=g=>(GRANTS.find(x=>x[0]===g)||[g,g])[1];
 const gOf=p=>{const g=Array.isArray(p&&p.grants)?p.grants:({auditor:['auditor'],auditee:['auditee'],keduanya:['auditor','auditee']}[p&&p.peran]||[]);return g};
 const roleLbl=u=>{const g=[...((u&&u.grants)||[])];if(u&&u.role==='dcc'&&!g.includes('dcc'))g.unshift('dcc');return [u&&u.role==='admin'?'Admin':'Pengguna',...g.map(grantName)].join(' \u00b7 ')};
 const canDoc=()=>!!U&&['admin','dcc'].includes(U.role);
+// pembuat kode akses auditor eksternal: admin, DCC, Lead Auditor, Auditee (grant dari menu Pengguna & Akses)
+const KODE_GRANTS=['dcc','lead','auditee'];
+const canCode=()=>!!U&&(canDoc()||(U.grants||[]).some(g=>KODE_GRANTS.includes(g)));
 const lt=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
 const genKode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>a[x%a.length]).join('')};
 const sisa=t=>{const ms=t-Date.now();if(ms<=0)return 'berakhir';const d=Math.floor(ms/864e5);if(d>=1)return d+' hari lagi';const h=Math.floor(ms/36e5);return h>=1?h+' jam lagi':Math.max(1,Math.floor(ms/6e4))+' menit lagi'};
@@ -502,8 +505,8 @@ async function start(){await loadData();initHist();shell()}
 const NAV=[['home','Beranda','home'],['docs','Dokumen','doc'],['ia','Audit','check'],['log','Riwayat','clock'],['adm','Kelola','cog']];
 function shell(){
   if(HON&&HV!==V)hpush({v:V});HV=V;
-  const nav=NAV.filter(n=>n[0]!=='adm'||canDoc()).map(n=>`<button data-v="${n[0]}" class="${V===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span>${n[0]==='adm'?'<i class="cv">'+ic('chev')+'</i>':''}</button>`).join('');
-  const T={home:['Dokumen Mutu ISO','Baca dokumen resmi perusahaan dengan aman'],docs:['Daftar Dokumen','Cari dan buka dokumen sesuai hak akses Anda'],log:['Riwayat Akses','Catatan siapa membuka dokumen apa'],adm:['Kelola Dokumen','Unggah, ubah, ganti, atau hapus dokumen'],prof:['Profil Saya','Atur nama, foto, dan kata sandi']}[V];
+  const nav=NAV.filter(n=>n[0]!=='adm'||canCode()).map(n=>`<button data-v="${n[0]}" class="${V===n[0]?'on':''}">${ic(n[2])}<span>${n[1]}</span>${n[0]==='adm'?'<i class="cv">'+ic('chev')+'</i>':''}</button>`).join('');
+  const T={home:['Dokumen Mutu ISO','Baca dokumen resmi perusahaan dengan aman'],docs:['Daftar Dokumen','Cari dan buka dokumen sesuai hak akses Anda'],log:['Riwayat Akses','Catatan siapa membuka dokumen apa'],adm:canDoc()?['Kelola Dokumen','Unggah, ubah, ganti, atau hapus dokumen']:['Kode Akses Auditor','Buat kode untuk auditor eksternal'],prof:['Profil Saya','Atur nama, foto, dan kata sandi']}[V];
   $('#app').innerHTML=`<aside class="side"><div class="brand"><svg class="sw" viewBox="0 0 100 30"><defs><linearGradient id="lg1" x1="0" x2="1"><stop offset="0" stop-color="#2ee6d0"/><stop offset="1" stop-color="#3b8bff"/></linearGradient></defs><path d="M4 27C24 6 62 0 97 13 64 8 30 13 4 27z" fill="url(#lg1)"/></svg><b>KIM</b><small>PT KARYA INDAH MULTIGUNA</small><span><i></i>ISO WORKSPACE<i></i></span></div><nav class="nav"><i class="nind"></i>${nav}</nav><div class="safe"><div class="si">${ic('shield')}</div><div><b>Dokumen Terkendali</b><small>Akses Terbatas<br>Hanya Untuk Petugas</small></div></div></aside>
   <main class="main"><div class="top"><div class="tl"><button class="ib" id="mb" title="Menu">${ic('menu')}</button><i class="vd"></i><div><h1>${T[0]}</h1><p>${T[1]}</p></div></div><div class="tr"><button class="ib" id="th" title="Tema">${ic('moon')}</button><span class="dchip d">${ic('cal')}${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span><i class="vd d"></i><button class="chip" id="me" title="Profil"><span class="av"${U.av?` style="background:url(${U.av}) center/cover"`:''}>${U.av?'':esc(U.nama.slice(0,2).toUpperCase())}</span><span class="nm">${esc(U.nama.split(' ')[0])}</span>${ic('chev')}</button></div></div>${U.tmp?`<div class="wrap"><div class="tmpb"><div><b>Akses sementara</b><span>Berlaku sampai ${fmt(U.exp)} (${sisa(U.exp)}).${U.sudah?'':' Daftarkan email agar akun permanen.'}</span></div>${U.sudah?'':'<button class="btn bs" id="tmpb" type="button">Daftar</button>'}</div></div>`:''}<div class="wrap" id="v"></div></main>`;
   document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='ia'){location.href='internal-audit.html';return}V=b.dataset.v;shell()});
@@ -618,10 +621,10 @@ async function pdfToPages(f,id,prog){
   return pdf.numPages}
 let AO=new Set();
 function vAdm(){
-  $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Unggah Dokumen Baru</h3><span id="pg">Dipecah menjadi gambar per halaman</span></div><div class="f">
+  $('#v').innerHTML=`${canDoc()?`<div class="box"><div class="bh"><h3>Unggah Dokumen Baru</h3><span id="pg">Dipecah menjadi gambar per halaman</span></div><div class="f">
   <div><label>Kode</label><input id="k" value="KIM-" placeholder="KIM-PR-HRD-001"></div><div><label>Revisi</label><input id="r" placeholder="Rev 01"></div>
   <div class="w"><label>Judul</label><input id="j"></div><div><label>Jenis Dokumen</label><select id="jn">${jOpts('LN')}</select></div><div><label>Departemen</label><input id="dp" value="Semua" list="dl-dept"></div><div><label>Bagian (opsional)</label><input id="bg" list="dl-bag" placeholder="Mis. Mounting, Design, Sample"></div><datalist id="dl-dept">${deptOpts()}</datalist><datalist id="dl-bag">${bagOpts()}</datalist><div><label>File PDF</label><input id="fl" type="file" accept="application/pdf"></div><div><label>Tanggal Berlaku</label><input id="tb" type="date" onclick="this.showPicker&&this.showPicker()"></div>
-  <div class="w"><label>File teks untuk pencarian isi (opsional, tidak disimpan)</label><input id="tf" type="file" accept=".pdf,.docx"><small class="hint">Pilih file Word (.docx) atau PDF hasil ekspor Word tanpa tanda tangan. Hanya teksnya yang disimpan, filenya tidak.</small></div><div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>
+  <div class="w"><label>File teks untuk pencarian isi (opsional, tidak disimpan)</label><input id="tf" type="file" accept=".pdf,.docx"><small class="hint">Pilih file Word (.docx) atau PDF hasil ekspor Word tanpa tanda tangan. Hanya teksnya yang disimpan, filenya tidak.</small></div><div class="w"><button class="btn" id="up">Unggah dan Proses</button></div></div></div>`:''}
   ${U.role==='admin'?`<div class="box" style="margin-top:12px"><div class="bh"><h3>Pengguna &amp; Akses</h3><span>NIK, kode akses, role</span></div><div class="pu" id="pu"><div class="empty">Memuat...</div></div></div>`:''}
   ${U.role==='admin'?`<div class="box" style="margin-top:12px"><div class="bh"><h3>Watermark Dokumen</h3><span>Berlaku untuk semua pembaca</span></div>
   <div class="wmx"><label>Kepekatan: <b id="wo"></b> (semakin kecil, semakin transparan)</label><input type="range" id="ro" min="2" max="40" step="1">
@@ -630,10 +633,10 @@ function vAdm(){
   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="ws">Simpan Pengaturan</button><button class="btn g" id="wr">Kembalikan Standar</button></div></div>`:''}
   <div class="box" style="margin-top:12px"><div class="bh"><h3>Kode Akses Auditor</h3><span>5 angka &middot; berlaku 24 jam</span></div>
   <div class="f"><div><label>Kode (5 angka)</label><input id="ck" inputmode="numeric" maxlength="5" placeholder="12345"></div><div><label>Untuk siapa (opsional)</label><input id="cl" placeholder="Nama auditor / lembaga"></div>
-  <div class="w"><label>Akses dokumen</label><select id="cm"><option value="pilihan">Hanya dokumen yang dikirim admin (seperti audit fisik)</option><option value="semua">Semua dokumen</option></select></div>
+  <div class="w"><label>Akses dokumen</label><select id="cm"><option value="pilihan">Hanya dokumen yang dipilih lalu dikirim (seperti audit fisik)</option><option value="semua">Semua dokumen</option></select></div>
   <div class="w" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn g" id="cr">Acak</button><button class="btn" id="cb">Buat Kode</button></div></div>
   <div id="acl" style="margin-top:12px"></div></div>
-  <div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span id="dc">${DOCS.length} dokumen</span></div><div class="sbox" style="height:42px;min-width:0;margin-bottom:12px;padding:0 14px;box-shadow:none;border:1px solid var(--line)">${ic('search')}<input id="aq" placeholder="Cari kode, judul, departemen, bagian..." value="${esc(AQ)}"><button type="button" class="clr" id="aqx" aria-label="Hapus pencarian" hidden>${ic('x')}</button></div><div id="dl"></div></div><input type="file" id="rf" accept="application/pdf" hidden>`;
+  ${canDoc()?`<div class="box" style="margin-top:12px"><div class="bh"><h3>Dokumen Terunggah</h3><span id="dc">${DOCS.length} dokumen</span></div><div class="sbox" style="height:42px;min-width:0;margin-bottom:12px;padding:0 14px;box-shadow:none;border:1px solid var(--line)">${ic('search')}<input id="aq" placeholder="Cari kode, judul, departemen, bagian..." value="${esc(AQ)}"><button type="button" class="clr" id="aqx" aria-label="Hapus pencarian" hidden>${ic('x')}</button></div><div id="dl"></div></div><input type="file" id="rf" accept="application/pdf" hidden>`:''}`;
   const left=t=>{const m=Math.max(0,Math.round((new Date(t)-Date.now())/60000));return Math.floor(m/60)+' jam '+m%60+' menit lagi'};
   async function loadCodes(){const box=$('#acl');if(!box)return;
     if(!demo){const r=await sb.from('iso_audit_codes').select('*').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});
@@ -684,6 +687,7 @@ function vAdm(){
     try{if(!demo){const r=await sb.from('iso_settings').upsert({key:'watermark',value:v,updated_at:new Date().toISOString()});
       if(r.error)throw new Error(/relation|does not exist|schema cache/i.test(r.error.message)?'Tabel iso_settings belum dibuat. Jalankan iso_settings.sql di Supabase.':r.error.message)}
       WM=v;localStorage.setItem('iso_wm',JSON.stringify(v));succ('Pengaturan watermark disimpan')}catch(x){toast('Gagal: '+(x.message||x))}}}
+  if(canDoc()){
   if(!demo)sb.from('iso_doc_text').select('doc_id').in('page',[0,1]).then(r=>{const k=new Set((r.data||[]).map(x=>String(x.doc_id)));document.querySelectorAll('[data-a=t]').forEach(b=>{if(k.has(b.dataset.id)){b.textContent='Indeks Ulang';b.classList.add('idx')}})});
   let jTouched=false;$('#jn').onchange=()=>jTouched=true;
   $('#k').oninput=()=>{if(!jTouched)$('#jn').value=jOf({kode:$('#k').value})};
@@ -723,6 +727,7 @@ function vAdm(){
           if(n<d.pages)await sb.storage.from(BUCKET).remove(Array.from({length:d.pages-n},(_,i)=>pth(d.id,n+i+1)));
           const u=await sb.from('iso_documents').update({pages:n,...(rv.trim()?{revisi:rv.trim()}:{})}).eq('id',d.id);if(u.error)throw u.error;
           await sb.from('iso_doc_text').delete().eq('doc_id',d.id);await done('File dokumen diganti. Indeks teks perlu dibuat ulang')}catch(e){toast('Gagal: '+(e.message||e))}};rf.click()}
+  }
   }
 }
 // ---------- profil akses sementara + daftar email permanen ----------
