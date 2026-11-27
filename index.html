@@ -553,8 +553,7 @@ async function boot(){
   U={id:session.user.id,email:session.user.email,nama:p.data.nama||session.user.email,dept:p.data.dept||'-',role:p.data.role||'user',nik:p.data.nik||null,foto_at:p.data.foto_at};await loadAv();
   try{U.grants=[];if(U.nik){const g=await sb.from('ia_personel').select('grants').eq('nik',U.nik).maybeSingle();U.grants=(g.data&&g.data.grants)||[]}}catch(e){U.grants=[]}
   U.bagian=String(p.data.bagian||'').trim();
-  try{if(U.nik){const g=await sb.from('ia_personel').select('dept,bagian').eq('nik',U.nik).maybeSingle();if(g.data){if(g.data.dept&&(!U.dept||U.dept==='-'))U.dept=g.data.dept;if(g.data.bagian)U.bagian=String(g.data.bagian).trim()}}}catch(e){}
-  {const md=session.user.user_metadata||{};if(md.dept){U.dept=md.dept;U.bagian=String(md.bagian||'').trim()}}
+  {let pers=null;try{if(U.nik){const g=await sb.from('ia_personel').select('dept,bagian').eq('nik',U.nik).maybeSingle();pers=g.data||null}}catch(e){}applyDept(session.user.user_metadata,pers)}
   try{await start();if(baru)setTimeout(passModal,500)}catch(e){loginView('Gagal memuat data: '+(e.message||e),'email')}
 }
 // ---------- akses sementara (NIK + kode) ----------
@@ -562,8 +561,7 @@ async function enterKode(d){
   const {data:{session}}=await sb.auth.getSession();
   U={id:session.user.id,nik:d.nik,nama:d.nama||('NIK '+d.nik),dept:'-',role:'user',tmp:true,exp:new Date(d.exp).getTime()};
   try{const st=await sb.rpc('iso_status_daftar');if(st.data&&st.data.sudah)U.sudah=true}catch(e){}
-  U.bagian='';try{const q=await sb.from('ia_personel').select('dept,bagian').eq('nik',d.nik).maybeSingle();if(q.data){if(q.data.dept)U.dept=q.data.dept;if(q.data.bagian)U.bagian=String(q.data.bagian).trim()}}catch(e){}
-  {const md=session.user.user_metadata||{};if(md.dept){U.dept=md.dept;U.bagian=String(md.bagian||'').trim()}}
+  U.bagian='';{let pers=null;try{const q=await sb.from('ia_personel').select('dept,bagian').eq('nik',d.nik).maybeSingle();pers=q.data||null}catch(e){}applyDept(session.user.user_metadata,pers)}
   clearInterval(TMR);TN=0;TMR=setInterval(tickExp,30000);
   try{await start()}catch(e){await endTmp('Gagal memuat data: '+(e.message||e))}
 }
@@ -662,10 +660,19 @@ const same=(a,b)=>{a=nz(a);b=nz(b);return !!a&&!!b&&(a===b||(Math.min(a.length,b
 const hasDept=()=>!!U&&!!U.dept&&U.dept!=='-';
 function myDocs(){if(!hasDept())return[];
   return DOCS.filter(d=>same(d.dept,U.dept)&&(!U.bagian||!bgOf(d)||same(bgOf(d),U.bagian)))}
-async function saveDept(d,b){d=String(d||'').trim();b=String(b||'').trim();if(!d)throw new Error('Isi departemen Anda.');
+function applyDept(md,pers){
+  if(pers&&String(pers.dept||'').trim()){U.dept=String(pers.dept).trim();U.bagian=String(pers.bagian||'').trim();U.deptAdm=true}
+  else if(md&&md.dept){U.dept=md.dept;U.bagian=String(md.bagian||'').trim();U.deptAdm=false}}
+async function refreshDept(){
+  if(demo||!U||!U.nik)return;
+  try{const g=await sb.from('ia_personel').select('dept,bagian').eq('nik',U.nik).maybeSingle();if(!g.data||!U)return;
+    const od=U.dept,ob=U.bagian,ow=U.deptAdm;applyDept(null,g.data);
+    if((U.dept!==od||U.bagian!==ob||U.deptAdm!==ow)&&V==='home'&&$('#v'))vHome()}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&V==='home')refreshDept()});
+async function saveDept(d,b){if(U&&U.deptAdm)throw new Error('Departemen diatur oleh admin. Hubungi admin untuk mengubahnya.');d=String(d||'').trim();b=String(b||'').trim();if(!d)throw new Error('Isi departemen Anda.');
   if(!demo){const r=await sb.auth.updateUser({data:{dept:d,bagian:b}});if(r.error)throw new Error(r.error.message)}
   U.dept=d;U.bagian=b}
-const deptBox=()=>`<div class="box" style="margin-top:12px"><div class="bh"><h3>Departemen &amp; Bagian</h3><span>Dasar &ldquo;Dokumen Saya&rdquo;</span></div><div class="f"><div><label>Departemen</label><input id="sdp" list="dl-dept" value="${esc(hasDept()?U.dept:'')}" placeholder="Mis. Gudang Barang Jadi"></div><div><label>Bagian (opsional)</label><input id="sbg" list="dl-bag" value="${esc(U.bagian||'')}" placeholder="Mis. Penerimaan"></div><datalist id="dl-dept">${deptOpts()}</datalist><datalist id="dl-bag">${bagOpts()}</datalist><div class="w"><button class="btn" id="sds" type="button">Simpan</button></div></div></div>`;
+const deptBox=()=>`<div class="box" style="margin-top:12px"><div class="bh"><h3>Departemen &amp; Bagian</h3><span>Dasar &ldquo;Dokumen Saya&rdquo;</span></div><div class="f"><div><label>Departemen</label><input id="sdp" list="dl-dept" value="${esc(hasDept()?U.dept:'')}" placeholder="Mis. Gudang Barang Jadi"${U.deptAdm?' readonly':''}></div><div><label>Bagian (opsional)</label><input id="sbg" list="dl-bag" value="${esc(U.bagian||'')}" placeholder="Mis. Penerimaan"${U.deptAdm?' readonly':''}></div><datalist id="dl-dept">${deptOpts()}</datalist><datalist id="dl-bag">${bagOpts()}</datalist>${U.deptAdm?'<div class="w"><p class="hint" style="margin:0">Diatur oleh admin. Jika admin mengubahnya di menu Kelola, di sini ikut berubah.</p></div>':'<div class="w"><button class="btn" id="sds" type="button">Simpan</button></div>'}</div></div>`;
 const bindDeptBox=()=>{const b=$('#sds');if(!b)return;b.onclick=async()=>{b.disabled=true;try{await saveDept($('#sdp').value,$('#sbg').value);succ('Departemen disimpan');shell()}catch(x){toast(x.message||String(x));b.disabled=false}}};
 function vHome(){
   const my=myDocs();
@@ -673,12 +680,13 @@ function vHome(){
   $('#v').innerHTML=`<div class="hero"><div class="hc"><small>DOKUMEN ISO &ndash; PT KARYA INDAH MULTIGUNA</small><h2>Satu tempat baca.<br><em>Akses terkendali.</em></h2><p>Dokumen hanya bisa dibaca di aplikasi, ditandai nama Anda, dan setiap pembukaan tercatat.</p><button class="btn" id="bd">Buka Daftar Dokumen ${ic('chevR')}</button></div><div class="art">${ART1}</div><ul><li>Hanya baca</li><li>Berwatermark</li><li>Tercatat</li><li>Sesuai hak akses</li></ul></div>
   <div class="stats"><div class="st s1"><i class="ci">${ic('doc')}</i><div><small>Total Dokumen</small><b>${DOCS.length}</b></div></div><div class="st s2"><i class="ci">${ic('check')}</i><div><small>Dibuka Hari Ini</small><b>${today}</b></div></div><div class="st s3"><i class="ci">${ic('chart')}</i><div><small>Departemen Anda</small><b class="dp">${esc(U.dept)}</b></div></div></div>
   ${DOCS.length?`<div class="box" style="margin-bottom:12px"><div class="bh"><h3>Departemen</h3><span>Tekan untuk melihat dokumennya</span></div><div class="dg">${deptList().map(([k,n])=>`<button class="dc" data-d="${esc(k)}"><b>${esc(k)}</b><span>${n} dokumen</span></button>`).join('')}</div></div>`:''}
-  <div class="box" style="margin-bottom:12px"><div class="bh"><h3>Dokumen Saya</h3>${my.length?`<button class="btn g" id="mine">Lihat Semua (${my.length}) ${ic('chevR')}</button>`:`<button class="btn g" id="setd">${hasDept()?'Ubah Departemen':'Atur Departemen'}</button>`}</div>${hasDept()?`<p class="hint" style="margin:0 0 10px">${esc(U.dept)}${U.bagian?' &rsaquo; '+esc(U.bagian):''}</p>`:''}${my.length?my.slice(0,5).map(item).join(''):`<div class="empty">${hasDept()?'Belum ada dokumen untuk departemen/bagian Anda. Semua dokumen tetap ada di tab Dokumen.':'Departemen Anda belum diatur. Atur departemen dan bagian agar dokumen Anda muncul di sini.'}</div>`}</div>
+  <div class="box" style="margin-bottom:12px"><div class="bh"><h3>Dokumen Saya</h3>${my.length?`<button class="btn g" id="mine">Lihat Semua (${my.length}) ${ic('chevR')}</button>`:''}</div>${hasDept()?`<p class="hint" style="margin:0 0 10px">${esc(U.dept)}${U.bagian?' &rsaquo; '+esc(U.bagian):''}</p>`:''}${my.length?my.slice(0,5).map(item).join(''):`<div class="empty">${hasDept()?'Belum ada dokumen untuk departemen/bagian Anda. Semua dokumen tetap ada di tab Dokumen.':'Departemen Anda belum diatur. Hubungi admin agar departemen dan bagian Anda diisi, lalu dokumen Anda muncul di sini.'}</div>`}</div>
   <div class="box"><div class="bh"><h3>Dokumen Terbaru</h3><button class="btn g" id="all">Lihat Semua ${ic('chevR')}</button></div>${DOCS.slice(0,4).map(item).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div>`;
   $('#bd').onclick=$('#all').onclick=()=>{V='docs';shell()};bindItems();
   document.querySelectorAll('.dc').forEach(b=>b.onclick=()=>{DF=b.dataset.d;BF='';Q='';JF='';V='docs';shell()});
   {const mb=$('#mine');if(mb)mb.onclick=()=>{const d0=DOCS.find(d=>same(d.dept,U.dept));DF=d0?d0.dept:'';const b0=DF&&U.bagian&&DOCS.find(d=>d.dept===DF&&same(bgOf(d),U.bagian));BF=b0?bgOf(b0):'';Q='';JF='';V='docs';shell()}}
   {const sb2=$('#setd');if(sb2)sb2.onclick=()=>{V='prof';shell()}}
+  refreshDept();
 }
 function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))],chips=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]==='DF'?'Daftar Induk':j[0]==='OR'?'Organisasi':j[0]])];
@@ -886,11 +894,9 @@ async function vProfTmp(){
   $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Akses Sementara</h3><span>${esc(U.dept)}</span></div>
   <div class="row" style="margin-bottom:0"><div style="flex:1;min-width:0"><b>${esc(U.nama)}</b><br><span>NIK ${esc(U.nik)} &middot; berlaku sampai ${fmt(U.exp)} (${sisa(U.exp)})</span></div></div>
   <p class="hint" style="margin-top:10px">Kode akses berlaku terbatas. Setelah habis, minta kode baru ke admin. Dengan akun email permanen, Anda bisa masuk kapan saja tanpa kode.</p></div>
-  ${deptBox()}
   <div class="box" style="margin-top:12px"><div class="bh"><h3>Jadikan Akun Permanen</h3><span>Daftar dengan email</span></div><div class="dftf" id="dft"><div class="empty">Memuat...</div></div></div>
   <div style="margin-top:14px"><button class="btn r" id="lo">Keluar</button></div>`;
   $('#lo').onclick=()=>{if(confirm('Keluar dari aplikasi?'))endTmp('')};
-  bindDeptBox();
   const box=$('#dft');
   if(demo){box.innerHTML='<div class="empty">Mode demo: tidak berlaku.</div>';return}
   let st=null;try{const r=await sb.rpc('iso_status_daftar');st=r.error?{err:r.error.message}:r.data}catch(e){st={err:e.message}}
@@ -919,13 +925,13 @@ async function daftarKirim(em,key){
 function daftarForm(box,pre){
   const key='daftar-'+(U.nik||U.id),L='Kirim Tautan Konfirmasi';
   box.innerHTML=`<ol><li>Masukkan email aktif Anda.</li><li>Buka tautan konfirmasi yang kami kirim ke email itu.</li><li>Buat kata sandi, lalu berikutnya masuk dengan email dan kata sandi.</li></ol>
-  <label>Email</label><input id="dem" type="email" autocomplete="email" placeholder="nama@email.com" value="${esc(pre||'')}"><label>Departemen</label><input id="ddp" list="dl-dept" value="${esc(hasDept()?U.dept:'')}" placeholder="Mis. Gudang Barang Jadi"><label>Bagian (opsional)</label><input id="dbg" list="dl-bag" value="${esc(U.bagian||'')}" placeholder="Mis. Penerimaan"><datalist id="dl-dept">${deptOpts()}</datalist><datalist id="dl-bag">${bagOpts()}</datalist><button class="btn" id="dgo" type="button">${L}</button><div class="err" id="dms"></div>`;
+  <label>Email</label><input id="dem" type="email" autocomplete="email" placeholder="nama@email.com" value="${esc(pre||'')}"><label>Departemen</label><input id="ddp" list="dl-dept" value="${esc(hasDept()?U.dept:'')}" placeholder="Pilih / ketik departemen Anda"${U.deptAdm?' readonly':''}><label>Bagian (opsional)</label><input id="dbg" list="dl-bag" value="${esc(U.bagian||'')}" placeholder="Pilih / ketik bagian (boleh kosong)"${U.deptAdm?' readonly':''}><datalist id="dl-dept">${deptOpts()}</datalist><datalist id="dl-bag">${bagOpts()}</datalist>${U.deptAdm?'<p class="hint" style="margin:0 0 8px">Departemen Anda sudah diatur admin.</p>':''}<button class="btn" id="dgo" type="button">${L}</button><div class="err" id="dms"></div>`;
   const go=async()=>{const m=$('#dms'),b=$('#dgo'),em=$('#dem').value.trim().toLowerCase();m.className='err';m.textContent='';
     if(cdGet(key)>Date.now())return;
     if(!/^\S+@\S+\.\S+$/.test(em)){m.textContent='Masukkan alamat email yang valid.';return}
-    if(!$('#ddp').value.trim()){m.textContent='Isi departemen Anda.';return}
+    if(!U.deptAdm&&!$('#ddp').value.trim()){m.textContent='Pilih atau isi departemen Anda.';return}
     b.disabled=true;
-    try{await saveDept($('#ddp').value,$('#dbg').value);await daftarKirim(em,key);succ('Tautan konfirmasi terkirim');daftarSent(box,em)}
+    try{if(!U.deptAdm)await saveDept($('#ddp').value,$('#dbg').value);await daftarKirim(em,key);succ('Tautan konfirmasi terkirim');daftarSent(box,em)}
     catch(x){m.textContent='Gagal: '+(x.message||x);cdBind(b,key,L)}};
   cdBind($('#dgo'),key,L);$('#dgo').onclick=go;$('#dem').addEventListener('keydown',e=>{if(e.key==='Enter')go()})}
 function daftarSent(box,em){
@@ -1026,12 +1032,10 @@ function vProf(){
   <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div class="pa"${U.av?` style="background-image:url(${U.av})"`:''}>${U.av?'':esc(U.nama.slice(0,2).toUpperCase())}</div>
   <div><button class="btn g bs" id="pf">Ganti Foto</button> <button class="btn g bs" id="pd">Hapus Foto</button><p style="margin:6px 0 0;font-size:12px;color:var(--mut)">Foto dikecilkan otomatis menjadi di bawah 50 KB agar hemat penyimpanan.</p></div></div><input type="file" id="pi" accept="image/*" hidden>
   <div class="f"><div class="w"><label>Nama</label><input id="nm" value="${esc(U.nama)}"></div><div class="w"><button class="btn" id="sn">Simpan Nama</button></div></div></div>
-  ${deptBox()}
   <div class="box" style="margin-top:12px"><div class="bh"><h3>Ganti Kata Sandi</h3></div><div class="f"><div><label>Kata sandi baru</label><input id="p1" type="password" autocomplete="new-password"></div><div><label>Ulangi kata sandi baru</label><input id="p2" type="password" autocomplete="new-password"></div>
   <div class="w"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="sp" style="width:auto;margin:0"> Tampilkan kata sandi</label></div><div class="w"><button class="btn" id="sg">Ganti Kata Sandi</button></div></div>
   <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--mut)">Lupa kata sandi? Kami kirim tautan reset ke ${demo?'email Anda':'<b>'+esc(U.email||'')+'</b>'}.<div style="margin-top:8px"><button class="btn g bs" id="fr">Kirim Tautan Reset</button></div></div></div>
   <div style="margin-top:14px"><button class="btn r" id="lo">Keluar</button></div>`;
-  bindDeptBox();
   $('#sp').onchange=e=>{$('#p1').type=$('#p2').type=e.target.checked?'text':'password'};
   $('#lo').onclick=async()=>{if(confirm('Keluar dari aplikasi?')){clearInterval(TMR);if(!demo)await sb.auth.signOut();if(U.av)URL.revokeObjectURL(U.av);U=null;V='home';HON=false;gateView()}};
   $('#sn').onclick=async()=>{const n=$('#nm').value.trim();if(!n){toast('Nama tidak boleh kosong');return}
