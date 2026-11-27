@@ -331,6 +331,12 @@ button{-webkit-tap-highlight-color:transparent}
 // ====== ISI DENGAN PROYEK SUPABASE ANDA (kosong = mode demo) ======
 const SB_URL='https://jvrcmvazuhbxlktnzwer.supabase.co', SB_KEY='sb_publishable_De5UwPKibjXjQ2dFSbaAgw_jPMluQxS', BUCKET='iso-pages';
 // ==================================================================
+const URLH=location.hash+location.search;
+const LINKERR=(()=>{if(!/error_code=|error_description=|[#&?]error=/.test(URLH))return '';
+  const q=new URLSearchParams(URLH.replace(/^#/,'').replace(/^\?/,'')),c=q.get('error_code')||'',d=q.get('error_description')||'';
+  return /otp_expired|expired|invalid/i.test(c+' '+d)?'Tautan konfirmasi sudah terpakai atau kedaluwarsa. Ini bisa terjadi kalau email dibuka otomatis oleh pemindai keamanan atau tautan diklik dua kali. Jika email sudah dikonfirmasi, pilih "Lupa kata sandi?" di bawah untuk membuat kata sandi.':('Tautan gagal: '+(d||c||'tidak dikenal'))})();
+const VIALINK=/access_token=/.test(URLH)&&!/type=recovery/.test(URLH);
+const clearUrl=()=>{try{history.replaceState(null,'',location.pathname+location.search.replace(/[?&](error|error_code|error_description)=[^&]*/g,''))}catch(e){}};
 const demo=!SB_URL, sb=demo?null:(window.supabase?supabase.createClient(SB_URL,SB_KEY):null);
 if(!demo&&!sb)document.addEventListener('DOMContentLoaded',()=>alert('Pustaka Supabase gagal dimuat. Periksa koneksi internet.'));
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -399,7 +405,7 @@ async function verifyPass(pw){
 function askPass(title,msg,okLabel,danger){
   return new Promise(res=>{
     const m=document.createElement('div');m.className='mdl';m.style.zIndex=60;
-    m.innerHTML=`<div class="lc"><h2>${esc(title)}</h2><p>${esc(msg)}</p><div class="pwr"><input id="apw" type="password" placeholder="Kata sandi Anda" autocomplete="current-password"><button type="button" class="eye" id="aey" aria-label="Lihat kata sandi">${EYE_ON}</button></div><div class="err" id="aer"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn g" id="axx" type="button">Batal</button><button class="btn${danger?' r':''}" id="axo" type="button">${esc(okLabel||'Lanjut')}</button></div></div>`;
+    m.innerHTML=`<div class="lc"><h2>${esc(title)}</h2><p>${esc(msg)}</p><div class="pwr"><input id="apw" type="password" name="konfirmasi-sandi" placeholder="Kata sandi Anda" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')"><button type="button" class="eye" id="aey" aria-label="Lihat kata sandi">${EYE_ON}</button></div><div class="err" id="aer"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn g" id="axx" type="button">Batal</button><button class="btn${danger?' r':''}" id="axo" type="button">${esc(okLabel||'Lanjut')}</button></div></div>`;
     document.body.append(m);const inp=m.querySelector('#apw'),er=m.querySelector('#aer'),ok=m.querySelector('#axo');let fail=0;
     const done=v=>{m.remove();res(v)};
     m.querySelector('#axx').onclick=()=>done(false);
@@ -480,7 +486,7 @@ function loginView(msg,tab){
     const go=async()=>{const b=$('#go');er('');b.disabled=true;b.textContent="Memproses...";
       try{const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
         if(error){const m=error.message||'';
-          er(/invalid login/i.test(m)?'Email atau kata sandi salah, atau email belum dikonfirmasi.':/not confirmed/i.test(m)?'Email belum dikonfirmasi. Buka tautan konfirmasi yang kami kirim ke email Anda.':'Gagal masuk: '+m);rb(b);return}
+          er(/invalid login/i.test(m)?'Email atau kata sandi salah, atau email belum dikonfirmasi. Jika belum sempat membuat kata sandi, pilih "Lupa kata sandi?" di bawah.':/not confirmed/i.test(m)?'Email belum dikonfirmasi. Buka tautan konfirmasi yang kami kirim ke email Anda.':'Gagal masuk: '+m);rb(b);return}
         await boot()}catch(e){er('Gagal: '+(e.message||e));rb(b)}};
     $('#fg').onclick=()=>forgotView($('#em').value.trim());
     $('#go').onclick=go;$('#ey').onclick=()=>{const q=$('#pw'),h=q.type==='password';q.type=h?'text':'password';$('#ey').innerHTML=h?eyeOff:eyeOn};
@@ -515,17 +521,20 @@ function forgotView(pre){
 const REASON={belum_daftar:'Akun ini belum terdaftar sebagai karyawan KIM. Masuk dulu dengan NIK dan kode akses, lalu daftarkan email dari menu Profil.',email_belum_konfirmasi:'Email belum dikonfirmasi. Buka tautan konfirmasi yang kami kirim ke email Anda.',nik_sudah_ada:'NIK pada pendaftaran ini sudah memiliki akun lain. Hubungi admin.',nik_tidak_aktif:'NIK Anda tidak aktif. Hubungi admin.'};
 async function boot(){
   if(demo){gateView();return}
-  const {data:{session}}=await sb.auth.getSession();if(!session){gateView();return}
+  const {data:{session}}=await sb.auth.getSession();
+  const le=LINKERR;if(le||VIALINK)clearUrl();
+  if(!session){le?loginView(le,'email'):gateView();return}
   if(session.user.is_anonymous){
     let r=null;try{r=await sb.rpc('ia_status_nik')}catch(e){}
-    if(r&&r.data&&r.data.ok){await enterKode(r.data);return}
-    gateView();return}
+    if(r&&r.data&&r.data.ok){await enterKode(r.data);if(le)setTimeout(()=>toast('Tautan konfirmasi sudah terpakai atau kedaluwarsa'),800);return}
+    le?loginView(le,'email'):gateView();return}
   let p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle(),baru=false;
   if(!p.data){
     // akun email yang baru dikonfirmasi: aktifkan sesuai pendaftaran dari sesi kode
     let a=null;try{a=await sb.rpc('iso_aktifkan_akun')}catch(e){}
     if(a&&a.data&&a.data.ok){baru=!!a.data.baru;p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle()}
     if(!p.data){const why=a&&a.data&&a.data.reason;await sb.auth.signOut();loginView(REASON[why]||'Akun ini belum terdaftar sebagai karyawan KIM. Hubungi admin.','email');return}}
+  if(VIALINK)baru=true;
   U={id:session.user.id,email:session.user.email,nama:p.data.nama||session.user.email,dept:p.data.dept||'-',role:p.data.role||'user',nik:p.data.nik||null,foto_at:p.data.foto_at};await loadAv();
   try{U.grants=[];if(U.nik){const g=await sb.from('ia_personel').select('grants').eq('nik',U.nik).maybeSingle();U.grants=(g.data&&g.data.grants)||[]}}catch(e){U.grants=[]}
   try{await start();if(baru)setTimeout(passModal,500)}catch(e){loginView('Gagal memuat data: '+(e.message||e),'email')}
@@ -548,9 +557,9 @@ async function tickExp(){
   if(Date.now()>=U.exp){toast('Kode akses sudah berakhir');return endTmp('Kode akses sudah berakhir. Minta kode baru ke admin.')}
   if(++TN%5===0){try{const r=await sb.rpc('ia_status_nik');if(U&&U.tmp&&r.data&&r.data.ok===false)endTmp('Kode akses dicabut atau sudah berakhir. Minta kode baru ke admin.')}catch(e){}}}
 function passModal(){
-  modal(`<h2>Buat Kata Sandi</h2><p>Email Anda sudah terkonfirmasi dan akun menjadi permanen. Buat kata sandi untuk masuk dengan email berikutnya.</p><label>Kata sandi baru (minimal 8 karakter)</label><input id="np1" type="password" autocomplete="new-password"><label>Ulangi kata sandi</label><input id="np2" type="password" autocomplete="new-password">`,
+  const m=modal(`<h2>Buat Kata Sandi</h2><p>Email Anda sudah terkonfirmasi dan akun menjadi permanen. Buat kata sandi untuk masuk dengan email berikutnya.</p><label>Kata sandi baru (minimal 8 karakter)</label><input id="np1" type="password" autocomplete="new-password"><label>Ulangi kata sandi</label><input id="np2" type="password" autocomplete="new-password">`,
   async()=>{const a=$('#np1').value;if(a.length<8)throw new Error('Kata sandi minimal 8 karakter');if(a!==$('#np2').value)throw new Error('Ulangi kata sandi dengan sama persis');
-    const {error}=await sb.auth.updateUser({password:a});if(error)throw new Error(error.message);succ('Akun permanen aktif')})}
+    const {error}=await sb.auth.updateUser({password:a});if(error)throw new Error(error.message);succ('Akun permanen aktif')});{const x=m.querySelector('#mx');if(x)x.remove()}}
 // ---------- tombol kembali HP: mundur 1 tahap, di beranda tanya keluar ----------
 let HON=false,HV=null;
 const hpush=st=>{try{history.pushState(st,'')}catch(_){}};
@@ -816,7 +825,17 @@ async function vProfTmp(){
   let st=null;try{const r=await sb.rpc('iso_status_daftar');st=r.error?{err:r.error.message}:r.data}catch(e){st={err:e.message}}
   if(!$('#dft'))return;
   if(!st||st.err||st.ok===false){box.innerHTML='<div class="empty">Pendaftaran email belum aktif di server atau kode Anda sudah tidak berlaku. Hubungi admin.</div>';return}
-  if(st.sudah){box.innerHTML=`<p class="hint" style="margin:0">NIK ${esc(st.nik)} sudah punya akun email (<b>${esc(st.email||'')}</b>). Keluar, lalu masuk lewat tab <b>Email</b>. Jika email itu salah, minta admin mencabut akun lama.</p>`;return}
+  if(st.sudah){box.innerHTML=`<p class="hint" style="margin:0 0 10px">NIK ${esc(st.nik)} sudah punya akun email (<b>${esc(st.email||'')}</b>). Keluar, lalu masuk lewat tab <b>Email</b>. Jika email itu salah, minta admin mencabut akun lama.</p>
+    <p class="hint" style="margin:0 0 8px"><b>Belum membuat kata sandi, atau lupa?</b> Masukkan email akun itu, lalu kami kirim tautan untuk membuat kata sandi.</p>
+    <input id="rse" type="email" name="email-reset" autocomplete="off" placeholder="nama@email.com"><button class="btn bs" id="rsb" type="button" style="margin-top:2px">Kirim Tautan Atur Kata Sandi</button><div class="err" id="rsm"></div>`;
+    const RL='Kirim Tautan Atur Kata Sandi',rk=()=>'reset-'+$('#rse').value.trim().toLowerCase();
+    const sd=async()=>{const m=$('#rsm'),b=$('#rsb'),e=$('#rse').value.trim();m.className='err';m.textContent='';
+      if(!/^\S+@\S+\.\S+$/.test(e)){m.textContent='Masukkan alamat email yang valid.';return}
+      if(cdGet(rk())>Date.now())return;b.disabled=true;
+      try{if(await sendReset(e)){succ('Tautan terkirim');cdSet(rk(),60)}m.className='err ok';m.textContent='Jika email itu terdaftar, tautan sudah dikirim. Buka tautannya, buat kata sandi, lalu masuk lewat tab Email.'}
+      catch(x){m.textContent='Gagal: '+(x.message||x);if(/Tunggu sekitar/.test(x.message||''))cdSet(rk(),60)}
+      cdBind(b,rk(),RL)};
+    $('#rsb').onclick=sd;$('#rse').addEventListener('input',()=>cdBind($('#rsb'),rk(),RL));$('#rse').addEventListener('keydown',e=>{if(e.key==='Enter')sd()});return}
   daftarForm(box,'');
 }
 
@@ -863,7 +882,7 @@ function drawPU(){
   const akOf=n=>AK.find(x=>x.nik===n),acOf=n=>AKUN.find(x=>x.nik===n);
   let body='';
   if(PU.tab==='kar'){
-    const f=PERS.filter(p=>has(p,['nik','nama','dept','bagian']));
+    const f=PERS.filter(p=>has(p,['nik','nama','dept','bagian'])||(q&&String((acOf(p.nik)||{}).email||'').toLowerCase().includes(q)));
     body=f.map(p=>{const a=akOf(p.nik),ac=acOf(p.nik),dead=a&&new Date(a.exp)<new Date(),adm=!!(ac&&ac.role==='admin'),gs=[...gOf(p)];if(ac&&ac.role==='dcc'&&!gs.includes('dcc'))gs.unshift('dcc');
       const kd=a?`<br><span>Kode: <b class="cdl" style="font-size:16px;letter-spacing:3px">${esc(a.kode)}</b> ${dead?'<b style="color:#c2255c">(kedaluwarsa)</b>':'sampai '+fmt(a.exp)+' ('+sisa(new Date(a.exp).getTime())+')'}</span>`:'<br><span>Belum ada kode akses</span>';
       return `<div class="row"><div style="flex:1;min-width:0"><b>${esc(p.nama)}</b> <span class="tag" style="background:#94a3b8">Pengguna</span>${adm?' <span class="tag" style="background:#c2255c">Admin</span>':''}${gs.map(g=>` <span class="tag o">${esc(grantName(g))}</span>`).join('')}${p.aktif===false?' <span class="tag" style="background:#c2255c">Nonaktif</span>':''}<br><span>NIK ${esc(p.nik)}${p.dept?' &middot; '+esc(p.dept):''}</span><br><span>${ac?'Akun: '+esc(ac.email||'-')+' &middot; terakhir masuk '+(ac.last_login?fmt(ac.last_login):'-'):'Belum daftar akun email'}</span>${kd}</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn bs" data-pg="${esc(p.nik)}" type="button">Hak Akses</button><button class="btn g bs" data-pk="${esc(p.nik)}" type="button">Kode</button><button class="btn g bs" data-pe="${esc(p.nik)}" type="button">Ubah</button><button class="btn r bs" data-pd="${esc(p.nik)}" type="button">Hapus</button>${a&&!dead?`<button class="btn wa bs" data-ps="${esc(p.nik)}" type="button" title="Salin &amp; bagikan ke WhatsApp" aria-label="Salin dan bagikan ke WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></button>`:''}${ac&&ac.id!==U.id?`<button class="btn r bs" data-px="${ac.id}" type="button">Cabut akun</button>`:''}</div></div>`}).join('')
@@ -872,14 +891,14 @@ function drawPU(){
   }
   box.innerHTML=(PUERR.length?`<div class="empty" style="padding:6px 0 12px;text-align:left;color:#c2255c">${PUERR.map(esc).join('<br>')}</div>`:'')
     +`<div class="bh" style="margin:0 0 8px"><h3 style="font-size:15px">Pengguna (${PERS.length})</h3><span>${AKUN.length} akun email</span></div>`
-    +`<input class="pq" id="pq" placeholder="Cari NIK, nama, departemen, email" value="${esc(PU.q)}">`+`<div id="pl">${body}</div>`;
+    +`<input class="pq" id="pq" type="search" name="cari-pengguna" autocomplete="off" placeholder="Cari NIK, nama, departemen, email" value="${esc(PU.q)}">`+`<div id="pl">${body}</div>`;
   box.querySelectorAll('[data-pt]').forEach(b=>b.onclick=()=>{PU.tab=b.dataset.pt;PU.q='';drawPU()});
   const pq=$('#pq');pq.oninput=e=>{PU.q=e.target.value;const pos=e.target.selectionStart;drawPU();const n=$('#pq');n.focus();n.setSelectionRange(pos,pos)};
   box.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>kodeNik(PERS.find(p=>p.nik===b.dataset.pk)));
   const pa=box.querySelector('#pa');if(pa)pa.onclick=()=>formPers(null);
   box.querySelectorAll('[data-pe]').forEach(b=>b.onclick=()=>formPers(PERS.find(p=>p.nik===b.dataset.pe)));
   box.querySelectorAll('[data-pd]').forEach(b=>b.onclick=async()=>{const p=PERS.find(x=>x.nik===b.dataset.pd);if(!p||!await askPass('Hapus karyawan','Hapus karyawan '+p.nama+' (NIK '+p.nik+')? Kode akses dan akunnya tidak bisa dipakai lagi.','Hapus',1))return;
-    try{try{await sb.rpc('ia_cabut',{p_nik:p.nik})}catch(e){}const r=await sb.from('ia_personel').delete().eq('nik',p.nik);if(r.error)throw r.error;succ('Karyawan dihapus');await loadPU();drawPU()}catch(x){toast('Gagal: '+(x.message||x))}});
+    try{try{await sb.rpc('ia_cabut',{p_nik:p.nik})}catch(e){}const r=await sb.from('ia_personel').delete().eq('nik',p.nik);if(r.error)throw r.error;succ('Karyawan dihapus');PU.q='';await loadPU();drawPU()}catch(x){toast('Gagal: '+(x.message||x))}});
   box.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{const p=PERS.find(x=>x.nik===b.dataset.ps),a=akOf(p.nik);
     const t=`Dokumen ISO - PT Karya Indah Multiguna\nBuka: ${baseUrl()}\nNIK: ${p.nik}\nKode akses: ${a.kode}\nBerlaku sampai: ${fmt(a.exp)}`;
     let cp=false;try{if(navigator.clipboard){navigator.clipboard.writeText(t).catch(()=>{});cp=true}}catch(e){}
@@ -888,7 +907,7 @@ function drawPU(){
   box.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>formGrant(PERS.find(p=>p.nik===b.dataset.pg)));
   box.querySelectorAll('[data-px]').forEach(b=>b.onclick=async()=>{const a=AKUN.find(x=>x.id===b.dataset.px);
     if(!await askPass('Cabut akun',`Cabut akun ${a.nama||a.email}? Orang ini tidak bisa masuk dengan email lagi dan harus mendaftar ulang dari kode akses.`,'Cabut',1))return;
-    try{const r=await sb.rpc('iso_cabut_akun',{p_id:a.id});if(r.error)throw new Error(r.error.message);succ('Akun dicabut');await loadPU();drawPU()}
+    try{const r=await sb.rpc('iso_cabut_akun',{p_id:a.id});if(r.error)throw new Error(r.error.message);succ('Akun dicabut');PU.q='';await loadPU();drawPU()}
     catch(x){toast('Gagal: '+(x.message||x))}});
 }
 function formGrant(p){if(!p)return;const ac=AKUN.find(x=>x.nik===p.nik),gs=[...gOf(p)];if(ac&&ac.role==='dcc'&&!gs.includes('dcc'))gs.push('dcc');const adm=!!(ac&&ac.role==='admin'),self=!!(ac&&ac.id===U.id);
@@ -922,7 +941,7 @@ function kodeNik(p){if(!p)return;
   m.querySelector('#kr').onclick=()=>m.querySelector('#kk').value=genKode();
   m.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>m.querySelector('#ke').value=lt(new Date(Date.now()+(+b.dataset.d)*864e5)));
   const kc=m.querySelector('#kc');if(kc)kc.onclick=async()=>{if(!await askPass('Cabut kode akses','Cabut kode? '+p.nama+' yang sedang masuk dengan kode langsung keluar.','Cabut',1))return;
-    const r=await sb.rpc('ia_cabut',{p_nik:p.nik});if(r.error){toast('Gagal: '+r.error.message);return}m.remove();succ('Kode dicabut');await loadPU();drawPU()};
+    const r=await sb.rpc('ia_cabut',{p_nik:p.nik});if(r.error){toast('Gagal: '+r.error.message);return}m.remove();succ('Kode dicabut');PU.q='';await loadPU();drawPU()};
 }
 // ---------- profil ----------
 async function loadAv(){if(demo||!U.foto_at)return;const r=await sb.storage.from('iso-avatars').download(U.id+'.jpg');if(U.av)URL.revokeObjectURL(U.av);U.av=r.data?URL.createObjectURL(r.data):null}
