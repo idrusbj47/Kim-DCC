@@ -335,6 +335,8 @@ const URLH=location.hash+location.search;
 const LINKERR=(()=>{if(!/error_code=|error_description=|[#&?]error=/.test(URLH))return '';
   const q=new URLSearchParams(URLH.replace(/^#/,'').replace(/^\?/,'')),c=q.get('error_code')||'',d=q.get('error_description')||'';
   return /otp_expired|expired|invalid/i.test(c+' '+d)?'Tautan konfirmasi sudah terpakai atau kedaluwarsa. Ini bisa terjadi kalau email dibuka otomatis oleh pemindai keamanan atau tautan diklik dua kali. Jika email sudah dikonfirmasi, pilih "Lupa kata sandi?" di bawah untuk membuat kata sandi.':('Tautan gagal: '+(d||c||'tidak dikenal'))})();
+const QP=new URLSearchParams(location.search),TOKH=QP.get('token_hash'),TOKT=['email_change','signup','email','magiclink'].includes(QP.get('type'))?QP.get('type'):'email_change';
+let FORCEPW=false,TOKDONE=false;
 const VIALINK=/access_token=/.test(URLH)&&!/type=recovery/.test(URLH);
 const clearUrl=()=>{try{history.replaceState(null,'',location.pathname+location.search.replace(/[?&](error|error_code|error_description)=[^&]*/g,''))}catch(e){}};
 const demo=!SB_URL, sb=demo?null:(window.supabase?supabase.createClient(SB_URL,SB_KEY):null);
@@ -519,8 +521,18 @@ function forgotView(pre){
   $('#fe').addEventListener('input',()=>cdBind($('#fs'),rkOf(),'Kirim Tautan Reset'));cdBind($('#fs'),rkOf(),'Kirim Tautan Reset');
   $('#fs').onclick=send;$('#fe').addEventListener('keydown',e=>{if(e.key==='Enter')send()})}
 const REASON={belum_daftar:'Akun ini belum terdaftar sebagai karyawan KIM. Masuk dulu dengan NIK dan kode akses, lalu daftarkan email dari menu Profil.',email_belum_konfirmasi:'Email belum dikonfirmasi. Buka tautan konfirmasi yang kami kirim ke email Anda.',nik_sudah_ada:'NIK pada pendaftaran ini sudah memiliki akun lain. Hubungi admin.',nik_tidak_aktif:'NIK Anda tidak aktif. Hubungi admin.'};
+function confirmView(){
+  $('#app').innerHTML=`<div class="lg"><div class="lc"><h2>Konfirmasi email</h2><p>Tekan tombol di bawah untuk mengonfirmasi email Anda. Setelah itu Anda diminta membuat kata sandi.</p><button class="btn" id="cf" type="button">Lanjutkan</button><div class="err" id="er"></div></div></div>`;
+  $('#cf').onclick=async()=>{const b=$('#cf');b.disabled=true;$('#er').textContent='';
+    try{const r=await sb.auth.verifyOtp({token_hash:TOKH,type:TOKT});
+      if(r.error){TOKDONE=true;try{history.replaceState(null,'',location.pathname)}catch(e){}
+        loginView('Tautan konfirmasi sudah terpakai atau kedaluwarsa. Jika email sudah dikonfirmasi, pilih "Lupa kata sandi?" di bawah untuk membuat kata sandi.','email');return}
+      TOKDONE=true;FORCEPW=true;try{history.replaceState(null,'',location.pathname)}catch(e){}
+      await boot()}
+    catch(x){b.disabled=false;$('#er').textContent='Gagal: '+(x.message||x)}}}
 async function boot(){
   if(demo){gateView();return}
+  if(TOKH&&!TOKDONE){confirmView();return}
   const {data:{session}}=await sb.auth.getSession();
   const le=LINKERR;if(le||VIALINK)clearUrl();
   if(!session){le?loginView(le,'email'):gateView();return}
@@ -534,7 +546,7 @@ async function boot(){
     let a=null;try{a=await sb.rpc('iso_aktifkan_akun')}catch(e){}
     if(a&&a.data&&a.data.ok){baru=!!a.data.baru;p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle()}
     if(!p.data){const why=a&&a.data&&a.data.reason;await sb.auth.signOut();loginView(REASON[why]||'Akun ini belum terdaftar sebagai karyawan KIM. Hubungi admin.','email');return}}
-  if(VIALINK)baru=true;
+  if(VIALINK||FORCEPW)baru=true;
   U={id:session.user.id,email:session.user.email,nama:p.data.nama||session.user.email,dept:p.data.dept||'-',role:p.data.role||'user',nik:p.data.nik||null,foto_at:p.data.foto_at};await loadAv();
   try{U.grants=[];if(U.nik){const g=await sb.from('ia_personel').select('grants').eq('nik',U.nik).maybeSingle();U.grants=(g.data&&g.data.grants)||[]}}catch(e){U.grants=[]}
   try{await start();if(baru)setTimeout(passModal,500)}catch(e){loginView('Gagal memuat data: '+(e.message||e),'email')}
@@ -557,9 +569,10 @@ async function tickExp(){
   if(Date.now()>=U.exp){toast('Kode akses sudah berakhir');return endTmp('Kode akses sudah berakhir. Minta kode baru ke admin.')}
   if(++TN%5===0){try{const r=await sb.rpc('ia_status_nik');if(U&&U.tmp&&r.data&&r.data.ok===false)endTmp('Kode akses dicabut atau sudah berakhir. Minta kode baru ke admin.')}catch(e){}}}
 function passModal(){
-  const m=modal(`<h2>Buat Kata Sandi</h2><p>Email Anda sudah terkonfirmasi dan akun menjadi permanen. Buat kata sandi untuk masuk dengan email berikutnya.</p><label>Kata sandi baru (minimal 8 karakter)</label><input id="np1" type="password" autocomplete="new-password"><label>Ulangi kata sandi</label><input id="np2" type="password" autocomplete="new-password">`,
+  const m=modal(`<h2>Buat Kata Sandi</h2><p>Email Anda sudah terkonfirmasi dan akun menjadi permanen. Buat kata sandi untuk masuk dengan email berikutnya.</p><label>Kata sandi baru (minimal 8 karakter)</label><div class="pwr"><input id="np1" type="password" autocomplete="new-password"><button type="button" class="eye" aria-label="Lihat kata sandi">${EYE_ON}</button></div><label>Ulangi kata sandi</label><div class="pwr"><input id="np2" type="password" autocomplete="new-password"><button type="button" class="eye" aria-label="Lihat kata sandi">${EYE_ON}</button></div>`,
   async()=>{const a=$('#np1').value;if(a.length<8)throw new Error('Kata sandi minimal 8 karakter');if(a!==$('#np2').value)throw new Error('Ulangi kata sandi dengan sama persis');
-    const {error}=await sb.auth.updateUser({password:a});if(error)throw new Error(error.message);succ('Akun permanen aktif')});{const x=m.querySelector('#mx');if(x)x.remove()}}
+    const {error}=await sb.auth.updateUser({password:a});if(error)throw new Error(error.message);succ('Akun permanen aktif')});{const x=m.querySelector('#mx');if(x)x.remove()}
+  m.querySelectorAll('.eye').forEach(e=>e.onclick=()=>{const i=e.previousElementSibling,h=i.type==='password';i.type=h?'text':'password';e.innerHTML=h?EYE_OFF:EYE_ON})}
 // ---------- tombol kembali HP: mundur 1 tahap, di beranda tanya keluar ----------
 let HON=false,HV=null;
 const hpush=st=>{try{history.pushState(st,'')}catch(_){}};
