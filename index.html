@@ -418,7 +418,7 @@ function askPass(title,msg,okLabel,danger){
       catch(x){ok.disabled=false;er.textContent=x.message||String(x);inp.value='';inp.focus();if(++fail>=5){toast('Terlalu banyak salah. Coba lagi nanti.');done(false)}}};
     ok.onclick=go;inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();if(e.key==='Escape')done(false)});setTimeout(()=>inp.focus(),60)})}
 function vAdmGate(){
-  if(passFresh())return vAdm();
+  return vAdm();
   $('#v').innerHTML=`<div class="box lock"><div class="lki">${ic('shield')}</div><h3 style="margin:0 0 6px">Menu pengelola terkunci</h3><p class="hint" style="margin:0 0 16px">Masukkan kata sandi akun Anda untuk membuka menu Kelola.</p><button class="btn" id="unl" type="button">Buka dengan Kata Sandi</button></div>`;
   const open=async()=>{if(await askPass('Buka menu Kelola','Masukkan kata sandi akun Anda untuk membuka menu pengelola.','Buka'))shell()};
   $('#unl').onclick=open;open()}
@@ -499,7 +499,7 @@ function gateView(){
   <button class="gb" id="g1"><span class="gi"><svg viewBox="0 0 24 24"><path d="M4 21V5l8-2v18M12 8h8v13M2 21h20M7 8h2M7 12h2M7 16h2M15 12h2M15 16h2"/></svg></span><span><b>Internal KIM</b><small>Karyawan PT Karya Indah Multiguna. Masuk dengan NIK dan kode akses, atau dengan email.</small></span></button>
   <button class="gb" id="g2"><span class="gi"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span><span><b>Auditor</b><small>Tamu audit. Masuk dengan kode akses 5 angka dari admin.</small></span></button>
   <button class="gb" id="g3"><span class="gi"><svg viewBox="0 0 24 24"><path d="M9 4h6l1 2h3v14H5V6h3z"/><path d="M8.5 13l2.5 2.5 4.5-5"/></svg></span><span><b>Audit Internal</b><small>Jadwal audit, dokumen yang diaudit, dan temuan. Masuk dengan kode akses atau email.</small></span></button></div></div>`;
-  $('#g1').onclick=()=>loginView('','kode');$('#g2').onclick=()=>{location.href='audit.html'};$('#g3').onclick=()=>{location.href='internal-audit.html'}}
+  $('#g1').onclick=async()=>{if(!demo){try{const {data:{session}}=await sb.auth.getSession();if(session){boot();return}}catch(e){}}loginView('','kode')};$('#g2').onclick=()=>{location.href='audit.html'};$('#g3').onclick=()=>{location.href='internal-audit.html'}}
 async function sendReset(email){
   if(demo){toast('Mode demo: tidak berlaku');return false}
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:new URL('reset.html',location.href).href});
@@ -534,6 +534,9 @@ async function boot(){
   if(demo){gateView();return}
   if(TOKH&&!TOKDONE){confirmView();return}
   const {data:{session}}=await sb.auth.getSession();
+  {const first=!BOOT1;BOOT1=true;
+   if(first&&session&&!VIALINK&&!TOKH){const t=actGet();
+     if(t&&Date.now()-t>IDLE_MS){try{await sb.auth.signOut()}catch(e){}loginView('Sesi berakhir karena aplikasi tidak aktif selama 1 jam. Silakan masuk lagi.',session.user.is_anonymous?'kode':'email');return}}}
   const le=LINKERR;if(le||VIALINK)clearUrl();
   if(!session){le?loginView(le,'email'):gateView();return}
   if(session.user.is_anonymous){
@@ -549,6 +552,8 @@ async function boot(){
   if(VIALINK||FORCEPW)baru=true;
   U={id:session.user.id,email:session.user.email,nama:p.data.nama||session.user.email,dept:p.data.dept||'-',role:p.data.role||'user',nik:p.data.nik||null,foto_at:p.data.foto_at};await loadAv();
   try{U.grants=[];if(U.nik){const g=await sb.from('ia_personel').select('grants').eq('nik',U.nik).maybeSingle();U.grants=(g.data&&g.data.grants)||[]}}catch(e){U.grants=[]}
+  U.bagian=String(p.data.bagian||'').trim();
+  try{if(U.nik){const g=await sb.from('ia_personel').select('dept,bagian').eq('nik',U.nik).maybeSingle();if(g.data){if(g.data.dept&&(!U.dept||U.dept==='-'))U.dept=g.data.dept;if(g.data.bagian)U.bagian=String(g.data.bagian).trim()}}}catch(e){}
   try{await start();if(baru)setTimeout(passModal,500)}catch(e){loginView('Gagal memuat data: '+(e.message||e),'email')}
 }
 // ---------- akses sementara (NIK + kode) ----------
@@ -556,7 +561,7 @@ async function enterKode(d){
   const {data:{session}}=await sb.auth.getSession();
   U={id:session.user.id,nik:d.nik,nama:d.nama||('NIK '+d.nik),dept:'-',role:'user',tmp:true,exp:new Date(d.exp).getTime()};
   try{const st=await sb.rpc('iso_status_daftar');if(st.data&&st.data.sudah)U.sudah=true}catch(e){}
-  try{const q=await sb.from('ia_personel').select('dept').eq('nik',d.nik).maybeSingle();if(q.data&&q.data.dept)U.dept=q.data.dept}catch(e){}
+  U.bagian='';try{const q=await sb.from('ia_personel').select('dept,bagian').eq('nik',d.nik).maybeSingle();if(q.data){if(q.data.dept)U.dept=q.data.dept;if(q.data.bagian)U.bagian=String(q.data.bagian).trim()}}catch(e){}
   clearInterval(TMR);TN=0;TMR=setInterval(tickExp,30000);
   try{await start()}catch(e){await endTmp('Gagal memuat data: '+(e.message||e))}
 }
@@ -583,8 +588,9 @@ function exitAsk(){
   m.innerHTML='<div class="lc" style="text-align:center"><h2>Keluar aplikasi?</h2><p>Anda yakin ingin keluar dari Dokumen ISO?</p><div style="display:flex;gap:10px;justify-content:center"><button class="btn g" id="exn">Tidak</button><button class="btn" id="exy">Ya, keluar</button></div></div>';
   document.body.append(m);
   $('#exn').onclick=()=>m.remove();
-  $('#exy').onclick=()=>{HON=false;m.remove();history.go(-2);
-    setTimeout(()=>{try{window.close()}catch(_){}toast('Tutup aplikasi atau tab ini secara manual');initHist()},600)}}
+  $('#exy').onclick=()=>{HON=false;m.remove();clearInterval(TMR);TMR=null;document.querySelector('.rd')?.remove();
+    if(U&&U.av){try{URL.revokeObjectURL(U.av)}catch(_){}}U=null;V='home';HV=null;gateView();
+    try{window.close()}catch(_){}}}
 addEventListener('popstate',e=>{
   if(!HON||!U)return;
   const st=e.state||{},ex=document.getElementById('exd');
@@ -594,7 +600,26 @@ addEventListener('popstate',e=>{
   if(ex)ex.remove();
   if(st.v&&st.v!==V){V=HV=st.v;shell()}
 });
-async function start(){await loadData();initHist();shell()}
+async function logLogin(){
+  if(demo||!U||!U.id)return;
+  try{const k='iso_ll_'+U.id,t=+sessionStorage.getItem(k)||0;if(Date.now()-t<30*60*1000)return;sessionStorage.setItem(k,Date.now());
+    await sb.from('iso_login_log').insert({user_id:U.id,nama:U.nama,nik:U.nik||null,dept:U.dept&&U.dept!=='-'?U.dept:null,metode:U.tmp?'kode':'email',at:new Date().toISOString()})}catch(e){}}
+async function loadLogins(){if(demo||!U||U.role!=='admin'){LGN=[];return}
+  try{const r=await sb.from('iso_login_log').select('*').order('at',{ascending:false}).limit(1000);LGN=r.data||[];LGERR=r.error?r.error.message:''}catch(e){LGN=[];LGERR=String(e.message||e)}}
+// ---------- sesi email berakhir bila tidak aktif 1 jam ----------
+const IDLE_MS=60*60*1000,IDLE_KEY='iso_last_act';let LAST_T=0,BOOT1=false;
+const actGet=()=>{try{return +localStorage.getItem(IDLE_KEY)||0}catch(e){return 0}};
+function actTouch(force){const n=Date.now();if(!force&&n-LAST_T<10000)return;LAST_T=n;try{localStorage.setItem(IDLE_KEY,n)}catch(e){}}
+async function idleOut(){
+  clearInterval(TMR);TMR=null;document.querySelector('.rd')?.remove();document.querySelectorAll('.mdl,.okov').forEach(x=>x.remove());
+  try{await sb.auth.signOut()}catch(e){}
+  const wasTmp=!!(U&&U.tmp);if(U&&U.av){try{URL.revokeObjectURL(U.av)}catch(e){}}U=null;V='home';HON=false;
+  loginView('Sesi berakhir karena aplikasi tidak aktif selama 1 jam. Silakan masuk lagi.',wasTmp?'kode':'email')}
+function idleCheck(){if(demo||!U)return;const t=actGet();if(t&&Date.now()-t>IDLE_MS)idleOut()}
+['pointerdown','keydown','touchstart','scroll','wheel'].forEach(ev=>addEventListener(ev,()=>{if(U){const t=actGet();if(t&&Date.now()-t>IDLE_MS){idleOut();return}actTouch()}},{passive:true,capture:true}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)idleCheck()});
+setInterval(idleCheck,30000);
+async function start(){if(U)actTouch(true);await loadData();await loadLogins();logLogin().then(()=>{if(U&&U.role==='admin')loadLogins()});initHist();shell()}
 // ---------- shell ----------
 const NAV=[['home','Beranda','home'],['docs','Dokumen','doc'],['ia','Audit','check'],['log','Riwayat','clock'],['adm','Kelola','cog']];
 function shell(){
@@ -630,14 +655,20 @@ const item=d=>`<div class="it" data-id="${d.id}"><div class="th">${jTh(d)}</div>
 const item2=d=>`<div class="it r2" data-id="${d.id}"><div class="th">${jTh(d)}</div><div class="im"><b class="kd">${esc(d.kode)}</b><span class="jd">${esc(d.judul)}</span><p>${d.pages} hal. &middot; ${esc(d.revisi||'-')} &middot; ${esc(d.dept)}${bgOf(d)?' &rsaquo; '+esc(bgOf(d)):''}${d.tgl_berlaku?' &middot; Berlaku '+D(String(d.tgl_berlaku).slice(0,10)+'T00:00:00'):''}</p></div><button class="vb">${ic('eye')}<span>Lihat</span></button></div>`;
 const bindItems=()=>document.querySelectorAll('.it:not(.fr)').forEach(e=>e.onclick=()=>openDoc(DOCS.find(d=>d.id===e.dataset.id)));
 function deptList(){const m={};DOCS.forEach(d=>{const k=d.dept||'Semua';m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0],'id'))}
+const nz=x=>String(x||'').trim().toLowerCase();
+function myDocs(){if(!U||!U.dept||U.dept==='-')return[];
+  return DOCS.filter(d=>nz(d.dept)===nz(U.dept)&&(!U.bagian||!bgOf(d)||nz(bgOf(d))===nz(U.bagian)))}
 function vHome(){
+  const my=myDocs();
   const today=LOG.filter(l=>new Date(l.at).toDateString()===new Date().toDateString()).length;
   $('#v').innerHTML=`<div class="hero"><div class="hc"><small>DOKUMEN ISO &ndash; PT KARYA INDAH MULTIGUNA</small><h2>Satu tempat baca.<br><em>Akses terkendali.</em></h2><p>Dokumen hanya bisa dibaca di aplikasi, ditandai nama Anda, dan setiap pembukaan tercatat.</p><button class="btn" id="bd">Buka Daftar Dokumen ${ic('chevR')}</button></div><div class="art">${ART1}</div><ul><li>Hanya baca</li><li>Berwatermark</li><li>Tercatat</li><li>Sesuai hak akses</li></ul></div>
   <div class="stats"><div class="st s1"><i class="ci">${ic('doc')}</i><div><small>Total Dokumen</small><b>${DOCS.length}</b></div></div><div class="st s2"><i class="ci">${ic('check')}</i><div><small>Dibuka Hari Ini</small><b>${today}</b></div></div><div class="st s3"><i class="ci">${ic('chart')}</i><div><small>Departemen Anda</small><b class="dp">${esc(U.dept)}</b></div></div></div>
   ${DOCS.length?`<div class="box" style="margin-bottom:12px"><div class="bh"><h3>Departemen</h3><span>Tekan untuk melihat dokumennya</span></div><div class="dg">${deptList().map(([k,n])=>`<button class="dc" data-d="${esc(k)}"><b>${esc(k)}</b><span>${n} dokumen</span></button>`).join('')}</div></div>`:''}
+  ${my.length?`<div class="box" style="margin-bottom:12px"><div class="bh"><h3>Dokumen Saya</h3><button class="btn g" id="mine">Lihat Semua (${my.length}) ${ic('chevR')}</button></div><p class="hint" style="margin:0 0 10px">${esc(U.dept)}${U.bagian?' &rsaquo; '+esc(U.bagian):''}</p>${my.slice(0,5).map(item).join('')}</div>`:''}
   <div class="box"><div class="bh"><h3>Dokumen Terbaru</h3><button class="btn g" id="all">Lihat Semua ${ic('chevR')}</button></div>${DOCS.slice(0,4).map(item).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div>`;
   $('#bd').onclick=$('#all').onclick=()=>{V='docs';shell()};bindItems();
   document.querySelectorAll('.dc').forEach(b=>b.onclick=()=>{DF=b.dataset.d;BF='';Q='';JF='';V='docs';shell()});
+  {const mb=$('#mine');if(mb)mb.onclick=()=>{const d0=DOCS.find(d=>nz(d.dept)===nz(U.dept));DF=d0?d0.dept:U.dept;const b0=U.bagian&&DOCS.find(d=>nz(d.dept)===nz(U.dept)&&nz(bgOf(d))===nz(U.bagian));BF=b0?bgOf(b0):'';Q='';JF='';V='docs';shell()}}
 }
 function vDocs(){
   const depts=[...new Set(DOCS.map(d=>d.dept))],chips=[['','Semua'],...JENIS.map(j=>[j[0],j[0]==='LN'?'Lain':j[0]==='DF'?'Daftar Induk':j[0]==='OR'?'Organisasi':j[0]])];
@@ -671,9 +702,24 @@ function vDocs(){
   $('#q').oninput=e=>{Q=e.target.value;sync();draw();clearTimeout(ST);ST=setTimeout(fullText,350)};$('#df').onchange=e=>{DF=e.target.value;BF='';drawBf();draw()};$('#bf').onchange=e=>{BF=e.target.value;draw()};
   drawBf();draw(true);fullText();document.fonts&&document.fonts.ready.then(()=>mv(true));window.onresize=()=>{if($('#jf'))mv(true)};
 }
+let LGN=[],LGERR='',LT='doc',LSORT='desc',LFROM='',LTO='';
 function vLog(){
-  const rows=(U.role==='admin'?LOG:LOG.filter(l=>l.user_id===U.id));
-  $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Riwayat Akses</h3><span>${U.role==='admin'?'Semua pengguna':'Akses Anda'}</span></div>${rows.length?`<div style="overflow-x:auto"><table><tr><th>Waktu</th><th>Pengguna</th><th>Dokumen</th></tr>${rows.map(l=>`<tr><td>${fmt(l.at)}</td><td>${esc(l.nama)}</td><td>${esc(l.judul)}</td></tr>`).join('')}</table></div>`:'<div class="empty">Belum ada dokumen yang dibuka.</div>'}</div>`;
+  const adm=U.role==='admin';
+  if(!adm){const rows=LOG.filter(l=>l.user_id===U.id);
+    $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Riwayat Akses</h3><span>Akses Anda</span></div>${rows.length?`<div style="overflow-x:auto"><table><tr><th>Waktu</th><th>Pengguna</th><th>Dokumen</th></tr>${rows.map(l=>`<tr><td>${fmt(l.at)}</td><td>${esc(l.nama)}</td><td>${esc(l.judul)}</td></tr>`).join('')}</table></div>`:'<div class="empty">Belum ada dokumen yang dibuka.</div>'}</div>`;return}
+  const dk=x=>{const d=new Date(x);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+  const draw=()=>{
+    const src=LT==='doc'?LOG:LGN;
+    const rows=src.filter(l=>(!LFROM||dk(l.at)>=LFROM)&&(!LTO||dk(l.at)<=LTO)).sort((a,b)=>LSORT==='desc'?new Date(b.at)-new Date(a.at):new Date(a.at)-new Date(b.at));
+    $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Riwayat</h3><span>${rows.length} catatan &middot; Khusus admin</span></div>
+    <div class="ltabs" style="margin-bottom:12px"><button type="button" data-t="login" class="${LT==='login'?'on':''}">Siapa yang Masuk</button><button type="button" data-t="doc" class="${LT==='doc'?'on':''}">Dokumen Dibuka</button></div>
+    <div class="f" style="margin-bottom:12px"><div><label>Dari tanggal</label><input id="lf" type="date" value="${LFROM}" onclick="this.showPicker&&this.showPicker()"></div><div><label>Sampai tanggal</label><input id="lt" type="date" value="${LTO}" onclick="this.showPicker&&this.showPicker()"></div><div><label>Urutan tanggal</label><select id="ls2"><option value="desc"${LSORT==='desc'?' selected':''}>Terbaru dulu</option><option value="asc"${LSORT==='asc'?' selected':''}>Terlama dulu</option></select></div><div class="w"><button class="btn g bs" id="lr" type="button">Reset filter</button></div></div>
+    ${LT==='login'&&LGERR?`<div class="ftn">Riwayat masuk belum bisa dimuat: ${esc(LGERR)}. Jalankan iso_login_log.sql di Supabase.</div>`:''}
+    ${rows.length?`<div style="overflow-x:auto"><table>${LT==='doc'?'<tr><th>Waktu</th><th>Pengguna</th><th>Dokumen</th></tr>'+rows.map(l=>`<tr><td>${fmt(l.at)}</td><td>${esc(l.nama)}</td><td>${esc(l.judul)}</td></tr>`).join(''):'<tr><th>Waktu masuk</th><th>Pengguna</th><th>NIK</th><th>Departemen</th><th>Cara</th></tr>'+rows.map(l=>`<tr><td>${fmt(l.at)}</td><td>${esc(l.nama||'-')}</td><td>${esc(l.nik||'-')}</td><td>${esc(l.dept||'-')}</td><td>${l.metode==='kode'?'NIK + kode':'Email'}</td></tr>`).join('')}</table></div>`:'<div class="empty">Tidak ada catatan pada filter ini.</div>'}</div>`;
+    document.querySelectorAll('.ltabs button').forEach(b=>b.onclick=()=>{LT=b.dataset.t;draw()});
+    $('#lf').onchange=e=>{LFROM=e.target.value;draw()};$('#lt').onchange=e=>{LTO=e.target.value;draw()};$('#ls2').onchange=e=>{LSORT=e.target.value;draw()};
+    $('#lr').onclick=()=>{LFROM=LTO='';LSORT='desc';draw()}};
+  draw();
 }
 // ---------- indeks teks (file tidak disimpan, hanya teksnya) ----------
 async function readText(f){
@@ -963,7 +1009,7 @@ async function squash(file){const bm=await createImageBitmap(file),m=Math.min(bm
   for(let q=.8;;q-=.1){const b=await new Promise(r=>c.toBlob(r,'image/jpeg',q));if(b.size<=51200||q<.35)return b}}
 function vProf(){
   if(U.tmp)return vProfTmp();
-  $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Profil</h3><span>${esc(U.dept)} &middot; ${esc(roleLbl(U))}${U.nik?' &middot; NIK '+esc(U.nik):''}</span></div>
+  $('#v').innerHTML=`<div class="box"><div class="bh"><h3>Profil</h3><span>${esc(U.dept)}${U.bagian?' &rsaquo; '+esc(U.bagian):''} &middot; ${esc(roleLbl(U))}${U.nik?' &middot; NIK '+esc(U.nik):''}</span></div>
   <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div class="pa"${U.av?` style="background-image:url(${U.av})"`:''}>${U.av?'':esc(U.nama.slice(0,2).toUpperCase())}</div>
   <div><button class="btn g bs" id="pf">Ganti Foto</button> <button class="btn g bs" id="pd">Hapus Foto</button><p style="margin:6px 0 0;font-size:12px;color:var(--mut)">Foto dikecilkan otomatis menjadi di bawah 50 KB agar hemat penyimpanan.</p></div></div><input type="file" id="pi" accept="image/*" hidden>
   <div class="f"><div class="w"><label>Nama</label><input id="nm" value="${esc(U.nama)}"></div><div class="w"><button class="btn" id="sn">Simpan Nama</button></div></div></div>
