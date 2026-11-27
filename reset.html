@@ -24,16 +24,24 @@ function bad(){c.innerHTML='<h1>Tautan tidak berlaku</h1><p>Tautan ini sudah ked
 function form(){if(shown)return;shown=true;
   c.innerHTML=`<h1>Buat kata sandi baru</h1><p>Gunakan minimal 8 karakter yang mudah Anda ingat tetapi sulit ditebak orang lain.</p>
   <div class="w"><label>Kata sandi baru</label><input id="a" type="password" autocomplete="new-password"><button type="button" class="e" id="ea" aria-label="Lihat kata sandi">${EYE}</button></div>
-  <div class="w"><label>Ulangi kata sandi baru</label><input id="b" type="password" autocomplete="new-password"></div>
+  <div class="w"><label>Ulangi kata sandi baru</label><input id="b" type="password" autocomplete="new-password"><button type="button" class="e" id="eb" aria-label="Lihat kata sandi">${EYE}</button></div>
   <div class="m" id="m"></div><button class="b" id="s">Simpan Kata Sandi</button>`;
-  document.getElementById('ea').onclick=()=>{const a=document.getElementById('a'),b=document.getElementById('b'),h=a.type==='password';a.type=b.type=h?'text':'password';document.getElementById('ea').innerHTML=h?OFF:EYE};
+  const tg=()=>{const a=document.getElementById('a'),b=document.getElementById('b'),h=a.type==='password';a.type=b.type=h?'text':'password';document.getElementById('ea').innerHTML=document.getElementById('eb').innerHTML=h?OFF:EYE};
+  document.getElementById('ea').onclick=tg;document.getElementById('eb').onclick=tg;
   document.getElementById('s').onclick=async()=>{const a=document.getElementById('a').value,m=document.getElementById('m'),s=document.getElementById('s');m.className='m';
     if(a.length<8){m.textContent='Kata sandi minimal 8 karakter.';return}
     if(a!==document.getElementById('b').value){m.textContent='Pengulangan kata sandi belum sama.';return}
     s.disabled=true;const {error}=await sb.auth.updateUser({password:a});
     if(error){m.textContent=/different from the old/i.test(error.message)?'Kata sandi baru harus berbeda dari yang lama.':'Gagal: '+error.message;s.disabled=false;return}
     await sb.auth.signOut();c.innerHTML='<h1>Kata sandi diganti</h1><p>Silakan masuk dengan kata sandi baru Anda.</p><a class="b" href="./">Ke halaman login</a>'}}
-if(/error/i.test(hash))bad();
+const qp=new URLSearchParams(location.search),th=qp.get('token_hash');
+if(th&&qp.get('type')==='recovery'){
+  c.innerHTML='<h1>Atur ulang kata sandi</h1><p>Tekan tombol di bawah untuk melanjutkan membuat kata sandi baru.</p><button class="b" id="go" type="button">Lanjutkan</button><div class="m" id="gm"></div>';
+  document.getElementById('go').onclick=async()=>{const g=document.getElementById('go');g.disabled=true;
+    const {error}=await sb.auth.verifyOtp({token_hash:th,type:'recovery'});
+    if(error){bad();return}
+    try{history.replaceState(null,'',location.pathname)}catch(e){}form()}}
+else if(/error/i.test(hash))bad();
 else{sb.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY'||(ev==='SIGNED_IN'&&/type=recovery/.test(hash)))form()});
   setTimeout(()=>{if(!shown)bad()},5000)}
 </script></body></html>
