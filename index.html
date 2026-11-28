@@ -574,7 +574,7 @@ async function boot(){
   U={id:session.user.id,email:session.user.email,nama:p.data.nama||session.user.email,dept:p.data.dept||'-',role:p.data.role||'user',nik:p.data.nik||null,foto_at:p.data.foto_at};await loadAv();
   try{U.grants=[];if(U.nik){const g=await sb.from('ia_personel').select('grants').eq('nik',U.nik).maybeSingle();U.grants=(g.data&&g.data.grants)||[]}}catch(e){U.grants=[]}
   U.bagian=String(p.data.bagian||'').trim();
-  {let pers=null;try{if(U.nik){const g=await sb.from('ia_personel').select('dept,bagian').eq('nik',U.nik).maybeSingle();pers=g.data||null}}catch(e){}applyDept(session.user.user_metadata,pers)}
+  {let pers=null;try{if(U.nik){pers=await getPers(U.nik)}}catch(e){}applyDept(session.user.user_metadata,pers)}
   try{await start();if(baru)setTimeout(passModal,500)}catch(e){loginView('Gagal memuat data: '+(e.message||e),'email')}
 }
 // ---------- akses sementara (NIK + kode) ----------
@@ -582,7 +582,7 @@ async function enterKode(d){
   const {data:{session}}=await sb.auth.getSession();
   U={id:session.user.id,nik:d.nik,nama:d.nama||('NIK '+d.nik),dept:'-',role:'user',tmp:true,exp:new Date(d.exp).getTime()};
   try{const st=await sb.rpc('iso_status_daftar');if(st.data&&st.data.sudah)U.sudah=true}catch(e){}
-  U.bagian='';{let pers=null;try{const q=await sb.from('ia_personel').select('dept,bagian').eq('nik',d.nik).maybeSingle();pers=q.data||null}catch(e){}applyDept(session.user.user_metadata,pers)}
+  U.bagian='';{let pers=null;try{pers=await getPers(d.nik)}catch(e){}applyDept(session.user.user_metadata,pers)}
   clearInterval(TMR);TN=0;TMR=setInterval(tickExp,30000);
   try{await start()}catch(e){await endTmp('Gagal memuat data: '+(e.message||e))}
 }
@@ -682,12 +682,15 @@ const same=(a,b)=>{a=nz(a);b=nz(b);return !!a&&!!b&&(a===b||(Math.min(a.length,b
 const hasDept=()=>!!U&&!!U.dept&&U.dept!=='-';
 function myDocs(){if(!hasDept())return[];
   return DOCS.filter(d=>same(d.dept,U.dept)&&(!U.bagian||!bgOf(d)||same(bgOf(d),U.bagian)))}
+async function getPers(nik){
+  try{const r=await sb.rpc('iso_dept_saya');if(r.data&&r.data.ok&&String(r.data.dept||'').trim())return{dept:r.data.dept,bagian:r.data.bagian||''}}catch(e){}
+  try{const g=await sb.from('ia_personel').select('dept,bagian').eq('nik',nik).maybeSingle();return g.data||null}catch(e){return null}}
 function applyDept(md,pers){
   if(pers&&String(pers.dept||'').trim()){U.dept=String(pers.dept).trim();U.bagian=String(pers.bagian||'').trim();U.deptAdm=true}
   else{U.dept='-';U.bagian='';U.deptAdm=true}}
 async function refreshDept(){
   if(demo||!U||!U.nik)return;
-  try{const g=await sb.from('ia_personel').select('dept,bagian').eq('nik',U.nik).maybeSingle();if(!g.data||!U)return;
+  try{const g={data:await getPers(U.nik)};if(!g.data||!U)return;
     const od=U.dept,ob=U.bagian,ow=U.deptAdm;applyDept(null,g.data);
     if((U.dept!==od||U.bagian!==ob||U.deptAdm!==ow)&&V==='home'&&$('#v'))vHome()}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&V==='home')refreshDept()});
