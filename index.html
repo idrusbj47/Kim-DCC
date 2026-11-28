@@ -684,8 +684,7 @@ function myDocs(){if(!hasDept())return[];
   return DOCS.filter(d=>same(d.dept,U.dept)&&(!U.bagian||!bgOf(d)||same(bgOf(d),U.bagian)))}
 function applyDept(md,pers){
   if(pers&&String(pers.dept||'').trim()){U.dept=String(pers.dept).trim();U.bagian=String(pers.bagian||'').trim();U.deptAdm=true}
-  else if(md&&md.dept){U.dept=md.dept;U.bagian=String(md.bagian||'').trim();U.deptAdm=false}
-  else if(U.nik){try{const sv=JSON.parse(localStorage.getItem('iso_dept_'+U.nik)||'null');if(sv&&sv.d){U.dept=sv.d;U.bagian=sv.b||'';U.deptAdm=false}}catch(e){}}}
+  else{U.dept='-';U.bagian='';U.deptAdm=true}}
 async function refreshDept(){
   if(demo||!U||!U.nik)return;
   try{const g=await sb.from('ia_personel').select('dept,bagian').eq('nik',U.nik).maybeSingle();if(!g.data||!U)return;
@@ -696,16 +695,14 @@ async function saveDept(d,b){if(U&&U.deptAdm)throw new Error('Departemen diatur 
   if(!demo){try{const r=await sb.auth.updateUser({data:{dept:d,bagian:b}});if(r.error&&!U.tmp)throw new Error(r.error.message)}catch(e){if(!U.tmp)throw e}}
   try{localStorage.setItem('iso_dept_'+(U.nik||U.id),JSON.stringify({d,b}))}catch(e){}
   U.dept=d;U.bagian=b}
-const deptBox=()=>`<div class="box" style="margin-top:12px" id="dbx"><div class="bh"><h3>Departemen &amp; Bagian</h3><span>Dasar &ldquo;Dokumen Saya&rdquo;</span></div><div class="f"><div><label>Departemen</label><div id="sdp-w"></div></div><div><label>Bagian (opsional)</label><div id="sbg-w"></div></div>${U.deptAdm?'<div class="w"><p class="hint" style="margin:0">Diatur oleh admin. Jika admin mengubahnya di menu Kelola, di sini ikut berubah.</p></div>':'<div class="w"><button class="btn" id="sds" type="button">Simpan</button></div>'}</div></div>`;
-const bindDeptBox=()=>{const bx=$('#dbx');if(!bx)return;deptCombos(bx,'sdp','sbg',hasDept()?U.dept:'',U.bagian||'',!!U.deptAdm);const b=$('#sds');if(!b)return;
-  b.onclick=async()=>{b.disabled=true;try{await saveDept(comboVal(bx,'sdp'),comboVal(bx,'sbg'));succ('Departemen disimpan');shell()}catch(x){toast(x.message||String(x));b.disabled=false}}};
+const deptBox=()=>'',bindDeptBox=()=>{};
 function vHome(){
   const my=myDocs();
   const today=LOG.filter(l=>new Date(l.at).toDateString()===new Date().toDateString()).length;
   $('#v').innerHTML=`<div class="hero"><div class="hc"><small>DOKUMEN ISO &ndash; PT KARYA INDAH MULTIGUNA</small><h2>Satu tempat baca.<br><em>Akses terkendali.</em></h2><p>Dokumen hanya bisa dibaca di aplikasi, ditandai nama Anda, dan setiap pembukaan tercatat.</p><button class="btn" id="bd">Buka Daftar Dokumen ${ic('chevR')}</button></div><div class="art">${ART1}</div><ul><li>Hanya baca</li><li>Berwatermark</li><li>Tercatat</li><li>Sesuai hak akses</li></ul></div>
   <div class="stats"><div class="st s1"><i class="ci">${ic('doc')}</i><div><small>Total Dokumen</small><b>${DOCS.length}</b></div></div><div class="st s2"><i class="ci">${ic('check')}</i><div><small>Dibuka Hari Ini</small><b>${today}</b></div></div><div class="st s3"><i class="ci">${ic('chart')}</i><div><small>Departemen Anda</small><b class="dp">${esc(U.dept)}</b></div></div></div>
   ${DOCS.length?`<div class="box" style="margin-bottom:12px"><div class="bh"><h3>Departemen</h3><span>Tekan untuk melihat dokumennya</span></div><div class="dg">${deptList().map(([k,n])=>`<button class="dc" data-d="${esc(k)}"><b>${esc(k)}</b><span>${n} dokumen</span></button>`).join('')}</div></div>`:''}
-  <div class="box" style="margin-bottom:12px"><div class="bh"><h3>Dokumen Saya</h3>${my.length?`<button class="btn g" id="mine">Lihat Semua (${my.length}) ${ic('chevR')}</button>`:''}</div>${hasDept()?`<p class="hint" style="margin:0 0 10px">${esc(U.dept)}${U.bagian?' &rsaquo; '+esc(U.bagian):''}</p>`:''}${my.length?my.slice(0,5).map(item).join(''):`<div class="empty">${hasDept()?'Belum ada dokumen untuk departemen/bagian Anda. Semua dokumen tetap ada di tab Dokumen.':'Departemen Anda belum diatur. Pilih departemen di kotak bawah ini, lalu dokumen Anda muncul di sini.'}</div>`}</div>
+  <div class="box" style="margin-bottom:12px"><div class="bh"><h3>Dokumen Saya</h3>${my.length?`<button class="btn g" id="mine">Lihat Semua (${my.length}) ${ic('chevR')}</button>`:''}</div>${hasDept()?`<p class="hint" style="margin:0 0 10px">${esc(U.dept)}${U.bagian?' &rsaquo; '+esc(U.bagian):''}</p>`:''}${my.length?my.slice(0,5).map(item).join(''):`<div class="empty">${hasDept()?'Belum ada dokumen untuk departemen/bagian Anda. Semua dokumen tetap ada di tab Dokumen.':'Departemen dan bagian Anda belum diatur oleh admin. Minta admin mengisinya di menu Kelola, bagian Pengguna, lalu dokumen Anda muncul di sini.'}</div>`}</div>
   ${!hasDept()&&!U.deptAdm?deptBox().replace('margin-top:12px','margin-bottom:12px'):''}
   <div class="box"><div class="bh"><h3>Dokumen Terbaru</h3><button class="btn g" id="all">Lihat Semua ${ic('chevR')}</button></div>${DOCS.slice(0,4).map(item).join('')||'<div class="empty">Belum ada dokumen.</div>'}</div>`;
   $('#bd').onclick=$('#all').onclick=()=>{V='docs';shell()};bindItems();bindDeptBox();
@@ -952,15 +949,13 @@ async function daftarKirim(em,key){
 function daftarForm(box,pre){
   const key='daftar-'+(U.nik||U.id),L='Kirim Tautan Konfirmasi';
   box.innerHTML=`<p class="hint" style="margin:0 0 8px"><b>Daftar pakai email untuk akses permanen.</b> Kode akses hanya berlaku sementara. Dengan akun email, Anda bisa masuk kapan saja tanpa kode.</p><ol><li>Masukkan email aktif Anda.</li><li>Buka tautan konfirmasi yang kami kirim ke email itu.</li><li>Buat kata sandi, lalu berikutnya masuk dengan email dan kata sandi.</li></ol>
-  <label>Email</label><input id="dem" type="email" autocomplete="email" placeholder="nama@email.com" value="${esc(pre||'')}"><label>Departemen</label><div id="ddp-w"></div><label>Bagian (opsional)</label><div id="dbg-w"></div><label>No. HP / WhatsApp (opsional)</label><input id="dhp" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" value="${esc(hpGet())}"><p class="hint" style="margin:-4px 0 8px">Dipakai admin untuk mengirim kode akses langsung ke WhatsApp Anda.</p>${U.deptAdm?'<p class="hint" style="margin:0 0 8px">Departemen Anda sudah diatur admin.</p>':''}<button class="btn" id="dgo" type="button">${L}</button><div class="err" id="dms"></div>`;
-  deptCombos(box,'ddp','dbg',hasDept()?U.dept:'',U.bagian||'',!!U.deptAdm);
+  <label>Email</label><input id="dem" type="email" autocomplete="email" placeholder="nama@email.com" value="${esc(pre||'')}"><label>No. HP / WhatsApp (opsional)</label><input id="dhp" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" value="${esc(hpGet())}"><p class="hint" style="margin:-4px 0 8px">Dipakai admin untuk mengirim kode akses langsung ke WhatsApp Anda.</p><button class="btn" id="dgo" type="button">${L}</button><div class="err" id="dms"></div>`;
   const go=async()=>{const m=$('#dms'),b=$('#dgo'),em=$('#dem').value.trim().toLowerCase();m.className='err';m.textContent='';
     if(cdGet(key)>Date.now())return;
     if(!/^\S+@\S+\.\S+$/.test(em)){m.textContent='Masukkan alamat email yang valid.';return}
-    if(!U.deptAdm&&!comboVal(box,'ddp')){m.textContent='Pilih atau isi departemen Anda.';return}
     const hp=$('#dhp').value.trim();if(hp&&!hpOk(hp)){m.textContent='No. HP tidak valid (contoh 08123456789).';return}
     b.disabled=true;
-    try{if(!U.deptAdm)await saveDept(comboVal(box,'ddp'),comboVal(box,'dbg'));await saveHp(hp);await daftarKirim(em,key);succ('Tautan konfirmasi terkirim');daftarSent(box,em)}
+    try{await saveHp(hp);await daftarKirim(em,key);succ('Tautan konfirmasi terkirim');daftarSent(box,em)}
     catch(x){m.textContent='Gagal: '+(x.message||x);cdBind(b,key,L)}};
   cdBind($('#dgo'),key,L);$('#dgo').onclick=go;$('#dem').addEventListener('keydown',e=>{if(e.key==='Enter')go()})}
 function daftarSent(box,em){
