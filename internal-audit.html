@@ -306,7 +306,10 @@ function gateView(msg,tab){VIEW='gate';tab=tab||'kode';clearInterval(timer);S=nu
         await enterStaff()}catch(e){er('Gagal: '+(e.message||e));b.disabled=false}};
     $('#go').onclick=go;['#em','#pw'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')go()}));$('#em').focus()}}
 async function enterKode(d){
-  S={mode:'kode',nik:d.nik,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false,dcc:false,lead:false,role:'user',all:false};J=null;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;await listView()}
+  S={mode:'kode',nik:d.nik,nama:d.nama,label:d.nama,exp:new Date(d.exp).getTime(),admin:false,dcc:false,lead:false,role:'user',all:false,grants:[]};
+  try{const r=await sb.rpc('iso_hak_saya'),h=r.data;if(h&&h.ok){const gs=Array.isArray(h.grants)?h.grants:[];S.grants=gs;S.dcc=h.role==='dcc'||gs.includes('dcc');S.lead=gs.includes('lead');S.all=S.dcc||S.lead;S.dept=h.dept||'';S.bagian=h.bagian||'';
+    S.rl=['Pengguna',...(S.dcc?['DCC']:[]),...gs.filter(g=>g!=='dcc').map(g=>GRANT_LBL[g]||g)].join(' \u00b7 ');if(h.nama&&!S.nama){S.nama=S.label=h.nama}}}catch(e){}
+  J=null;await loadDocs();clearInterval(timer);timer=setInterval(tick,30000);VT=null;await listView()}
 async function enterStaff(){
   const {data:{session}}=await sb.auth.getSession();
   const p=await sb.from('iso_profiles').select('*').eq('id',session.user.id).maybeSingle();
@@ -318,7 +321,7 @@ const tick=()=>{if(S&&S.mode==='kode'&&Date.now()>=S.exp){toast('Kode akses suda
 async function loadDocs(){const r=await sb.from('iso_documents').select('*').order('kode');if(r.error)throw r.error;DOCS=r.data||[]}
 const GRANT_LBL={dcc:'DCC',lead:'Lead Auditor',auditor:'Auditor',auditee:'Auditee'};
 const gOf=p=>Array.isArray(p&&p.grants)?p.grants:({auditor:['auditor'],auditee:['auditee'],keduanya:['auditor','auditee']}[p&&p.peran]||[]);
-const hdr=(t,back)=>`<header class="tb"><div><b>${t}</b><small>${esc(S.nama)}${S.nik?' ('+esc(S.nik)+')':''} &middot; ${S.mode==='kode'?'Akses kode':(S.rl||'Pengguna')}</small></div><div class="tr" style="display:flex;gap:8px;align-items:center">${back?'<button class="btn g bs" id="bk">&larr; Beranda</button>':''}<button class="btn g bs" id="lo">Keluar</button></div></header>`;
+const hdr=(t,back)=>`<header class="tb"><div><b>${t}</b><small>${esc(S.nama)}${S.nik?' ('+esc(S.nik)+')':''} &middot; ${S.mode==='kode'?'Akses kode'+(S.rl&&S.rl!=='Pengguna'?' &middot; '+esc(S.rl):''):(S.rl||'Pengguna')}</small></div><div class="tr" style="display:flex;gap:8px;align-items:center">${back?'<button class="btn g bs" id="bk">&larr; Beranda</button>':''}<button class="btn g bs" id="lo">Keluar</button></div></header>`;
 function bindHdr(){const lo=$('#lo');lo.onclick=async()=>{if(confirm('Keluar dari audit internal?'))await doLogout()};const bk=$('#bk');if(bk)bk.onclick=listView}
 
 // ---------- Jadwal & Panduan Audit (PDF diunggah admin -> disimpan sebagai WebP, bisa dilihat / diunduh PDF / dicetak) ----------
